@@ -1,7 +1,7 @@
 # coding=utf-8
 import logging
 import os
-import json
+
 from aiohttp import web
 from jsonrpcserver.aio import methods
 
@@ -41,14 +41,12 @@ app = web.Application()
 async def event(event=None):
     '''
 
-
     :param event:
     :type event:
     :return:
     :rtype:
     '''
     pass
-
 
 
 
@@ -66,6 +64,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="yo notification server")
     parser.add_argument('--server_port', type=int, default=8080)
     args = parser.parse_args()
-
+    app['server_port'] = args.server_port
 
     web.run_app(app, port=args.server_port)

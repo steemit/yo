@@ -15,73 +15,81 @@ log_level = getattr(logging, os.environ.get('LOG_LEVEL', 'INFO'))
 logging.basicConfig(level=log_level)
 logger = logging.getLogger('__name__')
 
+sg = sendgrid.SendGridAPIClient(apikey=os.environ.get('SENDGRID_API_KEY'))
+SENDGRID_FROM_EMAIL = os.environ.get('SENDGRID_FROM_EMAIL', 'noreply@example.com')
+
+TWILIO_ACCOUNT_SID = os.environ.get('TWILIO_ACCOUNT_SID')
+TWILIO_AUTH_TOKEN = os.environ.get('TWILIO_AUTH_TOKEN')
+client = TwilioRestClient(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
+
+GCM_API_KEY = os.environ.get('GCM_API_KEY')
+google_cloud_messenger = GCM(GCM_API_KEY)
+
+TELESIGN_CUSTOMER_ID = os.environ.get('TELESIGN_CUSTOMER_ID')
+TELESIGN_API_KEY = os.environ.get('TELESIGN_API_KEY')
+
 
 @methods.add('yo.send_email')
-async def send_email(**kwargs):
+async def send_email(to_email=None, from_email=None, subject=None, content=None, content_type=None):
     '''
-    "sendgrid": {
-    "from": "SDC_SENDGRID_FROM",
-    "key": "SDC_SENDGRID_API_KEY",
-    "templates": {
-      "confirm_email": "SDC_SENDGRID_CONFIRMTEMPLATE",
-      "waiting_list_invite": "SDC_SENDGRID_WAITINGTEMPLATE"
-    }
-  },
 
     Args:
-        **kwargs ():
+        to_email (str):
+        from_email (str):
+        subject (str):
+        content (str):
+        content_type (str):
 
     Returns:
-
+        response ():
     '''
 
     # https://github.com/steemit/condenser/blob/master/server/sendEmail.js
-    sg = sendgrid.SendGridAPIClient(apikey=os.environ.get('SENDGRID_API_KEY'))
-    from_email = Email("test@example.com")
-    subject = "Hello World from the SendGrid Python Library!"
-    to_email = Email("test@example.com")
-    content = Content("text/plain", "Hello, Email!")
+    to_email = Email(to_email)
+    from_email = from_email or SENDGRID_FROM_EMAIL
+    from_email = Email(from_email)
+    content_type = content_type or 'text/plain'
+    content = Content(content_type, content)
     mail = Mail(from_email, subject, to_email, content)
     response = sg.client.mail.send.post(request_body=mail.get())
-
+    return response
 
 @methods.add('yo.send_sms')
-async def send_sms(**kwargs):
-    '''
-  "twilio": {
-    "account_sid": "SDC_TWILIO_ACCOUNT_SID",
-    "auth_token": "SDC_TWILIO_AUTH_TOKEN"
-  },
-
+async def send_sms(to=None, _from=None, body=None):
     '''
 
-    account = "ACXXXXXXXXXXXXXXXXX"
-    token = "YYYYYYYYYYYYYYYYYY"
-    client = TwilioRestClient(account, token)
+    Args:
+        to (str):
+        _from (str):
+        body (str):
 
-    message = client.messages.create(to="+12316851234", from_="+15555555555",
-                                     body="Hello there!")
+    Returns:
+        message ():
+    '''
+    message = client.messages.create(to=to, _from=_from, body=body)
+    return message
+
 
 @methods.add('yo.send_browser_notification')
-async def send_browser_notification(**kwargs):
+async def send_browser_notification(reg_ids=None, data=None, **kwargs):
+    '''
+
+    Args:
+        reg_ids (List(str)):
+        data (str):
+        **kwargs ():
+
+    Returns:
+        response ():
+
+    '''
+
     # https://github.com/steemit/condenser/blob/master/server/api/notifications.js
     # https://developers.google.com/cloud-messaging/
-    gcm = GCM(API_KEY)
-    data = {'param1': 'value1', 'param2': 'value2'}
 
     # Downstream message using JSON request
-    reg_ids = ['token1', 'token2', 'token3']
-    response = gcm.json_request(registration_ids=reg_ids, data=data)
-
-    # Downstream message using JSON request with extra arguments
-    res = gcm.json_request(
-            registration_ids=reg_ids, data=data,
-            collapse_key='uptoyou', delay_while_idle=True, time_to_live=3600
-    )
-
-    # Topic Messaging
-    topic = 'topic name'
-    gcm.send_topic_message(topic=topic, data=data)
+    response = google_cloud_messenger.json_request(registration_ids=reg_ids, data=data, **kwargs)
+    return response
 
 
 async def send(notification):
@@ -96,41 +104,3 @@ async def send(notification):
         pass
     else:
         raise ValueError('Bad transport %s', transport)
-
-
-'''
-"sendgrid": {
-    "from": "noreply@example.com",
-    "key": "SG.xxx_yyyy",
-    "templates": {
-      "confirm_email": false,
-      "waiting_list_invite": false
-    }
-  },
-  "telesign": {
-    "customer_id": false,
-    "rest_api_key": false
-  },
-  "twilio": {
-    "account_sid": false,
-    "auth_token": false
-  }
-
-
-
-  "sendgrid": {
-    "from": "SDC_SENDGRID_FROM",
-    "key": "SDC_SENDGRID_API_KEY",
-    "templates": {
-      "confirm_email": "SDC_SENDGRID_CONFIRMTEMPLATE",
-      "waiting_list_invite": "SDC_SENDGRID_WAITINGTEMPLATE"
-    }
-  },
-  "telesign": {
-    "customer_id": "SDC_TELESIGN_CUSTOMER_ID",
-    "rest_api_key": "SDC_TELESIGN_API_KEY"
-  },
-
-
-'''
-

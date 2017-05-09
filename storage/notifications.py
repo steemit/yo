@@ -4,11 +4,13 @@ import os
 
 import sqlalchemy as sa
 
+from storage import metadata
+
 log_level = getattr(logging, os.environ.get('LOG_LEVEL', 'INFO'))
 logging.basicConfig(level=log_level)
 logger = logging.getLogger('__name__')
 
-metadata = sa.MetaData()
+
 
 TRANSPORT_TYPES = (
     'email',
@@ -127,7 +129,7 @@ Event JSON Schema
 }
 '''
 
-table = sa.Table('notifications', metadata,
+notifications_table = sa.Table('yo_notifications', metadata,
                  sa.Column('id', sa.Integer, primary_key=True),
                  sa.Column('data', sa.Text),
                  sa.Column('status', sa.Enum(NOTIFICATION_STATUS), nullable=False),
@@ -138,7 +140,6 @@ table = sa.Table('notifications', metadata,
                  sa.Column('source_event', sa.String(255)),
                  sa.Column('created_at', sa.DateTime(timezone=False), nullable=False, index=True)
 )
-
 
 async def put(pool, table, notification):
     with (await pool) as conn:

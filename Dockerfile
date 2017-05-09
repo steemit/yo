@@ -1,13 +1,11 @@
 FROM phusion/baseimage:0.9.19
 
-ENV STEEMD_HTTP_URL https://steemd.steemitdev.com
-ENV SBDS_HTTP_URL https://sbds.steemitdev.com
-ENV SBDS_LOG_LEVEL INFO
+ENV LOG_LEVEL INFO
 ENV LANG en_US.UTF-8
 ENV LC_ALL en_US.UTF-8
 ENV APP_ROOT /app
 ENV WSGI_APP ${APP_ROOT}/serve.py
-ENV SBDS_ENVIRONMENT DEV
+ENV ENVIRONMENT DEV
 ENV HTTP_SERVER_PORT 8080
 
 
@@ -30,16 +28,6 @@ RUN \
         nginx
 
 
-RUN \
-  mkdir -p /var/lib/nginx/body && \
-  mkdir -p /var/lib/nginx/scgi && \
-  mkdir -p /var/lib/nginx/uwsgi && \
-  mkdir -p /var/lib/nginx/fastcgi && \
-  mkdir -p /var/lib/nginx/proxy && \
-  chown -R www-data:www-data /var/lib/nginx && \
-  touch /var/run/nginx.pid && \
-  chown www-data:www-data /var/run/nginx.pid
-
 ADD . /app
 
 RUN \
@@ -49,8 +37,10 @@ RUN \
 WORKDIR /app
 
 RUN \
-    pip3 install --upgrade pip &&
-    pip3 install  -r requirements.txt && \
+    pip3 install --upgrade pip && \
+    pip3 install pipenv && \
+	  pipenv lock && \
+	  pipenv install --three --dev && \
     apt-get remove -y \
         build-essential \
         libffi-dev \
