@@ -1,13 +1,19 @@
 # coding=utf-8
 import logging
 import os
+import asyncio
+from datetime import datetime
+from datetime import timedelta
 
 import sqlalchemy as sa
+from sqlalchemy.sql import func
+from sqlalchemy.schema import ForeignKey
+
+
+
 
 from storage import metadata
 
-log_level = getattr(logging, os.environ.get('LOG_LEVEL', 'INFO'))
-logging.basicConfig(level=log_level)
 logger = logging.getLogger('__name__')
 
 
@@ -36,7 +42,9 @@ NOTIFICATION_TYPES = (
 
 NOTIFICATION_STATUS = (
     'created',
-    'sent'
+    'sent',
+    'seen',
+    'read'
 )
 
 '''
@@ -129,42 +137,91 @@ Event JSON Schema
 }
 '''
 
-notifications_table = sa.Table('yo_notifications', metadata,
-                 sa.Column('id', sa.Integer, primary_key=True),
-                 sa.Column('data', sa.Text),
-                 sa.Column('status', sa.Enum(NOTIFICATION_STATUS), nullable=False),
-                 sa.Column('to', sa.String(255), nullable=False, index=True),
-                 sa.Column('from', sa.String(255)),
-                 sa.Column('type', sa.Enum(NOTIFICATION_TYPES), nullable=False, index=True),
-                 sa.Column('transport', sa.Enum(TRANSPORT_TYPES), nullable=False, index=True),
-                 sa.Column('source_event', sa.String(255)),
-                 sa.Column('created_at', sa.DateTime(timezone=False), nullable=False, index=True)
+table = sa.Table('yo_notifications', metadata,
+     sa.Column('nid', sa.Integer, primary_key=True),
+     sa.Column('data', sa.UnicodeText),
+
+     # yo_users.uid
+     sa.Column('to', sa.Integer, ForeignKey('yo_users.uid'), nullable=False, index=True),
+
+     # yo_users.uid
+     sa.Column('from', sa.Integer, ForeignKey('yo_users.uid'), index=True),
+
+     sa.Column('type', sa.Enum(NOTIFICATION_TYPES), nullable=False, index=True),
+     sa.Column('transport', sa.Enum(TRANSPORT_TYPES), nullable=False, index=True),
+     sa.Column('source_event', sa.String(255)),
+
+    sa.Column('created_at', sa.DateTime, default=func.now(), index=True,
+              doc='Datetime when notification was created and stored in db'),
+    sa.Column('sent_at', sa.DateTime, index=True,
+              doc='Datetime when notification was sent'),
+    sa.Column('seen_at', sa.DateTime, index=True,
+              doc='Datetime when notification was seen (may be identical to read_at for some notification types)'),
+    sa.Column('read_at', sa.DateTime, index=True,
+              doc='Datetime when notification was read or marked as read'),
+
 )
 
-async def put(pool, table, notification):
-    with (await pool) as conn:
+async def put(engine, notification):
+    async with engine.acquire() as conn:
         return await conn.execute(table.insert(), **notification)
 
 
-async def get(pool, table, notification_id):
-    with (await pool) as conn:
-        query = table.select().where(table.c.id == notification_id)
+async def get(engine, notification_id):
+    async with engine.acquire() as conn:
+        query = table.select().where(table.c.nid == notification_id)
+        return await query.execute().first()
+
+
+async def fetch_for_user(engine, uid):
+    async with engine.acquire() as conn:
+        query = table.select().where(table.c.to == uid)
+        return await query.execute().first()
+
+
+async def mark_sent(engine, notification_id):
+    async with engine.acquire() as conn:
+        query = table.update().where(table.c.id == notification_id).value(sent_at=func.now())
         return await query.execute()
 
 
-async def fetch_for_user(pool, table, username):
-    with (await pool) as conn:
-        query = table.select().where(table.c.to == username)
-        return await query.execute()
+async def mark_seen(engine, notification_id):
+    async with engine.acquire() as conn:
+        stmt = table.update().where(table.c.id == notification_id).value(seen_at=func.now())
+        return await stmt.execute()
 
 
-async def mark_sent(pool, table, notification_id):
-    with (await pool) as conn:
-        query = table.update().where(table.c.id == notification_id).value(status='sent')
-        return await query.execute()
+async def mark_read(engine, notification_id):
+    async with engine.acquire() as conn:
+        stmt = table.update().where(table.c.id == notification_id).value(read_at=func.now())
+        return await conn.execute(stmt)
 
 
-async def mark_cancelled(pool, table, notification_id):
-    with (await pool) as conn:
-        query = table.update().where(table.c.id == notification_id).value(status='cancelled')
-        return await query.execute()
+async def status(engine, notification_id):
+    async with engine.acquire() as conn:
+        query = table.select().where(table.c.nid == notification_id)
+        notification =  await query.execute().first()
+        return await notification_status(notification)
+
+
+async def count_recent(engine, uid, hours=24):
+    async with engine.acquire() as conn:
+        min_datetime = datetime.utcnow() - timedelta(hours=hours)
+        query = table.select([table.c.type, func.count('*')]).where(table.c.uid == uid)
+        query = query.where(table.c.sent_at > min_datetime)
+        query = query.group_by(table.c.type)
+        return await query.execute().fetchall()
+
+
+
+async def notification_status(notification):
+    if not notification:
+        return None
+    if notification['read_at']:
+        return 'read'
+    elif notification['seen_at']:
+        return 'seen'
+    elif notification['sent_at']:
+        return 'sent'
+    else:
+        return 'created'

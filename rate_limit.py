@@ -3,8 +3,7 @@ import logging
 import os
 import json
 
-log_level = getattr(logging, os.environ.get('LOG_LEVEL', 'INFO'))
-logging.basicConfig(level=log_level)
+
 logger = logging.getLogger('__name__')
 
 
@@ -27,5 +26,5 @@ HARD_RATE_LIMITS = {
 }
 
 
-async def is_ok(notification):
+async def check_rate_limit(notification, uid):
     return True

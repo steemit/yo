@@ -29,7 +29,6 @@ TELESIGN_CUSTOMER_ID = os.environ.get('TELESIGN_CUSTOMER_ID')
 TELESIGN_API_KEY = os.environ.get('TELESIGN_API_KEY')
 
 
-@methods.add('yo.send_email')
 async def send_email(to_email=None, from_email=None, subject=None, content=None, content_type=None):
     '''
 
@@ -54,7 +53,7 @@ async def send_email(to_email=None, from_email=None, subject=None, content=None,
     response = sg.client.mail.send.post(request_body=mail.get())
     return response
 
-@methods.add('yo.send_sms')
+
 async def send_sms(to=None, _from=None, body=None):
     '''
 
@@ -70,7 +69,6 @@ async def send_sms(to=None, _from=None, body=None):
     return message
 
 
-@methods.add('yo.send_browser_notification')
 async def send_browser_notification(reg_ids=None, data=None, **kwargs):
     '''
 

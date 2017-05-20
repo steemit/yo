@@ -71,7 +71,7 @@ target/
 
 # pyenv
 .python-version
-
+Pipfile.lock
 # celery beat schedule file
 celerybeat-schedule
 

@@ -9,6 +9,10 @@ default: build
 
 .PHONY: test run test-without-lint test-pylint fmt test-without-build build
 
+init:
+	pip3 install pipenv
+	pipenv install --dev --three
+
 build:
 	docker build -t $(PROJECT_DOCKER_TAG) .
 

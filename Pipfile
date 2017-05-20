@@ -14,10 +14,7 @@ sphinxcontrib-programoutput = "*"
 sphinxcontrib-restbuilder = "*"
 yapf = "*"
 autopep8 = "*"
-Sphinx = "*"
-
-[requires]
-python_version = "3.5"
+sphinx = "*"
 
 [packages]
 ujson = "*"
@@ -30,4 +27,7 @@ cchardet = "*"
 uvloop = "*"
 funcy = "*"
 sqlalchemy = "*"
-mysqlclient = "*"
+aiomysql = "*"
+
+[requires]
+python_version = "3.5"
