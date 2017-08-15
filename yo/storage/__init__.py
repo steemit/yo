@@ -25,7 +25,7 @@ async def init_db(app):
        engine = sa.create_engine(db_url)
     if db_url.startswith('sqlite'):
        users.table.create(engine)
-       notifications.table.create(engine)
+#       notifications.table.create(engine)
        wwwpushsubs.table.create(engine)
 
     app['config']['db'] = engine
