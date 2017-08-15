@@ -25,6 +25,7 @@ async def handle(request):
     req_app = request.app
     request = await request.json()
     logger.debug('Incoming request: %s' % request)
+    if not 'params' in request.keys(): request['params'] = {} # fix for API methods that have no params
     request['params']['db'] = req_app['config']['db']
     response = await methods.dispatch(request)
     return web.json_response(response)
