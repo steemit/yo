@@ -2,38 +2,11 @@
 <head>
 
 <title>GCM/Firebase test</title>
-<link rel="manifest" href="manifest.json">
+<link rel="manifest" href="/gcm/manifest.json">
 
 <script src="https://www.gstatic.com/firebasejs/4.2.0/firebase.js"></script>
-<script>
-  // Initialize Firebase
-  var config = {
-      apiKey: "AIzaSyCqF8QYlFUEZ1i6Pd-lKc4PLMQbUZQzHOg",
-      authDomain: "androidgcm-testing.firebaseapp.com",
-      databaseURL: "https://androidgcm-testing.firebaseio.com",
-      projectId: "androidgcm-testing",
-      storageBucket: "androidgcm-testing.appspot.com",
-      messagingSenderId: "949229151994"
-					    };
-  firebase.initializeApp(config);
-</script>
-<script>
-// TODO - move into seperate file and dynamically generate the stuff above
-function registerServiceWorker() {
-	  return navigator.serviceWorker.register('service_worker.js')
-		    .then(function(registration) {
-			        console.log('Service worker successfully registered.');
-				    return registration;
-				      })
-	    .catch(function(err) {
-		        console.error('Unable to register service worker.', err);
-			  });
-}
-
-function subscribeUser() {
-         registerServiceWorker();
-}
-</script>
+<script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
+<script src="/gcm/js/gcm.js"></script>
 </head>
 <body>
 	<p>Click <a href="javascript:subscribeUser();">here</a> to subscribe</p>

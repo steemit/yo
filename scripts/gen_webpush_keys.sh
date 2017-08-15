@@ -6,8 +6,8 @@ echo    npm install -g web-push
 TMPFILE=`mktemp`
 
 web-push generate-vapid-keys >$TMPFILE
-grep -A1 "Public Key" $TMPFILE  | tail -1 >../pubkey.txt
-grep -A1 "Private Key" $TMPFILE | tail -1 >../privkey.txt
+grep -A1 "Public Key" $TMPFILE  | tail -1 | tr -d '\n' >../pubkey.txt
+grep -A1 "Private Key" $TMPFILE | tail -1 | tr -d '\n' >../privkey.txt
 
 rm $TMPFILE
 
