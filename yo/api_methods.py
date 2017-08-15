@@ -1,5 +1,7 @@
 # coding=utf-8
 import logging
+import storage
+import storage.users
 
 from jsonrpcserver.aio import methods
 
@@ -44,10 +46,14 @@ async def event(event=None, db=None):
     '''
     pass
 
+# TODO - needs some auth framework here
+
 # user methods
 @add_api_method
 async def create_user(user=None, db=None):
-    pass
+          retval = await storage.users.put(db,user)
+          return retval
+      
 
 @add_api_method
 async def update_user(user=None, db=None):
