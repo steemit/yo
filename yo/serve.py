@@ -9,7 +9,8 @@ import uvloop
 asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
 from aiohttp import web
-from jsonrpcserver.aio import methods
+#from jsonrpcserver.aio import methods
+from api_methods import methods
 
 from storage import init_db
 from storage import close_db
@@ -21,8 +22,9 @@ logger = logging.getLogger(__name__)
 
 
 async def handle(request):
+    req_app = request.app
     request = await request.json()
-    request['params']['db'] = request.app['config']['db']
+    request['params']['db'] = req_app['config']['db']
     response = await methods.dispatch(request)
     return web.json_response(response)
 

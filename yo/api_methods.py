@@ -5,13 +5,18 @@ from jsonrpcserver.aio import methods
 
 logger = logging.getLogger(__name__)
 
+def add_api_method(func):
+    """ Used to add the yo. prefix
+    """
+    methods.add(func,name='yo.%s' % func.__name__)
+
 # test method
-@methods.add('yo.test')
+@add_api_method
 async def test(db=None):
       return {'alive':True}
 
 # event triggered method
-@methods.add('yo.event')
+@add_api_method
 async def event(event=None, db=None):
     '''
 
@@ -40,36 +45,36 @@ async def event(event=None, db=None):
     pass
 
 # user methods
-@methods.add('yo.create_user')
+@add_api_method
 async def create_user(user=None, db=None):
     pass
 
-@methods.add('yo.update_user')
+@add_api_method
 async def update_user(user=None, db=None):
     pass
 
 # notification methods
-@methods.add('yo.get_notification_status')
+@add_api_method
 async def get_notification_status(notification=None, db=None):
     pass
 
-@methods.add('yo.mark_notification_as_seen')
+@add_api_method
 async def mark_notification_as_seen(notification=None, db=None):
     pass
 
-@methods.add('yo.mark_notification_as_read')
+@add_api_method
 async def mark_notification_as_read(notification=None, db=None):
     pass
 
 # direct transport methods
-@methods.add('yo.send_email')
+@add_api_method
 async def send_email(to_email=None, from_email=None, subject=None, content=None, content_type=None, db=None):
     pass
 
-@methods.add('yo.send_sms')
+@add_api_method
 async def send_sms(to=None, _from=None, body=None, db=None):
     pass
 
-@methods.add('yo.send_browser_notification')
+@add_api_method
 async def send_browser_notification(reg_ids=None, data=None, db=None, **kwargs):
     pass

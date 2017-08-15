@@ -32,7 +32,7 @@ class YoClient:
 if __name__=='__main__':
    parser = argparse.ArgumentParser(description="yo notification server")
    parser.add_argument('-s','--server_url', type=str, default='http://localhost:8080')
-   parser.add_argument('-m','--method',     type=str, default='test')
+   parser.add_argument('-m','--method',     type=str, default='yo.test')
    parser.add_argument('-p','--params',     nargs='+', help='Method arguments to pass to the server')
    args = parser.parse_args(sys.argv[1:])
 
