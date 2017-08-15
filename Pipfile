@@ -2,6 +2,22 @@
 verify_ssl = true
 url = "https://pypi.python.org/simple"
 
+[requires]
+python_version = "3.5"
+
+[packages]
+ujson = "*"
+aiohttp = "*"
+jsonrpcclient = "*"
+jsonrpcserver = "*"
+toolz = "*"
+websockets = "*"
+cchardet = "*"
+uvloop = "*"
+funcy = "*"
+aiomysql = "*"
+SQLAlchemy = "*"
+
 [dev-packages]
 ipython = "*"
 pep8 = "*"
@@ -14,20 +30,4 @@ sphinxcontrib-programoutput = "*"
 sphinxcontrib-restbuilder = "*"
 yapf = "*"
 autopep8 = "*"
-sphinx = "*"
-
-[packages]
-ujson = "*"
-aiohttp = "*"
-jsonrpcclient = "*"
-jsonrpcserver = "*"
-toolz = "*"
-websockets = "*"
-cchardet = "*"
-uvloop = "*"
-funcy = "*"
-sqlalchemy = "*"
-aiomysql = "*"
-
-[requires]
-python_version = "3.5"
+Sphinx = "*"

@@ -14,7 +14,10 @@ metadata = sa.MetaData()
 
 async def init_db(app):
     db_url = app['config']['database_url']
-    engine = await aiomysql.sa.create_engine(db_url, loop=app.loop)
+    if db_url.startswith('mysql'):
+       engine = await aiomysql.sa.create_engine(db_url, loop=app.loop)
+    else:
+       engine = sa.create_engine(db_url)
     app['config']['db'] = engine
 
 

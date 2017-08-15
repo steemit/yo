@@ -32,7 +32,7 @@ def init(loop, argv):
     parser = argparse.ArgumentParser(description="yo notification server")
     parser.add_argument('--server_port', type=int, default=8080)
     parser.add_argument('--server_host', type=str, default='0.0.0.0')
-    parser.add_argument('--database_url', type=str, default='sqlite:/')
+    parser.add_argument('--database_url', type=str, default='sqlite://')
     args = parser.parse_args(argv)
 
     # setup application and extensions
