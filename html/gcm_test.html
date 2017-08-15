@@ -2,7 +2,7 @@
 <head>
 
 <title>GCM/Firebase test</title>
-<link rel="manifest" href="/gcm/manifest.json">
+<link rel="manifest" href="manifest.json">
 
 <script src="https://www.gstatic.com/firebasejs/4.2.0/firebase.js"></script>
 <script>
@@ -20,7 +20,7 @@
 <script>
 // TODO - move into seperate file and dynamically generate the stuff above
 function registerServiceWorker() {
-	  return navigator.serviceWorker.register('/gcm/service_worker.js')
+	  return navigator.serviceWorker.register('service_worker.js')
 		    .then(function(registration) {
 			        console.log('Service worker successfully registered.');
 				    return registration;

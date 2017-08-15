@@ -55,7 +55,7 @@ async def handle_gcm_service_worker(request):
     return web.Response(body=gcm_service_worker_content,content_type='text/javascript')
 
 async def handle_gcm_manifest(request):
-      return web.json_response({'short_name':'GCM/Firebase test','start_url':'/gcm'})
+      return web.json_response({'short_name':'GCM/Firebase test'})
 
 def init(loop, argv):
     parser = argparse.ArgumentParser(description="yo notification server")
