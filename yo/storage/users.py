@@ -32,12 +32,15 @@ async def put(engine, user):
       with acquire_db_conn(engine) as conn:
            return conn.execute(table.insert(), **user)
 
-
 async def get(engine, user_id):
       with acquire_db_conn(engine) as conn:
            query = table.select().where(table.c.uid == user_id)
            return query.execute().first()
 
+async def get_by_name(engine, user_name):
+      with acquire_db_conn(engine) as conn:
+           query = table.select().where(table.c.name == user_name)
+           return query.execute().first()
 
 async def get_by_email(engine, email):
     async with engine.connect() as conn:
@@ -49,13 +52,6 @@ async def get_by_phone(engine, phone):
     async with engine.connect() as conn:
         query = table.select().where(table.c.phone == phone)
         return await query.execute().first()
-
-
-async def get_by_account(engine, account):
-    async with engine.connect() as conn:
-        query = table.select().where(table.c.name == account)
-        return await query.execute().first()
-
 
 async def update(engine, user):
     async with engine.connect() as conn:
