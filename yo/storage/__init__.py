@@ -6,6 +6,8 @@ import sqlalchemy as sa
 
 import aiomysql.sa
 
+from storage import dbtool
+
 logger = logging.getLogger('__name__')
 
 
