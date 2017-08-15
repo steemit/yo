@@ -1,5 +1,7 @@
 # coding=utf-8
 import logging
+import transports
+
 import storage
 import storage.users
 
@@ -77,6 +79,7 @@ async def mark_notification_as_read(notification=None, db=None):
     pass
 
 # direct transport methods
+# TODO - should this really exist here?
 @add_api_method
 async def send_email(to_email=None, from_email=None, subject=None, content=None, content_type=None, db=None):
     pass

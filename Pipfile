@@ -17,6 +17,11 @@ uvloop = "*"
 funcy = "*"
 aiomysql = "*"
 SQLAlchemy = "*"
+cryptography = "*"
+http-ece = "*"
+requests = "*"
+py-vapid = "*"
+pywebpush = "*"
 
 [dev-packages]
 ipython = "*"
