@@ -59,7 +59,7 @@ function subscribeUserToPush(service_reg) {
                 $.ajax({
 	                 type:"POST",
 	                 url:"/gcm/add_sub",
-	                 data:JSON.stringify(pushSubscription),
+	                 data:JSON.stringify({username:"testuser","push_sub":pushSubscription}),
 	                 dataType:"json",
 			 
 	                 success:function(response) {
@@ -74,15 +74,5 @@ function subscribeUserToPush(service_reg) {
 function subscribeUser() {
          var $service_reg = registerServiceWorker();
 	 askPermission();
-	 var sub = subscribeUserToPush($service_reg);
-	 console.log(sub);
-        $.ajax({
-               type:"POST",
-	       url:"/gcm/add_sub",
-	       data:sub,
-	       dataType:"json",
-	       success:function(response) {
-                   console.log("Transmitted subscription to server, got back response: ", JSON.stringify(response));
-	       }
-	});
+	 subscribeUserToPush($service_reg);
 }

@@ -82,6 +82,7 @@ async def handle_gcm_sub(request):
       req_app = request.app
       request = await request.json()
       logger.debug('Incoming web-push sub: %s' % str(request))
+      
       return web.json_response({'Success':True})
 
 def init(loop, argv):
