@@ -21,12 +21,24 @@ table = sa.Table('yo_users', metadata,
    sa.Column('phone', sa.String, nullable=False, index=True),
 
    sa.Column('created_at', sa.DateTime, default=func.now()),
-   sa.Column('updated_at', sa.DateTime, onupdate=func.now())
+   sa.Column('updated_at', sa.DateTime, onupdate=func.now(), default=func.now())
 )
 
 
 # TODO - need to look at how this works with the MySQL engine, should probably abstract it too
 #        perhaps simply make a generic function for acquiring connection from underlying DB and doing stuff with it in a python3 context
+
+def to_json_dict(user):
+    """ Convert a user profile to a JSON-serialisible dict
+    """
+    return {'uid'       :user['uid'],
+            'name'      :user['name'],
+            'email'     :user['email'],
+            'first_name':user['first_name'],
+            'last_name' :user['last_name'],
+            'phone'     :user['phone'],
+            'created_at':user['created_at'].isoformat(),
+            'updated_at':user['updated_at'].isoformat()}
 
 async def put(engine, user):
       with acquire_db_conn(engine) as conn:
@@ -40,7 +52,7 @@ async def get(engine, user_id):
 async def get_by_name(engine, user_name):
       with acquire_db_conn(engine) as conn:
            query = table.select().where(table.c.name == user_name)
-           return query.execute().first()
+           return conn.execute(query).first()
 
 async def get_by_email(engine, email):
     async with engine.connect() as conn:

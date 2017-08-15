@@ -14,7 +14,7 @@ logger = logging.getLogger('__name__')
 
 table = sa.Table('yo_www_push_subs', metadata,
    sa.Column('id', sa.Integer, primary_key=True),
-   sa.Column('to_uid', sa.Integer, ForeignKey('yo_users.uid'), nullable=False, index=True),
+   sa.Column('to_uid', sa.Integer, sa.ForeignKey('yo_users.uid'), nullable=False, index=True),
 
    sa.Column('push_sub_json', sa.Unicode, nullable=False, index=False),
 

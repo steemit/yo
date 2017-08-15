@@ -19,6 +19,8 @@ from api_methods import methods
 from storage import init_db
 from storage import close_db
 
+import storage.wwwpushsubs
+
 log_level = getattr(logging, os.environ.get('LOG_LEVEL', 'INFO'))
 logging.basicConfig(level=log_level)
 logger = logging.getLogger(__name__)
@@ -82,8 +84,13 @@ async def handle_gcm_sub(request):
       req_app = request.app
       request = await request.json()
       logger.debug('Incoming web-push sub: %s' % str(request))
+      user_profile = await storage.users.get_by_name(req_app['config']['db'],request['username'])
+      if not user_profile:
+         logger.error('Did not find user profile for %s' % request['username'])
+      else:
+         logger.debug('Found user profile: %s' % str(user_profile))
       
-      return web.json_response({'Success':True})
+      return web.json_response({'Success':True,'user_profile':storage.users.to_json_dict(user_profile)})
 
 def init(loop, argv):
     parser = argparse.ArgumentParser(description="yo notification server")
