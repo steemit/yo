@@ -5,6 +5,11 @@ from jsonrpcserver.aio import methods
 
 logger = logging.getLogger(__name__)
 
+# test method
+@methods.add('yo.test')
+async def test(db=None):
+      return {'alive':True}
+
 # event triggered method
 @methods.add('yo.event')
 async def event(event=None, db=None):
