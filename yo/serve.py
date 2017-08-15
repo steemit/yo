@@ -1,3 +1,7 @@
+""" Main entry point for the yo server
+    
+    As of now does not yet do FastCGI
+"""
 # coding=utf-8
 import logging
 import os
@@ -21,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 
 
-async def handle(request):
+async def handle_api(request):
     req_app = request.app
     request = await request.json()
     logger.debug('Incoming request: %s' % request)
@@ -30,6 +34,28 @@ async def handle(request):
     response = await methods.dispatch(request)
     return web.json_response(response)
 
+# TODO - move this to somewhere more appropriate
+
+gcm_test_content_fd = open('html/gcm_test.html','r')
+gcm_test_content = gcm_test_content_fd.read()
+gcm_test_content_fd.close()
+
+gcm_service_worker_content_fd = open('js/service_worker.js','r')
+gcm_service_worker_content    = gcm_service_worker_content_fd.read()
+gcm_service_worker_content_fd.close()
+
+async def handle_gcm_test(request):
+    """ This endpoint is used for simple tests of GCM/Firebase
+    """
+    return web.Response(body=gcm_test_content,content_type='text/html')
+
+async def handle_gcm_service_worker(request):
+    """ This endpoint is the service worker for notifications
+    """
+    return web.Response(body=gcm_service_worker_content,content_type='text/javascript')
+
+async def handle_gcm_manifest(request):
+      return web.json_response({'short_name':'GCM/Firebase test','start_url':'/gcm'})
 
 def init(loop, argv):
     parser = argparse.ArgumentParser(description="yo notification server")
@@ -45,7 +71,7 @@ def init(loop, argv):
     app['config'] = {
         'host': args.server_host,
         'port': args.server_port,
-        'database_url': args.database_url
+        'database_url': args.database_url,
     }
 
     # create connection to the database
@@ -54,7 +80,13 @@ def init(loop, argv):
     app.on_cleanup.append(close_db)
 
     # setup routes
-    app.router.add_post('/', handle)
+    app.router.add_post('/', handle_api)
+
+    # TODO - implement /static or similar instead of this stuff
+    app.router.add_get('/gcm',handle_gcm_test)
+    app.router.add_get('/gcm/manifest.json',handle_gcm_manifest)
+    app.router.add_get('/gcm/service_worker.js',handle_gcm_service_worker)
+
 
     return app
 

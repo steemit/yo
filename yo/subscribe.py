@@ -1,3 +1,5 @@
+""" Subscription handling
+"""
 # -*- coding: utf-8 -*-
 import logging
 import os
