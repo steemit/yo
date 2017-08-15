@@ -17,10 +17,12 @@ build:
 	docker build -t $(PROJECT_DOCKER_TAG) .
 
 run:
-	docker run $(PROJECT_DOCKER_RUN_ARGS) $(PROJECT_DOCKER_TAG)
+	docker run $(PROJECT_DOCKER_RUN_ARGS) $(PROJECT_DOCKER_TAG):latest
 
 run-without-docker:
 	pipenv run python3 yo/serve.py
+
+build-then-run: build run
 
 test: test-without-build build
 

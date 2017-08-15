@@ -1,0 +1,13 @@
+#!/bin/bash -e
+
+export LOG_LEVEL=DEBUG
+export HOME=${APP_ROOT}
+
+cd "${APP_ROOT}"
+pushd scripts/
+./gen_webpush_keys.sh
+popd
+
+exec 2>&1 \
+  chpst -u www-data \
+    pipenv run python3 "${APP_CMD}" 2>&1
