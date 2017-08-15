@@ -51,8 +51,12 @@ async def event(event=None, db=None):
 # user methods
 @add_api_method
 async def create_user(user=None, db=None):
-          retval = await storage.users.put(db,user)
-          return retval
+      retval = None
+      try:
+         result = await storage.users.put(db,user)
+      except Exception as e:
+         logger.exception('Failed to create user',extra=retval)
+      return retval
       
 
 @add_api_method

@@ -20,8 +20,8 @@ table = sa.Table('yo_users', metadata,
    sa.Column('last_name', sa.Unicode),
    sa.Column('phone', sa.String, nullable=False, index=True),
 
-   sa.Column('created_at', sa.DateTime, default=func.utc_timestamp()),
-   sa.Column('updated_at', sa.DateTime, onupdate=func.utc_timestamp())
+   sa.Column('created_at', sa.DateTime, default=func.now()),
+   sa.Column('updated_at', sa.DateTime, onupdate=func.now())
 )
 
 
@@ -30,13 +30,13 @@ table = sa.Table('yo_users', metadata,
 
 async def put(engine, user):
       with acquire_db_conn(engine) as conn:
-           return await conn.execute(table.insert(), **user)
+           return conn.execute(table.insert(), **user)
 
 
 async def get(engine, user_id):
-    async with engine.connect() as conn:
-        query = table.select().where(table.c.uid == user_id)
-        return await query.execute().first()
+      with acquire_db_conn(engine) as conn:
+           query = table.select().where(table.c.uid == user_id)
+           return query.execute().first()
 
 
 async def get_by_email(engine, email):
