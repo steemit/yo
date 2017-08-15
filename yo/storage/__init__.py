@@ -22,5 +22,6 @@ async def init_db(app):
 
 
 async def close_db(app):
-    app['config']['db'].close()
-    await app['config']['db'].wait_closed()
+    if 'close' in dir(app['config']['db']):
+       app['config']['db'].close()
+       await app['config']['db'].wait_closed()
