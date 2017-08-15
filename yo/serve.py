@@ -24,6 +24,7 @@ logger = logging.getLogger(__name__)
 async def handle(request):
     req_app = request.app
     request = await request.json()
+    logger.debug('Incoming request: %s' % request)
     request['params']['db'] = req_app['config']['db']
     response = await methods.dispatch(request)
     return web.json_response(response)

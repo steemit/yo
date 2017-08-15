@@ -11,16 +11,18 @@ class YoClient:
    def __init__(self,endpoint_url='http://localhost:8080'):
        self.client = http_client.HTTPClient(endpoint_url)
   
-   def invoke_method(self,method_name,*args,**kwargs):
+   def invoke_method(self,method_name,**kwargs):
        retval = None
        try:
-          response = self.client.request(method_name,*args,**kwargs)
+          response = self.client.request(method_name,**kwargs)
           retval   = response
        except Exception as e:
           print('Exception occurred in RMI: %s' % e)
           retval   = None
        return retval 
 
+   def test(self):
+       return self.invoke_method('yo.test')
    def create_user(self,username,email,first_name,last_name,phone):
        user_obj = {'name'      :username,
                    'email'     :email,
@@ -32,17 +34,17 @@ class YoClient:
 if __name__=='__main__':
    parser = argparse.ArgumentParser(description="yo notification server")
    parser.add_argument('-s','--server_url', type=str, default='http://localhost:8080')
-   parser.add_argument('-m','--method',     type=str, default='yo.test')
-   parser.add_argument('-p','--params',     nargs='+', help='Method arguments to pass to the server')
+   parser.add_argument('-m','--method',     type=str, default='test')
+   parser.add_argument('-p','--params',     nargs='+', default=[], help='Method arguments to pass to the server')
    args = parser.parse_args(sys.argv[1:])
 
    yo = YoClient(args.server_url)
 
    try:
-      if args.method in dir(yo): # we have a method to locally massage the data
+      if args.method in dir(yo):
          response = getattr(yo,args.method)(*args.params)
       else:
-         response = yo.invoke_method(args.method,args=args.params,kwargs={})
+         print('Client does not support method')
       if response == None:
          print('Method returned no response')
       else:
