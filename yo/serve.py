@@ -11,7 +11,6 @@ asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 from aiohttp import web
 from jsonrpcserver.aio import methods
 
-
 from storage import init_db
 from storage import close_db
 

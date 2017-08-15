@@ -20,7 +20,7 @@ run:
 	docker run $(PROJECT_DOCKER_RUN_ARGS) $(PROJECT_DOCKER_TAG)
 
 run-without-docker:
-	pipenv run python3 -m yo.serve
+	pipenv run python3 yo/serve.py
 
 test: test-without-build build
 
