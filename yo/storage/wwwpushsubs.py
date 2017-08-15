@@ -19,7 +19,7 @@ table = sa.Table('yo_www_push_subs', metadata,
    sa.Column('push_sub_json', sa.Unicode, nullable=False, index=False),
 
    sa.Column('created_at', sa.DateTime, default=func.now()),
-   sa.Column('updated_at', sa.DateTime, onupdate=func.now())
+   sa.Column('updated_at', sa.DateTime, onupdate=func.now(),default=func.now())
 )
 
 # TODO - move the below into a base class or something
@@ -31,7 +31,7 @@ async def put(engine, push_sub):
 async def get_by_to_uid(engine, user_id):
       with acquire_db_conn(engine) as conn:
            query = table.select().where(table.c.to_uid == user_id)
-           return query.execute().fetchall()
+           return conn.execute(query).fetchall()
 
 
 # TODO - add update and make sure the user can still have >1 browser target

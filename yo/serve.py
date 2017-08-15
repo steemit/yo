@@ -87,10 +87,24 @@ async def handle_gcm_sub(request):
       user_profile = await storage.users.get_by_name(req_app['config']['db'],request['username'])
       if not user_profile:
          logger.error('Did not find user profile for %s' % request['username'])
+         return web.json_response({'success':False,'err_msg':'No such user'})
       else:
          logger.debug('Found user profile: %s' % str(user_profile))
-      
-      return web.json_response({'Success':True,'user_profile':storage.users.to_json_dict(user_profile)})
+
+      user_sub = {'to_uid':       user_profile['uid'],
+                  'push_sub_json':str(request['push_sub'])}
+
+      is_valid = True
+      try:
+         await storage.wwwpushsubs.put(req_app['config']['db'],user_sub)
+      except Exception as e:
+         is_valid = False
+         logger.exception('Failed to store new sub', e, extra=request)
+
+      if is_valid:
+         return web.json_response({'success':True,'user_profile':storage.users.to_json_dict(user_profile)})
+      else:
+         return web.json_response({'success':False,'err_msg':'Internal error'})
 
 def init(loop, argv):
     parser = argparse.ArgumentParser(description="yo notification server")
