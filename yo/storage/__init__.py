@@ -13,6 +13,8 @@ logger = logging.getLogger('__name__')
 
 metadata = sa.MetaData()
 
+from storage import users
+from storage import notifications
 
 async def init_db(app):
     db_url = app['config']['database_url']
@@ -20,6 +22,9 @@ async def init_db(app):
        engine = await aiomysql.sa.create_engine(db_url, loop=app.loop)
     else:
        engine = sa.create_engine(db_url)
+    if db_url.startswith('sqlite'):
+       users.table.create(engine)
+
     app['config']['db'] = engine
 
 

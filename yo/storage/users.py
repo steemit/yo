@@ -24,6 +24,7 @@ table = sa.Table('yo_users', metadata,
    sa.Column('updated_at', sa.DateTime, onupdate=func.utc_timestamp())
 )
 
+
 # TODO - need to look at how this works with the MySQL engine, should probably abstract it too
 #        perhaps simply make a generic function for acquiring connection from underlying DB and doing stuff with it in a python3 context
 
