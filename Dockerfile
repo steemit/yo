@@ -64,7 +64,6 @@ RUN chown -R www-data ${APP_ROOT}
 USER www-data
 
 COPY ./Pipfile /app/Pipfile
-COPY ./Pipfile.lock /app/Pipfile.lock
 COPY ./scripts /app/scripts
 COPY ./html /app/html
 COPY ./js /app/js
