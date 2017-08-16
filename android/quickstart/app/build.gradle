@@ -1,0 +1,56 @@
+apply plugin: 'com.android.application'
+check.dependsOn 'assembleDebugAndroidTest'
+
+android {
+    compileSdkVersion 26
+    buildToolsVersion '25.0.3'
+
+    defaultConfig {
+        applicationId "com.steemitdev.yo.quickstart"
+        minSdkVersion 14
+        targetSdkVersion 26
+        versionCode 1
+        versionName "1.0"
+
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    packagingOptions {
+        exclude 'LICENSE.txt'
+    }
+
+    lintOptions {
+        abortOnError false
+    }
+}
+
+configurations.all {
+    resolutionStrategy.force 'com.android.support:support-annotations:26.0.0-beta2'
+}
+
+repositories {
+    maven { url 'https://maven.google.com' }
+}
+
+dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    compile 'com.android.support:appcompat-v7:26.0.0-beta2'
+    compile 'com.android.support:animated-vector-drawable:26.0.0-beta2'
+    compile 'com.android.support:support-compat:26.0.0-beta2'
+
+    compile 'com.google.firebase:firebase-messaging:11.2.0'
+    compile 'com.firebase:firebase-jobdispatcher:0.6.0'
+
+    // Testing dependencies
+    androidTestCompile 'com.android.support.test.espresso:espresso-core:2.2.2'
+    androidTestCompile 'com.android.support.test:runner:0.5'
+    androidTestCompile 'com.android.support:support-annotations:26.0.0'
+}
+
+apply plugin: 'com.google.gms.google-services'
