@@ -1,6 +1,6 @@
 # keys
-pubkey.txt
-privkey.txt
+wwwpush_pubkey.txt
+wwwpush_privkey.txt
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

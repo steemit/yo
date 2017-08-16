@@ -25,7 +25,7 @@ log_level = getattr(logging, os.environ.get('LOG_LEVEL', 'INFO'))
 logging.basicConfig(level=log_level)
 logger = logging.getLogger(__name__)
 
-
+import static_content
 
 async def handle_api(request):
     req_app = request.app
@@ -36,51 +36,7 @@ async def handle_api(request):
     response = await methods.dispatch(request)
     return web.json_response(response)
 
-# TODO - move this to somewhere more appropriate and switch to a template engine
-
-gcm_test_content           = ''
-gcm_service_worker_content = ''
-gcm_js_content             = ''
-
-def init_static_content():
-    global gcm_test_content
-    global gcm_service_worker_content
-    global gcm_js_content
-    fd = open('html/gcm_test.html','r')
-    gcm_test_content = fd.read()
-    fd.close()
-
-    fd = open('js/service_worker.js','r')
-    gcm_service_worker_content    = fd.read()
-    fd.close()
-
-    fd = open('js/gcm.js','r')
-    gcm_js_content = fd.read()
-    fd.close()
-    
-    # the below needs to become a proper template engine
-    fd = open('pubkey.txt','r')
-    push_pubkey = fd.read()
-    fd.close()
-    gcm_js_content = gcm_js_content.replace('%%SERVER_KEY%%',push_pubkey)
-
-async def handle_gcm_test(request):
-    """ This endpoint is used for simple tests of GCM/Firebase
-    """
-    return web.Response(body=gcm_test_content,content_type='text/html')
-
-async def handle_gcm_service_worker(request):
-    """ This endpoint is the service worker for notifications
-    """
-    return web.Response(body=gcm_service_worker_content,content_type='text/javascript')
-
-async def handle_gcm_manifest(request):
-      return web.json_response({'short_name':'GCM/Firebase test'})
-
-async def handle_gcm_js(request):
-      return web.Response(body=gcm_js_content,content_type='text/javascript')
-
-async def handle_gcm_sub(request):
+async def handle_wwwpush_sub(request):
       req_app = request.app
       request = await request.json()
       logger.debug('Incoming web-push sub: %s' % str(request))
@@ -131,16 +87,11 @@ def init(loop, argv):
     # setup routes
     app.router.add_post('/', handle_api)
 
-    init_static_content()
-
-    # TODO - implement /static or similar instead of this stuff
-    app.router.add_get('/gcm',handle_gcm_test)
-    app.router.add_get('/gcm/manifest.json',       handle_gcm_manifest)
-    app.router.add_get('/gcm/js/service_worker.js',handle_gcm_service_worker)
-    app.router.add_get('/gcm/js/gcm.js',           handle_gcm_js)
+    # add the static stuff for WWW push demo
+    static_content.add_wwwpush_statics(app)
 
     # TODO - implement a javascript JSON-RPC client and make this an API call
-    app.router.add_post('/gcm/add_sub', handle_gcm_sub)
+    app.router.add_post('/wwwpush/add_sub', handle_wwwpush_sub)
 
 
     return app

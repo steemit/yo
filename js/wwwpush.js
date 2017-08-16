@@ -1,17 +1,7 @@
-  // Initialize Firebase
-  var config = {
-      apiKey: "AIzaSyCqF8QYlFUEZ1i6Pd-lKc4PLMQbUZQzHOg",
-      authDomain: "androidgcm-testing.firebaseapp.com",
-      databaseURL: "https://androidgcm-testing.firebaseio.com",
-      projectId: "androidgcm-testing",
-      storageBucket: "androidgcm-testing.appspot.com",
-      messagingSenderId: "949229151994"
-					    };
-  firebase.initializeApp(config);
 
 // these functions are shamelessly ripped from google's tutorials - i'm a backend guy, not a UI guy
 function registerServiceWorker() {
-	  return navigator.serviceWorker.register('/gcm/js/service_worker.js')
+	  return navigator.serviceWorker.register('/pushdemo/js/service-worker.js')
 		    .then(function(registration) {
 			        console.log('Service worker successfully registered.');
 				    return registration;
@@ -58,7 +48,7 @@ function subscribeUserToPush(service_reg) {
                 console.log('Received PushSubscription: ', JSON.stringify(pushSubscription));
                 $.ajax({
 	                 type:"POST",
-	                 url:"/gcm/add_sub",
+	                 url:"/wwwpush/add_sub",
 	                 data:JSON.stringify({username:"testuser","push_sub":pushSubscription}),
 	                 dataType:"json",
 			 
