@@ -9,6 +9,8 @@ import sys
 import argparse
 import asyncio
 
+import datetime
+
 import uvloop
 asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
@@ -36,6 +38,10 @@ async def handle_api(request):
     request['params']['db'] = req_app['config']['db']
     response = await methods.dispatch(request)
     return web.json_response(response)
+
+async def handle_health(request):
+    return web.json_response({'status': 'OK',
+                              'datetime': datetime.datetime.utcnow().isoformat()})
 
 async def handle_wwwpush_sub(request):
       req_app = request.app
@@ -116,6 +122,8 @@ def init(loop, argv):
     app.on_cleanup.append(close_db)
 
     # setup routes
+    app.router.add_get('/',      handle_health)
+    app.router.add_get('/health',handle_health)
     app.router.add_post('/', handle_api)
 
     # add the static stuff for WWW push demo
