@@ -15,7 +15,7 @@ logger = logging.getLogger('__name__')
 def notify(pool, notification, *args, **kwargs):
     try:
         result = storage.put(notification)
-        notificiation = storage.get(result.id)
+        notification = storage.get(result.id)
     except Exception as e:
         logger.exception('failed to store notification', extra=notification)
         return

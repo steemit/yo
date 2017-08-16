@@ -9,11 +9,11 @@ class BaseTransport:
    def __init__(self):
        # TODO - config and stuff here
        pass
-   def send_notification(self,to_user,notify_type='message',data={},msg_summary=None):
-       """ Sends a notifcation to a specific user
+   def send_notification(self,to_uid=None,notify_type='message',data={},msg_summary=None):
+       """ Sends a notification to a specific user
 
        Keyword args:
-          to_user(str):     an identifier for the end user destination
+          to_uid(str):      user's UID we're sending to
           notify_type(str): the type of notification we're sending
           data(dict):       a dictionary containing the raw data for the notification
           msg_summary(str): a human-readable summary of the notification, ignored if None
