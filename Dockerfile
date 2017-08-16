@@ -33,13 +33,14 @@ RUN \
 
 RUN ln -s "$(which nodejs)" /usr/bin/node
 
-ADD . /app
+ADD ./service /etc/service
+
+RUN chmod +x /etc/service/*/run
+
+WORKDIR /app
 
 ENV HOME ${APP_ROOT}
 
-RUN \
-    mv /app/service/* /etc/service && \
-    chmod +x /etc/service/*/run
 
 # nginx
 RUN \
@@ -56,10 +57,24 @@ RUN \
   touch /var/run/nginx.pid && \
   chown www-data:www-data /var/run/nginx.pid
 
-WORKDIR /app
+RUN pip3 install pipenv
 
-RUN pip3 install pipenv && \
+RUN chown -R www-data ${APP_ROOT}
+
+USER www-data
+
+COPY ./Pipfile /app/Pipfile
+COPY ./Pipfile.lock /app/Pipfile.lock
+COPY ./scripts /app/scripts
+COPY ./html /app/html
+COPY ./js /app/js
+COPY ./json /app/json
+COPY ./yo /app/yo
+
+RUN cd /app && \
     pipenv install --dev --three
+
+USER root
 
 RUN rm -rf \
         /root/.cache \
@@ -70,6 +85,5 @@ RUN rm -rf \
         /usr/include \
         /usr/local/include
 
-RUN chown -R www-data .
 
 EXPOSE ${HTTP_SERVER_PORT}

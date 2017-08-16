@@ -13,6 +13,8 @@ init:
 	pip3 install pipenv
 	pipenv install --dev --three
 
+rebuild:
+	docker build --no-cache -t $(PROJECT_DOCKER_TAG) .
 build:
 	docker build -t $(PROJECT_DOCKER_TAG) .
 

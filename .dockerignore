@@ -1,3 +1,10 @@
+# keys
+wwwpush_pubkey.txt
+wwwpush_privkey.txt
+ 
+# We really don't need the android app in docker builds - for now at least
+android/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
