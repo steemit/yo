@@ -33,7 +33,7 @@ def gen_static_fromfile(filename='static/index.html',template_replace={},content
     file_content = loadfile(filename)
     for k,v in template_replace.items():
         file_content = file_content.replace(k,v)
-    return gen_static_handler(content=file_content,content_type='text/html')
+    return gen_static_handler(content=file_content,content_type=content_type)
 
 def add_static_files(app,files={},template_replace={}):
     """ Adds a bunch of static files to a web app, taking care of template substitution and routes
