@@ -1,0 +1,10 @@
+version: "3.3"
+services:
+  yo:
+    image: steemit/yo
+    build: ..
+    ports:
+      - "8080:8080"
+      - "9000:9000"
+    environment:
+      LOG_LEVEL: DEBUG
