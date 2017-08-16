@@ -30,6 +30,8 @@ class YoClient:
                    'last_name' :last_name,
                    'phone'     :phone}
        return self.invoke_method('yo.create_user',user=user_obj)
+   def send_browser_notification(self,to_uid,notify_type,data):
+       return self.invoke_method('yo.send_browser_notification',notify_type=notify_type,to_uid=to_uid,data=data)
 
 if __name__=='__main__':
    parser = argparse.ArgumentParser(description="yo notification server")
