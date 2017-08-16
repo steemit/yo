@@ -41,11 +41,27 @@ RUN \
     mv /app/service/* /etc/service && \
     chmod +x /etc/service/*/run
 
+# nginx
+RUN \
+  mkdir -p /var/lib/nginx/body && \
+  mkdir -p /var/lib/nginx/scgi && \
+  mkdir -p /var/lib/nginx/uwsgi && \
+  mkdir -p /var/lib/nginx/fastcgi && \
+  mkdir -p /var/lib/nginx/proxy && \
+  chown -R www-data:www-data /var/lib/nginx && \
+  mkdir -p /var/log/nginx && \
+  touch /var/log/nginx/access.log && \
+  touch /var/log/nginx/error.log && \
+  chown www-data:www-data /var/log/nginx/*.log && \
+  touch /var/run/nginx.pid && \
+  chown www-data:www-data /var/run/nginx.pid
+
 WORKDIR /app
 
-RUN \
-    make init && \
-    rm -rf \
+RUN pip3 install pipenv && \
+    pipenv install --dev --three
+
+RUN rm -rf \
         /root/.cache \
         /var/lib/apt/lists/* \
         /tmp/* \
@@ -53,5 +69,7 @@ RUN \
         /var/cache/* \
         /usr/include \
         /usr/local/include
+
+RUN chown -R www-data .
 
 EXPOSE ${HTTP_SERVER_PORT}
