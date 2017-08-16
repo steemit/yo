@@ -16,6 +16,7 @@ metadata = sa.MetaData()
 from storage import users
 from storage import notifications
 from storage import wwwpushsubs
+from storage import android_fcm_subs
 
 async def init_db(app):
     db_url = app['config']['database_url']
@@ -27,6 +28,7 @@ async def init_db(app):
        users.table.create(engine)
 #       notifications.table.create(engine)
        wwwpushsubs.table.create(engine)
+       android_fcm_subs.table.create(engine)
 
     app['config']['db'] = engine
 
