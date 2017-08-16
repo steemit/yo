@@ -28,6 +28,7 @@ import android.widget.Button;
 import android.widget.Toast;
 
 import com.google.firebase.iid.FirebaseInstanceId;
+import com.google.firebase.iid.FirebaseInstanceIdService;
 import com.google.firebase.messaging.FirebaseMessaging;
 
 public class MainActivity extends AppCompatActivity {
@@ -87,6 +88,8 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 // Get token
                 String token = FirebaseInstanceId.getInstance().getToken();
+
+                
 
                 // Log and toast
                 String msg = getString(R.string.msg_token_fmt, token);

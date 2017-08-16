@@ -16,15 +16,33 @@
 
 package com.steemitdev.yo.quickstart;
 
+import android.content.Context;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
+import android.os.Bundle;
 import android.util.Log;
 
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.VolleyLog;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.iid.FirebaseInstanceIdService;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.HashMap;
 
 
 public class MyFirebaseInstanceIDService extends FirebaseInstanceIdService {
 
-    private static final String TAG = "MyFirebaseIIDService";
+    private static final String TAG = "YoFCM";
+
 
     /**
      * Called if InstanceID token is updated. This may occur if the security of
@@ -53,7 +71,39 @@ public class MyFirebaseInstanceIDService extends FirebaseInstanceIdService {
      *
      * @param token The new token.
      */
+    public static String getMetaData(Context context, String name) {
+        try {
+            ApplicationInfo ai = context.getPackageManager().getApplicationInfo(context.getPackageName(), PackageManager.GET_META_DATA);
+            Bundle bundle = ai.metaData;
+            return bundle.getString(name);
+        } catch (PackageManager.NameNotFoundException e) {
+            Log.e(TAG, "Unable to load meta-data: " + e.getMessage());
+        }
+        return null;
+    }
+
     private void sendRegistrationToServer(String token) {
+        RequestQueue queue = Volley.newRequestQueue(this);
+        String Url= getMetaData(this.getApplicationContext(), "yo_endpoint");
+        HashMap<String, String> params = new HashMap<String, String>();
+        params.put("username", "testuser");
+        params.put("push_sub", token);
+        JsonObjectRequest req = new JsonObjectRequest(Url, new JSONObject(params), new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+                try {
+                    VolleyLog.v("Response:%n %s", response.toString(4));
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                VolleyLog.e("Error: ", error.getMessage());
+            }
+        });
+        queue.add(req);
         // TODO: Implement this method to send token to your app server.
     }
 }
