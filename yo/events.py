@@ -113,7 +113,6 @@ FILTERS = ([
     'contains',
 ])
 
-jsonrpcclient.config.validate = False
 
 
 class EventSource(object):

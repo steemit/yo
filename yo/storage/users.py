@@ -2,13 +2,13 @@
 import logging
 import os
 
-from storage.dbtool import acquire_db_conn
+from .dbtool import acquire_db_conn
 
 
 import sqlalchemy as sa
 from sqlalchemy.sql import func
 
-from storage import metadata
+from yo.storage import metadata
 
 logger = logging.getLogger('__name__')
 
