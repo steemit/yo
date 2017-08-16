@@ -14,18 +14,19 @@ asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
 from aiohttp import web
 #from jsonrpcserver.aio import methods
-from api_methods import methods
+import yo
+from yo.api_methods import methods
 
-from storage import init_db
-from storage import close_db
+from yo.storage import init_db
+from yo.storage import close_db
 
-import storage.wwwpushsubs
+from yo.storage import wwwpushsubs
 
 log_level = getattr(logging, os.environ.get('LOG_LEVEL', 'INFO'))
 logging.basicConfig(level=log_level)
 logger = logging.getLogger(__name__)
 
-import static_content
+from yo import static_content
 
 async def handle_api(request):
     req_app = request.app

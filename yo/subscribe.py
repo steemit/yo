@@ -9,7 +9,7 @@ from collections import defaultdict
 
 from funcy.py3 import log_calls, log_errors
 
-import notification
+from yo import notification
 
 log_level = getattr(logging, os.environ.get('LOG_LEVEL', 'INFO'))
 logging.basicConfig(level=log_level)

@@ -4,8 +4,8 @@ import logging
 import os
 
 
-import transports
-import storage
+from yo import transports
+from yo import storage
 
 log_level = getattr(logging, os.environ.get('LOG_LEVEL', 'INFO'))
 logging.basicConfig(level=log_level)

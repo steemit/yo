@@ -1,9 +1,10 @@
 # coding=utf-8
 import logging
-import transports
 
-import storage
-import storage.users
+from yo import transports
+
+from yo import storage
+from yo.storage import users
 
 from jsonrpcserver.aio import methods
 

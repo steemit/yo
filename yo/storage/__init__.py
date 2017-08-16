@@ -6,17 +6,17 @@ import sqlalchemy as sa
 
 import aiomysql.sa
 
-from storage import dbtool
+from . import dbtool
 
 logger = logging.getLogger('__name__')
 
 
 metadata = sa.MetaData()
 
-from storage import users
-from storage import notifications
-from storage import wwwpushsubs
-from storage import android_fcm_subs
+from yo.storage import users
+from yo.storage import notifications
+from yo.storage import wwwpushsubs
+from yo.storage import android_fcm_subs
 
 async def init_db(app):
     db_url = app['config']['database_url']

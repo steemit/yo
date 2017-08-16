@@ -22,7 +22,7 @@ run:
 	docker run $(PROJECT_DOCKER_RUN_ARGS) $(PROJECT_DOCKER_TAG):latest
 
 run-without-docker:
-	pipenv run python3 yo/serve.py
+	pipenv run python3 -m yo.serve
 
 build-then-run: build run
 
@@ -32,7 +32,7 @@ test-without-build: test-without-lint test-pylint
 
 
 test-without-lint:
-	py.test tests
+	pipenv run pytest
 
 test-pylint:
 	py.test --pylint -m pylint yo

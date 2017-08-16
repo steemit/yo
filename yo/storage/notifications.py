@@ -12,7 +12,7 @@ from sqlalchemy.schema import ForeignKey
 
 
 
-from storage import metadata
+from yo.storage import metadata
 
 logger = logging.getLogger('__name__')
 
