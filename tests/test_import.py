@@ -19,6 +19,7 @@ def test_import():
     import yo.transports
     import yo.transports.base_transport
     import yo.transports.mobile_android
+    import yo.transports.wwwpush
 
     import yo.utils
     import yo.utils.simple_client

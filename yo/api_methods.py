@@ -90,5 +90,10 @@ async def send_sms(to=None, _from=None, body=None, db=None):
     pass
 
 @add_api_method
-async def send_browser_notification(reg_ids=None, data=None, db=None, **kwargs):
-    pass
+async def send_browser_notification(to_uid=None, notify_type=None, data=None, db=None):
+     notification_object = {'transport'   :'browser',
+                            'type'        :notify_type,
+                            'source_event':json.dumps({}),
+                            'data'        :data}
+     await transports.send(notification_object)
+     
