@@ -1,6 +1,7 @@
 # keys
 wwwpush_pubkey.txt
 wwwpush_privkey.txt
+sendgrid_privkey.txt
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

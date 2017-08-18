@@ -15,7 +15,11 @@ init:
 
 rebuild:
 	docker build --no-cache -t $(PROJECT_DOCKER_TAG) .
-build:
+
+sendgrid_private_key.txt:
+	cd scripts/; ./add_sendgrid_key.sh
+
+build: Dockerfile sendgrid_private_key.txt
 	docker build -t $(PROJECT_DOCKER_TAG) .
 
 run:

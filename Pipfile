@@ -22,6 +22,7 @@ http-ece = "*"
 requests = "*"
 py-vapid = "*"
 pywebpush = "*"
+sendgrid = "*"
 
 [dev-packages]
 ipython = "*"
