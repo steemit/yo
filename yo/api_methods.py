@@ -7,6 +7,7 @@ from yo import storage
 from yo.storage import users
 
 from jsonrpcserver.aio import methods
+import json
 
 logger = logging.getLogger(__name__)
 
@@ -108,12 +109,17 @@ async def send_email_notification(to_uid=None, notify_type=None, data=None, db=N
 
 @add_api_method
 async def send_email_message(to_uid=None, from_username=None, msg=None, db=None):
-     user_profile = users.get(db,to_uid)
-     notification_data = {'fromusername'   :from_username,
+     user_profile = await users.get(db,to_uid)
+     notification_data = {'to'             :to_uid,
+                          'fromusername'   :from_username,
                           'touserfirstname':user_profile['first_name'],
                           'touserlastname' :user_profile['last_name'],
                           'message'        :msg}
-     send_email_notification(to_uid=to_uid, notify_type='message', data=notification_data, db=db)
+     await transports.send({'to':to_uid,
+                          'transport'   :'email',
+                          'type'        :'message',
+                          'source_event':json.dumps({}),
+                          'data'        :notification_data})
 
 @add_api_method
 async def send_browser_notification(to_uid=None, notify_type=None, data=None, db=None):

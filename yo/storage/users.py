@@ -47,7 +47,7 @@ async def put(engine, user):
 async def get(engine, user_id):
       with acquire_db_conn(engine) as conn:
            query = table.select().where(table.c.uid == user_id)
-           return query.execute().first()
+           return conn.execute(query).first()
 
 async def get_by_name(engine, user_name):
       with acquire_db_conn(engine) as conn:

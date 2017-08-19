@@ -5,9 +5,14 @@ import asyncio
 import json
 
 from .wwwpush import WWWPushTransport
+from .sendgrid import SendgridEmailTransport
 
 # TODO - add config and better key management
-active_transports = {'browser':WWWPushTransport()}
+active_transports = {}
+
+async def init_transports(app):
+    active_transports['browser'] = WWWPushTransport(db=app['config']['db'])
+    active_transports['email']   = SendgridEmailTransport(db=app['config']['db'])
 
 
 async def send(notification):

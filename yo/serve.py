@@ -22,6 +22,8 @@ from yo.api_methods import methods
 from yo.storage import init_db
 from yo.storage import close_db
 
+from yo.transports import init_transports
+
 from yo.storage import wwwpushsubs
 
 log_level = getattr(logging, os.environ.get('LOG_LEVEL', 'INFO'))
@@ -118,6 +120,7 @@ def init(loop, argv):
 
     # create connection to the database
     app.on_startup.append(init_db)
+    app.on_startup.append(init_transports)
     # shutdown db connection on exit
     app.on_cleanup.append(close_db)
 

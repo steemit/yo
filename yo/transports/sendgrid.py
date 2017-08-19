@@ -24,9 +24,10 @@ class SendgridEmailTransport(BaseTransport):
        self.sendgrid_priv_key = sendgrid_privkey
        self.db = db
        self.sg = sendgrid.SendGridAPIClient(apikey=self.sendgrid_priv_key)
-   def send_notification(self,to_uid=None,notify_type='message',data={},msg_summary=None):
-       user_profile = users.get(self.db,to_uid)
-       for sub in emailsubs.get_by_to_uid(self.db,to_uid):
+   async def send_notification(self,to_uid=None,notify_type='message',data={},msg_summary=None):
+       user_profile = await users.get(self.db,to_uid)
+       email_subs = await emailsubs.get_by_to_uid(self.db,to_uid)
+       for sub in email_subs:
            try:
               sendgrid_template_name=SENDGRID_TEMPLATES[notify_type]
               sendgrid_tousername   =user_profile['name']

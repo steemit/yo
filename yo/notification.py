@@ -21,7 +21,7 @@ def notify(pool, notification, *args, **kwargs):
         return
 
     try:
-        result = transports.send(notification)
+        result = await transports.send(notification)
         if not result:
             raise Exception('failed to send notification', extra=notification)
     except Exception as e:

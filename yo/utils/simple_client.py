@@ -31,11 +31,11 @@ class YoClient:
                    'phone'     :phone}
        return self.invoke_method('yo.create_user',user=user_obj)
    def create_email_subscription(self,to_uid,email):
-       return self.invoke_method('yo.create_email_subscription',to_uid=to_uid,email=email)
+       return self.invoke_method('yo.create_email_subscription',to_uid=int(to_uid),email=email)
    def send_email_message(self,to_uid,from_username,msg):
-       return self.invoke_method('yo.send_email_message',to_uid=to_uid,from_username=from_username,msg=msg)
+       return self.invoke_method('yo.send_email_message',to_uid=int(to_uid),from_username=from_username,msg=msg)
    def send_browser_notification(self,to_uid,notify_type,data):
-       return self.invoke_method('yo.send_browser_notification',notify_type=notify_type,to_uid=to_uid,data=data)
+       return self.invoke_method('yo.send_browser_notification',notify_type=notify_type,to_uid=int(to_uid),data=data)
 
 if __name__=='__main__':
    parser = argparse.ArgumentParser(description="yo notification server")

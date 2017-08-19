@@ -28,7 +28,7 @@ async def put(engine, email_sub):
       with acquire_db_conn(engine) as conn:
            return conn.execute(table.insert(), **email_sub)
 
-async def get_by_to_uid(engine, user_id):
+def get_by_to_uid(engine, user_id):
       with acquire_db_conn(engine) as conn:
            query = table.select().where(table.c.to_uid == user_id)
            return conn.execute(query).fetchall()
