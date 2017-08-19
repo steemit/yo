@@ -60,7 +60,16 @@ async def create_user(user=None, db=None):
       except Exception as e:
          logger.exception('Failed to create user',extra=retval)
       return retval
-      
+
+@add_api_method
+async def create_email_subscription(to_uid=None, email=None, db=None):
+      sub_object = {'to_uid':to_uid,'email':email}
+      retval = None
+      try:
+         result = await storage.emailsubs.put(db,sub_object)
+      except Exception as e:
+         logger.exception('Failed to create email subscription',extra=retval)
+      return retval
 
 @add_api_method
 async def update_user(user=None, db=None):
@@ -88,6 +97,23 @@ async def send_email(to_email=None, from_email=None, subject=None, content=None,
 @add_api_method
 async def send_sms(to=None, _from=None, body=None, db=None):
     pass
+
+@add_api_method
+async def send_email_notification(to_uid=None, notify_type=None, data=None, db=None):
+     notification_object = {'transport'   :'email',
+                            'type'        :notify_type,
+                            'source_event':json.dumps({}),
+                            'data'        :data}
+     await transports.send(notification_object)
+
+@add_api_method
+async def send_email_message(to_uid=None, from_username=None, msg=None, db=None):
+     user_profile = users.get(db,to_uid)
+     notification_data = {'fromusername'   :from_username,
+                          'touserfirstname':user_profile['first_name'],
+                          'touserlastname' :user_profile['last_name'],
+                          'message'        :msg}
+     send_email_notification(to_uid=to_uid, notify_type='message', data=notification_data, db=db)
 
 @add_api_method
 async def send_browser_notification(to_uid=None, notify_type=None, data=None, db=None):

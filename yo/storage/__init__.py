@@ -14,9 +14,8 @@ logger = logging.getLogger('__name__')
 metadata = sa.MetaData()
 
 from yo.storage import users
-from yo.storage import notifications
 from yo.storage import wwwpushsubs
-from yo.storage import android_fcm_subs
+from yo.storage import emailsubs
 
 async def init_db(app):
     db_url = app['config']['database_url']
@@ -26,9 +25,8 @@ async def init_db(app):
        engine = sa.create_engine(db_url)
     if db_url.startswith('sqlite'):
        users.table.create(engine)
-#       notifications.table.create(engine)
        wwwpushsubs.table.create(engine)
-       android_fcm_subs.table.create(engine)
+       emailsubs.table.create(engine)
 
     app['config']['db'] = engine
 
