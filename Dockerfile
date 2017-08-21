@@ -36,7 +36,16 @@ RUN \
         nginx \
         nodejs \
         wget \
+        libsqlite3-dev \
         pandoc
+
+# Python 3.6
+RUN \
+    wget https://www.python.org/ftp/python/3.6.2/Python-3.6.2.tar.xz && \
+    tar xvf Python-3.6.2.tar.xz && \
+    cd Python-3.6.2/ && \
+    ./configure && \
+    make altinstall
 
 # Configure nginx etc
 
@@ -58,8 +67,9 @@ RUN \
 ADD ./service /etc/service
 RUN chmod +x /etc/service/*/run
 
-# This updates the distro-provided pip and gives us pip3.5 binary
-RUN python3.5 -m pip install --upgrade pip
+# This updates the distro-provided pip and gives us pip3.6 binary
+RUN python3.6 -m pip install --upgrade pip
+
 
 WORKDIR ${APP_ROOT}
 
@@ -70,7 +80,7 @@ COPY ./Makefile ${APP_ROOT}/Makefile
 # Install those dependencies
 RUN cd ${APP_ROOT} && \
     make requirements.txt && \
-    pip3.5 -r requirements.txt
+    pip3.6 -r requirements.txt
 
 # Copy rest of the code into a suitable place
 COPY . ${APP_ROOT}/src

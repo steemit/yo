@@ -1,5 +1,9 @@
+import asyncio
 import steem
 from steem.blockchain import Blockchain
+
+import logging
+logger = logging.getLogger(__name__)
 
 # TODO - use reliable stream when merged into steem-python
 
@@ -12,19 +16,23 @@ class YoBlockchainFollower:
    def notify(self,blockchain_op):
        """ Handle notification for a particular op
        """
+       logger.debug('Got operation from blockchain')
        if blockchain_op['op'][0]=='vote':
+          logger.info('Incoming vote operation')
           # handle notifications for upvotes here based on user preferences in DB
-          pass
        elif blockchain_op['op'][0]=='custom_json':
           if blockchain_op['op'][1]['id']=='follow':
+             logger.info('Incoming follow operation')
              # handle follow notifications here
              pass
        # etc etc
-   async def async_task(self,web_app):
+   async def async_task(self):
+       logger.info('Blockchain follower started')
        while True:
           try:
              b = Blockchain()
              for op in b.stream_from():
                  self.notify(op)
+                 await asyncio.sleep(1)
           except Exception as e:
-             print(str(e))
+              logger.exception('Exception occurred')

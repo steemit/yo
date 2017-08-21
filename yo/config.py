@@ -2,6 +2,8 @@ import os
 import configparser
 import py_vapid
 
+import logging
+
 
 class YoConfigManager:
    """A class for handling configuration details all in one place
@@ -19,13 +21,16 @@ class YoConfigManager:
                    else:
                       env_name = 'YO_%s_%s' % (section.upper(),k.upper())
                    if not os.getenv(env_name) is None:
-                           k.config_data[section][k] = os.getenv(env_name)
+                          self.config_data[section][k] = os.getenv(env_name)
+ 
+       log_level = self.config_data['yo_general'].get('log_level','INFO')
+       logging.basicConfig(level=log_level)
        self.generate_needed()
        self.update_enabled()
    def get_listen_host(self):
        return self.config_data['http'].get('listen_host','0.0.0.0')
    def get_listen_port(self):
-       return self.config_data['http'].get('listen_port',8080)
+       return int(self.config_data['http'].get('listen_port',8080))
    def update_enabled(self):
        self.enabled_services = []
        if self.config_data['blockchain_follower'].get('enabled',0): self.enabled_services.append('blockchain_follower')
