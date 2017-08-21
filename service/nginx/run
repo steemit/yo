@@ -1,0 +1,11 @@
+#!/bin/bash
+
+# First we configure the ports
+sed -i 's/HTTP_PORT/${HTTP_SERVER_PORT}/g' /etc/service/nginx/nginx.conf
+sed -i 's/HTTP_APP_PORT/${HTTP_APP_PORT}/g' /etc/service/nginx/nginx.conf
+
+# Now configure any static data
+sed -i 's/APP_STATIC_ROOT/${APP_STATIC_ROOT}/g' /etc/service/nginx/nginx.conf
+
+chown www-data /dev/stdout
+exec setuidgid www-data /usr/sbin/nginx -c /etc/service/nginx/nginx.conf

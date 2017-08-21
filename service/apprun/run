@@ -1,0 +1,9 @@
+#!/bin/bash -e
+
+# Make sure we're in the right place
+cd "${APPRUN_ROOT}"
+
+# Run the actual app here
+	exec 2>&1 \
+	  chpst -u www-data \
+	     steemyo 2>&1
