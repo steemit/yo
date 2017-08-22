@@ -14,7 +14,7 @@ Yo consists of the following components:
     
     This component follows the blockchain operations up to latest irreversible block and checks for events, sending events to the Yo notification sender for processing based on user preferences. This is done by simply inserting into the database as unprocessed and then alerting the notification sender. New event notifications are marked as processed before being dispatched to the notification sender.
     
-    The communication between this component and the notification sender is via an internal API that should be treated as a block box by external users.
+    The communication between this component and the notification sender is via an internal API that should be treated as a black box by external users.
     
  3. ***Notification sender***
     

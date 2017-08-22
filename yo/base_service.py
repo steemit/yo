@@ -2,8 +2,9 @@
 """
 
 class YoBaseService:
-   api_methods  = {}
-   service_name = 'base'
+   api_methods         = {}
+   private_api_methods = {}
+   service_name        = 'base'
    def __init__(self,config=None,db=None):
        self.config=config
        self.db=db

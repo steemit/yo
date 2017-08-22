@@ -34,6 +34,7 @@ class YoConfigManager:
    def update_enabled(self):
        self.enabled_services = []
        if self.config_data['blockchain_follower'].get('enabled',0): self.enabled_services.append('blockchain_follower')
+       if self.config_data['notification_sender'].get('enabled',0): self.enabled_services.append('notification_sender')
    def generate_needed(self):
        """If needed, regenerates VAPID keys and similar
        """
