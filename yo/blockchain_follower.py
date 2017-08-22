@@ -16,7 +16,7 @@ class YoBlockchainFollower:
    async def notify(self,blockchain_op):
        """ Handle notification for a particular op
        """
-       logger.debug('Got operation from blockchain')
+       logger.debug('Got operation from blockchain: %s',str(blockchain_op))
        if blockchain_op['op'][0]=='vote':
           logger.info('Incoming vote operation')
           # handle notifications for upvotes here based on user preferences in DB
@@ -29,7 +29,7 @@ class YoBlockchainFollower:
    async def async_ops(self,loop,b):
        while True:
            ops = b.stream_from()
-           yield await loop.run_in_executor(None,ops.__next__)
+           yield await loop.run_in_executor(None,next,ops)
    async def async_task(self,yo_app):
        logger.info('Blockchain follower started')
        while True:

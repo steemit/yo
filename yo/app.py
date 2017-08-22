@@ -8,7 +8,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-#asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
+asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 class YoApp:
    def __init__(self,config=None,db=None):
        self.config=config
