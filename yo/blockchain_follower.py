@@ -13,7 +13,7 @@ class YoBlockchainFollower:
        self.db=db
    def get_name(self):
        return 'blockchain follower'
-   def notify(self,blockchain_op):
+   async def notify(self,blockchain_op):
        """ Handle notification for a particular op
        """
        logger.debug('Got operation from blockchain')
@@ -26,13 +26,21 @@ class YoBlockchainFollower:
              # handle follow notifications here
              pass
        # etc etc
-   async def async_task(self):
+   async def async_ops(self,loop,b):
+       while True:
+           ops = b.stream_from()
+           yield await loop.run_in_executor(None,ops.__next__)
+   async def async_task(self,yo_app):
        logger.info('Blockchain follower started')
        while True:
           try:
              b = Blockchain()
-             for op in b.stream_from():
-                 self.notify(op)
-                 await asyncio.sleep(1)
+             while True:
+               try:
+                  async for op in self.async_ops(yo_app.loop,b):
+                     await self.notify(op)
+                     await asyncio.sleep(0)
+               except Exception as e:
+                   logger.exception('Exception occurred')
           except Exception as e:
               logger.exception('Exception occurred')

@@ -25,7 +25,7 @@ class YoApp:
        logger.info('Starting tasks...')
        for k,v in self.services.items():
            logger.info('Starting %s' % k)
-           self.web_app[k] = self.web_app.loop.create_task(v())
+           self.web_app[k] = self.web_app.loop.create_task(v(self))
    def run(self):
        self.running = True
        self.web_app.on_startup.append(self.start_background_tasks)
