@@ -33,4 +33,7 @@ class YoApp:
                    host=self.config.get_listen_host(),
                    port=self.config.get_listen_port())
    def add_service(self,service):
-       self.services[service.get_name()] = service.async_task
+       name = service.get_name()
+       for k,v in service.api_methods.items():
+           self.api_methods['yo.%s' % name] = v
+       self.services[name] = service.async_task

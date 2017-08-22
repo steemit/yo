@@ -1,4 +1,56 @@
-def init_db(yo_config):
-    """ Sets up a database and returns it
-    """
-    return None
+# coding=utf-8
+import logging
+import os
+
+import sqlalchemy as sa
+
+import aiomysql.sa
+
+
+logger = logging.getLogger('__name__')
+
+metadata = sa.MetaData()
+
+NOTIFICATION_TYPES=('vote')
+
+notifications_table = sa.Table('yo_notifications', metadata,
+     sa.Column('nid', sa.Integer, primary_key=True),
+     sa.Column('json_data', sa.UnicodeText),
+
+     sa.Column('to_username', sa.Unicode, index=True),
+     sa.Column('from_username', sa.Unicode, index=True),
+
+     sa.Column('type', sa.Enum(NOTIFICATION_TYPES), nullable=False, index=True),
+
+     sa.Column('created_at', sa.DateTime, default=sa.func.now(), index=True,
+               doc='Datetime when notification was created and stored in db'),
+     sa.Column('sent_at', sa.DateTime, index=True,
+               doc='Datetime when notification was sent'),
+     sa.Column('seen_at', sa.DateTime, index=True,
+               doc='Datetime when notification was seen (may be identical to read_at for some notification types)'),
+     sa.Column('read_at', sa.DateTime, index=True,
+               doc='Datetime when notification was read or marked as read'),
+)
+
+from contextlib import contextmanager
+@contextmanager
+def acquire_db_conn(db):
+    conn = db.connect()
+    try:
+       yield conn
+    finally:
+       conn.close()
+
+def init_db(config):
+      provider = config.config_data['database'].get('provider','sqlite3')
+      if provider=='sqlite':
+         engine = sa.create_engine('sqlite:///%s' % config.config_data['sqlite'].get('filename',':memory:'))
+      #TODO - add MySQL here
+      if int(config.config_data['database'].get('init_schema',0))==1:
+         metadata.create_all(engine)
+      return engine
+
+async def close_db(app):
+    if 'close' in dir(app['config']['db']):
+       app['config']['db'].close()
+       await app['config']['db'].wait_closed()
