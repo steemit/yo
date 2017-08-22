@@ -34,6 +34,17 @@ notifications_table = sa.Table('yo_notifications', metadata,
                doc='Datetime when notification was read or marked as read'),
 )
 
+preferences_table = sa.Table('yo_user_prefs', metadata,
+     sa.Column('uid', sa.Integer, primary_key=True),
+
+     sa.Column('username', sa.Unicode, index=True),
+
+     sa.Column('created_at', sa.DateTime, default=sa.func.now(), index=True,
+               doc='Datetime when we first created this user preferences entry'),
+     sa.Column('updated_at', sa.DateTime, index=True,
+               doc='Datetime when preferences were updated'),
+)
+
 from contextlib import contextmanager
 @contextmanager
 def acquire_db_conn(db):

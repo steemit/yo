@@ -40,7 +40,10 @@ class YoApp:
        self.service_tasks[name] = service.async_task
        service.yo_app = self
        self.services[name]=service
+   async def invoke_public_api(self,service,api_method,*args,**kwargs):
+
    async def invoke_private_api(self,service,api_method,*args,**kwargs):
+       # TODO - add support for URLs other than :local:
        if not service in self.services.keys():
           return {'error':'No such service found!'}
        if not api_method in self.services[service].private_api_methods.keys():
