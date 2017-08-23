@@ -25,6 +25,8 @@ notifications_table = sa.Table('yo_notifications', metadata,
 
      sa.Column('type', sa.Enum(NOTIFICATION_TYPES), nullable=False, index=True),
 
+     sa.Column('sent', sa.Boolean(), nullable=False, default=False, index=True),
+
      sa.Column('created_at', sa.DateTime, default=sa.func.now(), index=True,
                doc='Datetime when notification was created and stored in db'),
      sa.Column('sent_at', sa.DateTime, index=True,
