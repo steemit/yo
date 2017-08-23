@@ -14,7 +14,9 @@ logger = logging.getLogger(__name__)
 class YoAPIServer(YoBaseService):
    service_name='api_server'
    q = asyncio.Queue()
-   async def api_update_preferences(self,username=None,new_preferences={},raw_json=None):
+   async def api_update_preferences(self,username=None,new_preferences={},**kwargs):
        pass
+   async def api_test_method(self,**kwargs):
+       return {'status':'OK'}
    async def async_task(self,yo_app):
-       self.api_methods['update_preferences'] = self.api_update_preferences
+       yo_app.add_api_method(self.api_test_method,'api_test_method')

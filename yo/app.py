@@ -13,23 +13,9 @@ from jsonrpc_auth.AuthorizedRequest import verify_request_with_pub
 
 asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
-from jsonrpcserver.aio import methods
+from jsonrpcserver.async_methods import AsyncMethods
 
-def add_api_method(func,func_name):
-    methods.add(func,name='yo.%s' % func_name)
 
-async def handle_api(request):
-      req_app = request.app
-      request = await request.json()
-      orig_request = request
-      logger.debug('Incoming request: %s' % request)
-      if not 'params' in request.keys(): request['params'] = {} # fix for API methods that have no params
-      request['params']['yo_app']    = req_app['config']['yo_app']
-      request['params']['yo_db']     = req_app['config']['yo_db']
-      request['params']['yo_config'] = req_app['config']['yo_config']
-      request['params']['orig_req']  = orig_request # needed for authentication
-      response = await methods.dispatch(request)
-      return web.json_response(response)
 
 
 class YoApp:
@@ -45,7 +31,24 @@ class YoApp:
           'yo_db'    :self.db,
           'yo_app'   :self
        }
+       self.api_methods = AsyncMethods()
        self.running = False
+
+   async def handle_api(self,request):
+         req_app = request.app
+         request = await request.json()
+         orig_request = request
+         logger.debug('Incoming request: %s' % request)
+         if not 'params' in request.keys(): request['params'] = {} # fix for API methods that have no params
+         request['params']['yo_app']    = req_app['config']['yo_app']
+         request['params']['yo_db']     = req_app['config']['yo_db']
+         request['params']['yo_config'] = req_app['config']['yo_config']
+         request['params']['orig_req']  = orig_request # needed for authentication
+         response = await self.api_methods.dispatch(request)
+         return web.json_response(response)
+   def add_api_method(self,func,func_name):
+       logger.debug('Adding API method %s' % func_name)
+       self.api_methods.add(func,name='yo.%s' % func_name)
    async def start_background_tasks(self,app):
        logger.info('Starting tasks...')
        for k,v in self.service_tasks.items():
@@ -55,8 +58,8 @@ class YoApp:
        return({'status'  :'OK',
                'datetime':datetime.datetime.utcnow().isoformat()})
    async def setup_standard_api(self,app):
-       add_api_method(self.api_healthcheck,'healthcheck')
-       self.web_app.router.add_post('/', handle_api)
+       self.add_api_method(self.api_healthcheck,'healthcheck')
+       self.web_app.router.add_post('/', self.handle_api)
    def run(self):
        self.running = True
        self.web_app.on_startup.append(self.start_background_tasks)
@@ -65,9 +68,8 @@ class YoApp:
                    host=self.config.get_listen_host(),
                    port=self.config.get_listen_port())
    def add_service(self,service):
+       logger.debug('Adding service %s' % service.get_name())
        name = service.get_name()
-       for k,v in service.api_methods.items():
-           add_api_method(v,k)
        self.service_tasks[name] = service.async_task
        service.yo_app = self
        self.services[name]=service
