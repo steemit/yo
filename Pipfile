@@ -23,8 +23,8 @@ requests = "*"
 py-vapid = "*"
 pywebpush = "*"
 steem = "*"
-jsonrpc-auth = "*"
 secp256k1 = "*"
+sendgrid = "*"
 
 [dev-packages]
 ipython = "*"
