@@ -1,6 +1,7 @@
 import uvloop
 from aiohttp import web
 
+import datetime
 import aiohttp
 import asyncio
 
@@ -51,7 +52,8 @@ class YoApp:
            logger.info('Starting %s' % k)
            self.web_app['service_task:%s' % k] = self.web_app.loop.create_task(v(self))
    async def api_healthcheck(self,**kwargs):
-       return({'status':'OK'})
+       return({'status'  :'OK',
+               'datetime':datetime.datetime.utcnow().isoformat()})
    async def setup_standard_api(self,app):
        add_api_method(self.api_healthcheck,'healthcheck')
        self.web_app.router.add_post('/', handle_api)
