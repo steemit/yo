@@ -12,6 +12,7 @@ logger = logging.getLogger('__name__')
 metadata = sa.MetaData()
 
 NOTIFICATION_TYPES=('vote')
+TRANSPORT_TYPES   =('sendgrid')
 
 notifications_table = sa.Table('yo_notifications', metadata,
      sa.Column('nid', sa.Integer, primary_key=True),
@@ -34,10 +35,14 @@ notifications_table = sa.Table('yo_notifications', metadata,
                doc='Datetime when notification was read or marked as read'),
 )
 
-preferences_table = sa.Table('yo_user_prefs', metadata,
+# We basically just store one entry for each configured transport, and delete them with API calls if required
+preferences_table = sa.Table('yo_user_configured_transports', metadata,
      sa.Column('uid', sa.Integer, primary_key=True),
 
      sa.Column('username', sa.Unicode, index=True),
+
+     sa.Column('notify_type', sa.Enum(NOTIFICATION_TYPES), nullable=False, index=True)
+     sa.Column('transport_type', sa.Enum(NOTIFICATION_TYPES), nullable=False, index=True)
 
      sa.Column('created_at', sa.DateTime, default=sa.func.now(), index=True,
                doc='Datetime when we first created this user preferences entry'),
