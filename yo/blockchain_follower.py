@@ -10,6 +10,7 @@ logger = logging.getLogger(__name__)
 
 # TODO - use reliable stream when merged into steem-python
 
+# Basically this service just follows the blockchain and inserts into the DB then triggers the notification sender to send the actual notification
 
 class YoBlockchainFollower(YoBaseService):
    service_name = 'blockchain_follower'
@@ -29,18 +30,14 @@ class YoBlockchainFollower(YoBaseService):
             try:
                tx = conn.begin()
                insert_response = conn.execute(notifications_table.insert(), **notification_object)
-               sender_response = await self.yo_app.invoke_private_api('notification_sender','send_notification',db_tx=tx,notification=notification_object) # try and send to the notification sender via internal API
-               if 'error' in sender_response.keys():
-                   logger.error('Error communicating with notification sender service: %s' % str(sender_response))
-                   tx.rollback()
-                   retval = False
-               else:
-                   tx.commit()
-                   logger.info('Processed vote notification for transaction ID %s' % op['trx_id'])
+               logger.info('Processed vote notification for transaction ID %s' % op['trx_id'])
+               tx.commit()
             except Exception as e:
                tx.rollback()
                logger.exception('Exception occured while processing transaction ID %s' % op['trx_id'])
                retval = False
+       if retval:
+          sender_response = await self.yo_app.invoke_private_api('notification_sender','trigger_notification',trx_id=op['trx_id'])
        return retval
 
    async def notify(self,blockchain_op):
