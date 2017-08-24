@@ -15,7 +15,7 @@ pubkey   = 'STM6vKTPia86DPtozntiP2YvtaqZsnz648eQmcJs9bhd6dquYY6T7'
 
 def test_update_userprefs(wif):
     client = HTTPClient('http://localhost:8080')
-    req = Request('yo.enable_transports',username=username,transports={'vote':[('email','gareth@steemit.com')]})
+    req = Request('yo.enable_transports',username=username,transports={'vote':['email','gareth@steemit.com']})
     canon_req,hex_sig,wif = jsonrpc_auth.sign_request(req,wif,pubkey)
     print('Canon request sent:')
     pprint.pprint(canon_req)

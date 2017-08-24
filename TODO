@@ -5,7 +5,7 @@
 * API server: add test method for API server component
 * TestScript: check test method in API server component
 * TestScript: Send enable_transport for emails+votes
-API server: Implement enable_transports method, complete with verification of request
+* API server: Implement enable_transports method, complete with verification of request
 Have notification sender lookup notifications when triggered to do so and pass to configured transport
 * Testscript: Add user preference for vote notification, signed by posting key pasted in on console with getpass
 Add sendgrid
