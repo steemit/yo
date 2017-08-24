@@ -65,7 +65,7 @@ class YoBlockchainFollower(YoBaseService):
                 return op
        return None
    async def async_ops(self,loop,b):
-       ops = b.stream_from()
+       ops = b.stream_from(start_block=int(self.yo_app.config.config_data['blockchain_follower']['start_block']) )
        while True:
            yield await loop.run_in_executor(None,next,ops)
    async def async_task(self,yo_app):
