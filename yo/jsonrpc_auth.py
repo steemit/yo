@@ -10,9 +10,15 @@ import secp256k1
 from binascii import hexlify,unhexlify
 from steembase.base58 import Base58, base58decode
 
+import logging
+logger = logging.getLogger(__name__)
 from jsonrpcclient.request import Request
 
 import secp256k1
+
+import logging
+
+
 
 def canon_params(params):
     """ Ensures the params are canon
@@ -53,6 +59,7 @@ def sign_request(request,wif,pubwif):
     """
     canon_req  = canon_request(request)
     digest     = hashlib.sha256(canon_req.encode('utf-8')).digest()
+    logger.info('sign_request using digest %s' % hexlify(digest))
     priv_key   = Base58(wif)
     ecdsa_priv = secp256k1.PrivateKey(bytes(priv_key),raw=True)
     sig        = ecdsa_priv.ecdsa_sign(digest,raw=True)
@@ -71,8 +78,9 @@ def verify_request_with_pub(request,pub_key,hex_sig):
     del request['params']['AuthSig']
     del request['params']['AuthKey']
 
-    request   = json.dumps(request)
+    request   = canon_request(request)
     digest    = hashlib.sha256(request.encode('utf-8')).digest()
+    logger.info('verify_request_with_pub using digest %s' % hexlify(digest))
     pub_key   = Base58(pub_key)
     ecdsa_pub = secp256k1.PublicKey(bytes(pub_key),raw=True)
     ecdsa_sig = ecdsa_pub.ecdsa_deserialize(unhexlify(hex_sig))
@@ -81,15 +89,20 @@ def verify_request_with_pub(request,pub_key,hex_sig):
 def verify_request(request,username):
     """ Verifies a request (not in JSON format) against a user account in the steem blockchain
     """
+    logger.debug('verify_request checking %s' % json.dumps(request))
+    logger.debug('verify_request dump of param keys: %s' % request['params'].keys())
+
     if not 'AuthKey' in request['params'].keys(): return False
     if not 'AuthSig' in request['params'].keys(): return False
     user_account = Account(username)
     posting_keys = []
-    for key in user_account: posting_keys.append(key[0])
+    for key in user_account['posting']['key_auths']: posting_keys.append(key[0])
+    logger.debug('verify_request got key %s, valid keys are %s' % (request['params']['AuthKey'],str(posting_keys)))
     if not request['params']['AuthKey'] in posting_keys: return False
     return verify_request_with_pub(json.dumps(request),request['params']['AuthKey'],request['params']['AuthSig'])
 
 if __name__=='__main__':
+   logging.basicConfig(level=logging.DEBUG)
    pub_key  = 'STM5sWzsUCociNCxaRJhQ1WKyZVBduDUy7uR4yrifX9vLhh9LxeKv'
    priv_key = '5JxQDXSZNBLLTMqMFMGswdCnwn5KWdFv6NVSBEJTLEg1v5gvU9b'
 

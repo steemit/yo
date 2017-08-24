@@ -9,7 +9,6 @@ import logging
 logger = logging.getLogger(__name__)
 
 from jsonrpcserver.aio import methods
-from jsonrpc_auth.AuthorizedRequest import verify_request_with_pub
 
 asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 

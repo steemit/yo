@@ -10,14 +10,13 @@ import json
 import logging
 logger = logging.getLogger(__name__)
 
-from jsonrpc_auth import AuthorizedRequest
+from yo import jsonrpc_auth
 
 class YoAPIServer(YoBaseService):
    service_name='api_server'
    q = asyncio.Queue()
    async def api_enable_transports(self,username=None,transports={},orig_req=None,**kwargs):
-         logger.debug(json.dumps(orig_req))
-         if not AuthorizedRequest.verify_request(orig_req,username):
+         if not jsonrpc_auth.verify_request(orig_req,username):
             return {'error':'Request could not be authenticated'}
          return {'status':'OK'}
    async def api_test_method(self,**kwargs):
