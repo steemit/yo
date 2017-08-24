@@ -17,7 +17,7 @@ class YoBlockchainFollower(YoBaseService):
    async def handle_vote(self,op):
        retval = True
        vote_info=op['op'][1]
-       logger.info('Vote on %s (written by %s) by %s with weight %s' % (vote_info['permlink'],
+       logger.debug('Vote on %s (written by %s) by %s with weight %s' % (vote_info['permlink'],
                                                                         vote_info['author'],
                                                                         vote_info['voter'],
                                                                         vote_info['weight']))
@@ -31,7 +31,7 @@ class YoBlockchainFollower(YoBaseService):
             try:
                tx = conn.begin()
                insert_response = conn.execute(notifications_table.insert(), **notification_object)
-               logger.info('Processed vote notification for transaction ID %s' % op['trx_id'])
+               logger.debug('Processed vote notification for transaction ID %s' % op['trx_id'])
                tx.commit()
             except Exception as e:
                tx.rollback()
@@ -50,7 +50,7 @@ class YoBlockchainFollower(YoBaseService):
           # handle notifications for upvotes here based on user preferences in DB
        elif blockchain_op['op'][0]=='custom_json':
           if blockchain_op['op'][1]['id']=='follow':
-             logger.info('Incoming follow operation')
+             logger.debug('Incoming follow operation')
              # handle follow notifications here
              pass
        # etc etc
