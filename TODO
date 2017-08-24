@@ -5,5 +5,5 @@
 * API server: add test method for API server component
 * TestScript: check test method in API server component
 Have notification sender lookup notifications when triggered to do so and pass to configured transport
-Testscript: Add user preference for vote notification, signed by posting key pasted in on console with getpass
+* Testscript: Add user preference for vote notification, signed by posting key pasted in on console with getpass
 Add sendgrid

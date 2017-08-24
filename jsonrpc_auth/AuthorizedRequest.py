@@ -57,7 +57,6 @@ def sign_request(request,wif):
     ecdsa_priv = secp256k1.PrivateKey(bytes(priv_key),raw=True)
     sig        = ecdsa_priv.ecdsa_sign(digest,raw=True)
     hex_sig    = hexlify(ecdsa_priv.ecdsa_serialize(sig)).decode('utf-8')
-    print('canon_req: %s' % str(canon_req))
     request['params']['AuthSig'] = hex_sig
     request['params']['AuthKey'] = wif
     canon_req = canon_request(request)

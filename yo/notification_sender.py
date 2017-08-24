@@ -26,6 +26,7 @@ class YoNotificationSender(YoBaseService):
               select_response = conn.execute(query)
               for row in select_response:
                   logger.debug('>>>>>> Sending new notification: %s' % str(row))
+              
 
    async def async_task(self,yo_app):
        self.private_api_methods['trigger_notification'] = self.api_trigger_notification
