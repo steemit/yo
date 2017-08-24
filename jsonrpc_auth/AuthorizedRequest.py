@@ -41,11 +41,11 @@ def canon_request(request):
 def get_ecdsa_pubkey(wif):
     """ Takes a key in WIF format and returns an ECDSA public key that can be used to verify signatures
     """
-    pub_key   = Base58('STM5sWzsUCociNCxaRJhQ1WKyZVBduDUy7uR4yrifX9vLhh9LxeKv')
+    pub_key   = Base58(wif)
     ecdsa_pub = secp256k1.PublicKey(bytes(pub_key),raw=True)
     return ecdsa_pub
 
-def sign_request(request,wif):
+def sign_request(request,wif,pubwif):
     """ Signs a request with the provided WIF
         Request will first be made canon and JSON-encoded
 
@@ -58,7 +58,7 @@ def sign_request(request,wif):
     sig        = ecdsa_priv.ecdsa_sign(digest,raw=True)
     hex_sig    = hexlify(ecdsa_priv.ecdsa_serialize(sig)).decode('utf-8')
     request['params']['AuthSig'] = hex_sig
-    request['params']['AuthKey'] = wif
+    request['params']['AuthKey'] = pubwif
     canon_req = canon_request(request)
     return (canon_req,hex_sig,wif)
 
@@ -95,7 +95,7 @@ if __name__=='__main__':
 
    request  = Request('update_preferences',test_pref=1,details={'username':'testuser','prefer_ssl':True})
    print('Signing request %s with private key %s' % (str(request),priv_key))
-   canon_req,hex_sig,wif = sign_request(request,priv_key)
+   canon_req,hex_sig,wif = sign_request(request,priv_key,pub_key)
 
    print('Got canon request: %s' % canon_req)
    print('Got auth signature: %s' % hex_sig)

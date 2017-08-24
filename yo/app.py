@@ -14,7 +14,7 @@ from jsonrpc_auth.AuthorizedRequest import verify_request_with_pub
 asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
 from jsonrpcserver.async_methods import AsyncMethods
-
+import json
 
 
 
@@ -37,13 +37,13 @@ class YoApp:
    async def handle_api(self,request):
          req_app = request.app
          request = await request.json()
-         orig_request = request
+         orig_request = json.dumps(request) # silly hack
          logger.debug('Incoming request: %s' % request)
          if not 'params' in request.keys(): request['params'] = {} # fix for API methods that have no params
          request['params']['yo_app']    = req_app['config']['yo_app']
          request['params']['yo_db']     = req_app['config']['yo_db']
          request['params']['yo_config'] = req_app['config']['yo_config']
-         request['params']['orig_req']  = orig_request # needed for authentication
+         request['params']['orig_req']  = json.loads(orig_request) # needed for authentication
          response = await self.api_methods.dispatch(request)
          return web.json_response(response)
    def add_api_method(self,func,func_name):
