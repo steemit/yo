@@ -7,7 +7,7 @@
 * TestScript: Send enable_transport for emails+votes
 * API server: Implement enable_transports method, complete with verification of request
 Refactor DB, all queries should live in one module
-Have notification sender lookup notifications when triggered to do so and pass to configured transport
+* Have notification sender lookup notifications when triggered to do so and pass to configured transport
 * Ensure notification sender updates sent_at value
 * Testscript: Add user preference for vote notification, signed by posting key pasted in on console with getpass
 Add sendgrid

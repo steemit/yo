@@ -37,8 +37,8 @@ class YoBlockchainFollower(YoBaseService):
                tx.rollback()
                logger.exception('Exception occured while processing transaction ID %s' % op['trx_id'])
                retval = False
-       if retval:
-          sender_response = await self.yo_app.invoke_private_api('notification_sender','trigger_notification',username=notification_object['to_username'])
+       sender_response = await self.yo_app.invoke_private_api('notification_sender','trigger_notification',username=notification_object['to_username'])
+       logger.debug('Got %s from notification sender' % str(sender_response))
        return retval
 
    async def notify(self,blockchain_op):

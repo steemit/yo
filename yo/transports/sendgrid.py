@@ -1,0 +1,46 @@
+""" Sendgrid transport class
+"""
+import sendgrid
+from sendgrid.helpers.mail import *
+
+from .base_transport import BaseTransport
+import logging
+
+logger = logging.getLogger(__name__)
+import json
+
+class SendGridTransport(BaseTransport):
+   def __init__(self,sendgrid_privkey):
+       """ Transport implementation for sendgrid
+
+       Args:
+           sendgrid_privkey(str): the private key for sendgrid
+       """
+       self.privkey = sendgrid_privkey
+       self.sg = sendgrid.SendGridAPIClient(self.privkey)
+   def send_notification(self,to_subdata=None,notify_type=None,data={}):
+       """ Sends a notification to a specific user
+
+       Keyword args:
+          to_subdata:       the subscription data for this transport
+          notify_type(str): the type of notification we're sending
+          data(dict):       a dictionary containing the raw data for the notification
+
+       Note:
+          the subscription data for sendgrid is simply an email address
+       """
+       from_email = Email("no-reply-yo@steemit.com")
+       to_email = Email(to_subdata)
+       if notification_type=='vote':
+          vote_info    = data['op'][1]
+          subject      = "%s has upvoted your post or comment" % vote_info['voter']
+          text_content = 'Your comment or post %s has been upvoted by %s' % (vote_info['permlink'],vote_info['voter'])
+       else:
+          logger.error('SendGrid transport doesn\'t know about notification type %s' % notification_type)
+          return
+       content = Content("text/plain", text_content)
+       mail = Mail(from_email, subject, to_email, content)
+       response = sg.client.mail.send.post(request_body=mail.get())
+       logger.debug('SendGrid response code %s'    % response.status_code)
+       logger.debug('SendGrid response body %s'    % response.body)
+       logger.debug('SendGrid response headers %s' % str(response.headers))
