@@ -10,4 +10,6 @@ Refactor DB, all queries should live in one module
 * Have notification sender lookup notifications when triggered to do so and pass to configured transport
 * Ensure notification sender updates sent_at value
 * Testscript: Add user preference for vote notification, signed by posting key pasted in on console with getpass
-Add sendgrid
+* Add sendgrid
+Fix bug with notification sender not invoking configured transports
+Refactor services private_api_methods stuff - init in one place

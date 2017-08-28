@@ -20,7 +20,6 @@ logger = logging.getLogger(__name__)
 
 class YoNotificationSender(YoBaseService):
    service_name='notification_sender'
-   q = asyncio.Queue()
 
    def get_user_transports(self,db_conn,username,notify_type):
        """ Returns a list of tuples of (transport,sub_data)
@@ -34,12 +33,13 @@ class YoNotificationSender(YoBaseService):
        return retval
    async def api_trigger_notification(self,username=None):
          logger.info('api_trigger_notification invoked for %s' % username)
-         await self.q.put({'to_username':username})
+         await self.run_send_notify({'to_username':username})
          return {'result':'Succeeded'} # dummy for now
    async def run_send_notify(self,notification_job):
          logger.debug('run_send_notify executing! %s' % notification_job)
          with acquire_db_conn(self.db) as conn:
-              query = notifications_table.select().where(notifications_table.c.to_username == notification_job['to_username']).where(notifications_table.c.sent == False)
+              query = notifications_table.select().where(notifications_table.c.to_username == notification_job['to_username'])
+              # TODO - add check for already sent
               select_response = conn.execute(query)
               for row in select_response:
                   logger.debug('>>>>>> Sending new notification: %s' % str(row))
@@ -53,14 +53,8 @@ class YoNotificationSender(YoBaseService):
                   update_query = notifications_table.update().where(notifications_table.c.nid==row.nid).values(sent=True,sent_at=datetime.datetime.now())
                   conn.execute(update_query)
 
-   async def async_task(self,yo_app):
-       self.configured_transports={'email':sendgrid_transport.SendGridTransport(yo_app.config_data['sendgrid']['priv_key'])}
+   def init_api(self,yo_app):
        self.private_api_methods['trigger_notification'] = self.api_trigger_notification
+       self.configured_transports={'email':sendgrid.SendGridTransport(yo_app.config.config_data['sendgrid']['priv_key'])}
+   async def async_task(self,yo_app):
        logger.info('Notification sender started')
-       while True:
-          try:
-             notification = await self.q.get()
-             logger.debug('Got request to send notification: %s' % str(notification))
-             await self.run_send_notify(notification)
-          except Exception as e:
-             logger.exception('Exception occurred')
