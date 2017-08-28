@@ -4,7 +4,7 @@ import asyncio
 import json
 
 from .transports import base_transport
-
+import datetime
 import logging
 logger = logging.getLogger(__name__)
 
@@ -44,8 +44,11 @@ class YoNotificationSender(YoBaseService):
                   transports = get_user_transports(conn,notification_job['to_username'],row['type'])
                   for t in transports:
                       t[0].send_notification(to_subdata=t[1],notify_type=row['type'],data=json.loads(row['json_data']))
-                  row['sent'] = True
-                  conn.execute(notifications_table.update(),**row)
+                  row_dict = dict(row.items())
+                  row_dict['sent']    = True
+                  row_dict['sent_at'] = datetime.datetime.now()
+                  update_query = notifications_table.update().where(notifications_table.c.nid==row.nid).values(sent=True,sent_at=datetime.datetime.now())
+                  conn.execute(update_query)
 
    async def async_task(self,yo_app):
        self.private_api_methods['trigger_notification'] = self.api_trigger_notification

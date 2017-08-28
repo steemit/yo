@@ -16,7 +16,7 @@ TRANSPORT_TYPES   =('email')
 
 notifications_table = sa.Table('yo_notifications', metadata,
      sa.Column('nid', sa.Integer, primary_key=True),
-     sa.Column('trx_id', sa.String(40), index=True, unique=True, nullable=False,
+     sa.Column('trx_id', sa.String(40), index=True, nullable=False,
                doc='The trx_id from the blockchain'),
      sa.Column('json_data', sa.UnicodeText),
 
