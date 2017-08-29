@@ -11,5 +11,8 @@ Refactor DB, all queries should live in one module
 * Ensure notification sender updates sent_at value
 * Testscript: Add user preference for vote notification, signed by posting key pasted in on console with getpass
 * Add sendgrid
-Fix bug with notification sender not invoking configured transports
-Refactor services private_api_methods stuff - init in one place
+* Fix bug with notification sender not invoking configured transports
+* Refactor services private_api_methods stuff - init in one place
+Add WWW push static page
+Rate limiting
+Implement locking in DB layer and ensure no double sends
