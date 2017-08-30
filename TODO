@@ -14,5 +14,6 @@ Refactor DB, all queries should live in one module
 * Fix bug with notification sender not invoking configured transports
 * Refactor services private_api_methods stuff - init in one place
 Add WWW push static page
-Rate limiting
+Rate limiting DB schema
+  Add priority level to notifications and check whether recent notifications sent within X amount of time at same or lower priority level
 Implement locking in DB layer and ensure no double sends
