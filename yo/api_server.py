@@ -39,8 +39,21 @@ class YoAPIServer(YoBaseService):
                   conn.execute(update_query)
 
          return {'status':'OK'}
+   async def api_get_enabled_transports(self,username=None,orig_req=None,yo_db=None,**kwargs):
+         if not jsonrpc_auth.verify_request(orig_req,username):
+            return {'error':'Request could not be authenticated'}
+         retval = []
+         with acquire_db_conn(yo_db) as conn:
+              query = user_transports_table.select().where(user_transports_table.c.username == username)
+              select_response = conn.execute(query)
+              for row in select_response:
+                  retval.append({'transport_type':row.transport_type,
+                                 'notify_type'   :row.notify_type,
+                                 'sub_data'      :row.sub_data})
+         return retval
    async def api_test_method(self,**kwargs):
        return {'status':'OK'}
    async def async_task(self,yo_app):
        yo_app.add_api_method(self.api_enable_transports,'enable_transports')
+       yo_app.add_api_method(self.api_get_enabled_transports,'get_enabled_transports')
        yo_app.add_api_method(self.api_test_method,'api_test_method')

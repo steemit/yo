@@ -13,6 +13,7 @@ Refactor DB, all queries should live in one module
 * Add sendgrid
 * Fix bug with notification sender not invoking configured transports
 * Refactor services private_api_methods stuff - init in one place
+Add initdata to DB layer
 Add API method for grabbing currently configured transports
 Add WWW push static page
 * Rate limiting DB schema
