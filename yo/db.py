@@ -32,6 +32,8 @@ notifications_table = sa.Table('yo_notifications', metadata,
 
      sa.Column('sent', sa.Boolean(), nullable=False, default=False, index=True),
 
+     sa.Column('notify_type', sa.Enum(NOTIFICATION_TYPES), nullable=False, index=True),
+
      sa.Column('created_at', sa.DateTime, default=sa.func.now(), index=True,
                doc='Datetime when notification was created and stored in db'),
      sa.Column('sent_at', sa.DateTime, index=True,
@@ -48,7 +50,6 @@ user_transports_table = sa.Table('yo_user_configured_transports', metadata,
 
      sa.Column('username', sa.Unicode, index=True),
 
-     sa.Column('priority_level', sa.Integer,index=True),
      sa.Column('notify_type', sa.Enum(NOTIFICATION_TYPES), nullable=False, index=True),
      sa.Column('transport_type', sa.Enum(TRANSPORT_TYPES), nullable=False, index=True),
 
