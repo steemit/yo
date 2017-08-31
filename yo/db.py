@@ -13,6 +13,11 @@ metadata = sa.MetaData()
 
 NOTIFICATION_TYPES=('vote')
 TRANSPORT_TYPES   =('email')
+PRIORITY_LEVELS   ={'always'   :5,
+                    'priority' :4,
+                    'normal'   :3,
+                    'low'      :2,
+                    'marketing':1}
 
 notifications_table = sa.Table('yo_notifications', metadata,
      sa.Column('nid', sa.Integer, primary_key=True),
@@ -43,6 +48,7 @@ user_transports_table = sa.Table('yo_user_configured_transports', metadata,
 
      sa.Column('username', sa.Unicode, index=True),
 
+     sa.Column('priority_level', sa.Integer,index=True),
      sa.Column('notify_type', sa.Enum(NOTIFICATION_TYPES), nullable=False, index=True),
      sa.Column('transport_type', sa.Enum(TRANSPORT_TYPES), nullable=False, index=True),
 
