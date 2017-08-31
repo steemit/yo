@@ -5,7 +5,7 @@ import os
 import sqlalchemy as sa
 
 import aiomysql.sa
-
+import json
 
 logger = logging.getLogger('__name__')
 
@@ -30,9 +30,8 @@ notifications_table = sa.Table('yo_notifications', metadata,
 
      sa.Column('type', sa.Enum(NOTIFICATION_TYPES), nullable=False, index=True),
 
-     sa.Column('sent', sa.Boolean(), nullable=False, default=False, index=True),
-
-     sa.Column('notify_type', sa.Enum(NOTIFICATION_TYPES), nullable=False, index=True),
+     sa.Column('sent', sa.Boolean(), nullable=True, default=False, index=True),
+     sa.Column('priority_level', sa.Integer, index=True),
 
      sa.Column('created_at', sa.DateTime, default=sa.func.now(), index=True,
                doc='Datetime when notification was created and stored in db'),
@@ -77,6 +76,19 @@ def init_db(config):
       #TODO - add MySQL here
       if int(config.config_data['database'].get('init_schema',0))==1:
          metadata.create_all(engine)
+      initdata_file = config.config_data['database'].get('init_data',None)
+      if not (initdata_file is None):
+         fd = open(initdata_file,'rb')
+         jsondata = json.load(fd)
+         fd.close()
+         for entry in jsondata:
+             table_name,data = entry
+             if table_name=='user_transports_table':
+                with acquire_db_conn(engine) as conn:
+                     conn.execute(user_transports_table.insert(),**data)
+             elif table_name=='notifications_table':
+                with acquire_db_conn(engine) as conn:
+                     conn.execute(notifications_table.insert(),**data)
       return engine
 
 async def close_db(app):
