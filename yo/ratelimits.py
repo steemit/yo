@@ -3,7 +3,7 @@ logger = logging.getLogger(__name__)
 
 from .db import *
 
-def check_ratelimit(notification_object,override=False):
+def check_ratelimit(db,notification_object,override=False):
     """Checks if this notification should be sent or not
 
     Args:
@@ -18,12 +18,28 @@ def check_ratelimit(notification_object,override=False):
     to_username           = notification_object['to_username']
 
     if notification_priority==PRIORITY_ALWAYS:
-       
+       return (get_priority_count(db,to_username,PRIORITY_ALWAYS,3600) < 10)
     elif notification_priority==PRIORITY_PRIORITY:
+       if override:
+          return (get_priority_count(db,to_username,PRIORITY_PRIORITY,3600) <= 10)
+       else:
+          return (get_priority_count(db,to_username,PRIORITY_PRIORITY,3600) == 0)
     elif notification_priority==PRIORITY_NORMAL:
+       if override:
+          return (get_priority_count(db,to_username,PRIORITY_NORMAL,60) < 3)
+       else:
+          return (get_priority_count(db,to_username,PRIORITY_NORMAL,60) == 0)
     elif notification_priority==PRIORITY_LOW:
+       if override:
+          return (get_priority_count(db,to_username,PRIORITY_LOW,3600) < 10)
+       else:
+          return (get_priority_count(db,to_username,PRIORITY_LOW,3600) == 0)
     elif notification_priority==PRIORITY_MARKETING:
+       if override:
+          return (get_priority_count(db,to_username,PRIORITY_MARKETING,86400) == 0)
+       else:
+          return (get_priority_count(db,to_username,PRIORITY_MARKETING,3600) == 0)
     else:
       logger.error('Invalid notification priority level! Assuming corrupted data for notification: %s' % notification_object)
 
-    return True # dummy for now
+    return False # for invalid stuff, assume it's bad
