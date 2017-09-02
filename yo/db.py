@@ -18,6 +18,13 @@ PRIORITY_LEVELS   ={'always'   :5,
                     'normal'   :3,
                     'low'      :2,
                     'marketing':1}
+# TODO - this should be done in a cleaner way
+PRIORITY_ALWAYS    = 5
+PRIORITY_PRIORITY  = 4
+PRIORITY_NORMAL    = 3
+PRIORITY_LOW       = 2
+PRIORITY_MARKETING = 1
+
 
 notifications_table = sa.Table('yo_notifications', metadata,
      sa.Column('nid', sa.Integer, primary_key=True),
@@ -91,6 +98,31 @@ def create_notification(db, **notification_object):
             tx.rollback()
             logger.error('Failed to create new notification object: %s' % str(notification_object))
     return retval
+
+def get_priority_count(db, to_username, priority,timeframe):
+    """Returns count of notifications to a user of a set priority or higher
+
+    This is used to implement the rate limits
+
+    Args:
+        db:               SQLAlchemy database engine
+        to_username(str): The username to lookup
+        priority(int):    The priority level to lookup
+        timeframe(int):   The timeframe in seconds to check
+
+    Returns:
+        An integer count of the number of notifications sent to the specified user within the specified timeframe of that priority level or higher
+    """
+    start_time = datetime.datetime.now()- datetime.timedelta(seconds=timeframe)
+    retval = 0
+    with acquire_db_conn(db) as conn:
+         try:
+            select_response = conn.execute(notifications_table.select().where(to_username==to_username,priority_level>=priority,sent==True,sent_at>=start_time)
+            retval = select_response.rowcount
+         except:
+            logger.exception('Exception occurred!')
+    return retval
+
 
 def init_db(config):
       provider = config.config_data['database'].get('provider','sqlite3')
