@@ -117,7 +117,7 @@ def get_priority_count(db, to_username, priority,timeframe):
     retval = 0
     with acquire_db_conn(db) as conn:
          try:
-            select_response = conn.execute(notifications_table.select().where(to_username==to_username,priority_level>=priority,sent==True,sent_at>=start_time)
+            select_response = conn.execute(notifications_table.select().where(to_username==to_username,priority_level>=priority,sent==True,sent_at>=start_time))
             retval = select_response.rowcount
          except:
             logger.exception('Exception occurred!')
