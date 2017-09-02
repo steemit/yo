@@ -18,9 +18,9 @@ class YoBlockchainFollower(YoBaseService):
        retval = True
        vote_info=op['op'][1]
        logger.debug('Vote on %s (written by %s) by %s with weight %s' % (vote_info['permlink'],
-                                                                        vote_info['author'],
-                                                                        vote_info['voter'],
-                                                                        vote_info['weight']))
+                                                                         vote_info['author'],
+                                                                         vote_info['voter'],
+                                                                         vote_info['weight']))
        create_notification(self.db,trx_id=op['trx_id'],
                                    from_username=vote_info['voter'],
                                    to_username=vote_info['author'],

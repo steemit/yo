@@ -3,6 +3,7 @@ from .db import acquire_db_conn,notifications_table,user_transports_table
 import asyncio
 import json
 
+from .ratelimits import check_ratelimit
 from .transports import base_transport
 from .transports import sendgrid
 import datetime
@@ -42,12 +43,15 @@ class YoNotificationSender(YoBaseService):
               # TODO - add check for already sent
               select_response = conn.execute(query)
               for row in select_response:
+                  row_dict = dict(row.items())
+                  if not check_ratelimit(row_dict):
+                     logger.debug('Skipping sending of notification for failing rate limit check: %s' % str(row))
+                     continue
                   logger.debug('>>>>>> Sending new notification: %s' % str(row))
                   transports = self.get_user_transports(conn,notification_job['to_username'],row['type'])
                   for t in transports:
                       logger.debug('Sending notification to transport %s' % str(t))
                       t[0].send_notification(to_subdata=t[1],notify_type=row['type'],data=json.loads(row['json_data']))
-                  row_dict = dict(row.items())
                   row_dict['sent']    = True
                   row_dict['sent_at'] = datetime.datetime.now()
                   update_query = notifications_table.update().where(notifications_table.c.nid==row.nid).values(sent=True,sent_at=datetime.datetime.now())

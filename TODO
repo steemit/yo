@@ -17,6 +17,7 @@ Refactor DB, all queries should live in one module
 * Add API method for grabbing currently configured transports
 Add WWW push static page
 * Rate limiting DB schema
-Add priority level to notifications
+* Add priority level to notifications
+* Implement ratelimit dummy function
 Check whether recent notifications sent within X amount of time at same or lower priority level
 Implement locking in DB layer and ensure no double sends
