@@ -36,7 +36,7 @@ test: build-without-docker test-without-build
 test-without-build: test-without-lint test-pylint
 
 test-without-lint:
-	pipenv run pytest -v
+	pipenv run pytest --cov=yo tests/
 
 test-pylint:
 	pipenv run pytest -v --pylint
