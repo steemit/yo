@@ -6,7 +6,6 @@
 * TestScript: check test method in API server component
 * TestScript: Send enable_transport for emails+votes
 * API server: Implement enable_transports method, complete with verification of request
-Refactor DB, all queries should live in one module
 * Have notification sender lookup notifications when triggered to do so and pass to configured transport
 * Ensure notification sender updates sent_at value
 * Testscript: Add user preference for vote notification, signed by posting key pasted in on console with getpass
@@ -25,4 +24,6 @@ TestScript: Test each notification priority level
   Configure DB such that notifications already sent at and below hard limit, soft limit and boundary conditions
   Check for each limit that we get proper response
 Setup pytest to work properly
+Refactor DB, all queries should live in one module
+Make DB access all mockable for sane testing
 Implement locking in DB layer and ensure no double sends
