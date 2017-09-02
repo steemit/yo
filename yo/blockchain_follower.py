@@ -1,5 +1,5 @@
 from .base_service import YoBaseService 
-from .db import acquire_db_conn,notifications_table
+from .db import acquire_db_conn,notifications_table,PRIORITY_LEVELS
 import asyncio
 import steem
 from steem.blockchain import Blockchain
@@ -23,11 +23,13 @@ class YoBlockchainFollower(YoBaseService):
                                                                         vote_info['weight']))
        with acquire_db_conn(self.db) as conn:
             notification_object = {'trx_id':op['trx_id'],
-                                  'from_username':vote_info['voter'],
-                                  'to_username':vote_info['author'],
-                                  'json_data':json.dumps(op),
-                                  'sent':False,
-                                  'type':'vote'}
+                                   'from_username':vote_info['voter'],
+                                   'to_username':vote_info['author'],
+                                   'json_data':json.dumps(op),
+                                   'sent':False,
+                                   'type':'vote',
+                                   'priority_level':PRIORITY_LEVELS['low'],
+                                   }
             try:
                tx = conn.begin()
                insert_response = conn.execute(notifications_table.insert(), **notification_object)
