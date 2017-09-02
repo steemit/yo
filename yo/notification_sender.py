@@ -44,7 +44,7 @@ class YoNotificationSender(YoBaseService):
               select_response = conn.execute(query)
               for row in select_response:
                   row_dict = dict(row.items())
-                  if not check_ratelimit(row_dict):
+                  if not check_ratelimit(self.db,row_dict):
                      logger.debug('Skipping sending of notification for failing rate limit check: %s' % str(row))
                      continue
                   logger.debug('>>>>>> Sending new notification: %s' % str(row))
