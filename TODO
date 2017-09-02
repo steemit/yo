@@ -20,5 +20,9 @@ Add WWW push static page
 * Add priority level to notifications
 * Implement ratelimit dummy function
 * Add function in db.py to query notification count
-Check whether recent notifications sent within X amount of time at same or lower priority level
+* Check whether recent notifications sent within X amount of time at same or lower priority level
+TestScript: Test each notification priority level
+  Configure DB such that notifications already sent at and below hard limit, soft limit and boundary conditions
+  Check for each limit that we get proper response
+Setup pytest to work properly
 Implement locking in DB layer and ensure no double sends
