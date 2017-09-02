@@ -1,5 +1,5 @@
 from .base_service import YoBaseService 
-from .db import acquire_db_conn,notifications_table,PRIORITY_LEVELS
+from .db import acquire_db_conn,notifications_table,PRIORITY_LEVELS,create_notification
 import asyncio
 import steem
 from steem.blockchain import Blockchain
@@ -21,27 +21,15 @@ class YoBlockchainFollower(YoBaseService):
                                                                         vote_info['author'],
                                                                         vote_info['voter'],
                                                                         vote_info['weight']))
-       with acquire_db_conn(self.db) as conn:
-            notification_object = {'trx_id':op['trx_id'],
-                                   'from_username':vote_info['voter'],
-                                   'to_username':vote_info['author'],
-                                   'json_data':json.dumps(op),
-                                   'sent':False,
-                                   'type':'vote',
-                                   'priority_level':PRIORITY_LEVELS['low'],
-                                   }
-            try:
-               tx = conn.begin()
-               insert_response = conn.execute(notifications_table.insert(), **notification_object)
-               logger.debug('Processed vote notification for transaction ID %s' % op['trx_id'])
-               tx.commit()
-            except Exception as e:
-               tx.rollback()
-               logger.exception('Exception occured while processing transaction ID %s' % op['trx_id'])
-               retval = False
-       sender_response = await self.yo_app.invoke_private_api('notification_sender','trigger_notification',username=notification_object['to_username'])
+       create_notification(self.db,trx_id=op['trx_id'],
+                                   from_username=vote_info['voter'],
+                                   to_username=vote_info['author'],
+                                   json_data=json.dumps(op),
+                                   sent=False,
+                                   type='vote',
+                                   priority_level=PRIORITY_LEVELS['low'])
+       sender_response = await self.yo_app.invoke_private_api('notification_sender','trigger_notification',username=vote_info['author'])
        logger.debug('Got %s from notification sender' % str(sender_response))
-       return retval
 
    async def notify(self,blockchain_op):
        """ Handle notification for a particular op

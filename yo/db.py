@@ -69,6 +69,29 @@ def acquire_db_conn(db):
     finally:
        conn.close()
 
+def create_notification(db, **notification_object):
+    """ Creates an unsent notification in the DB
+    
+    Args:
+        db:                        SQLAlchemy database engine, usually available from the app object as yo_db
+        notification_object(dict): the actual notification to create+store
+
+    Returns:
+       True on success, False on error
+    """
+    with acquire_db_conn(db) as conn:
+         retval = False
+         try:
+            tx = conn.begin()
+            insert_response = conn.execute(notifications_table.insert(), **notification_object)
+            tx.commit()
+            retval = True
+            logger.debug('Created new notification object: %s' % str(notification_object))
+         except:
+            tx.rollback()
+            logger.error('Failed to create new notification object: %s' % str(notification_object))
+    return retval
+
 def init_db(config):
       provider = config.config_data['database'].get('provider','sqlite3')
       if provider=='sqlite':
