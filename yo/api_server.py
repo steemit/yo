@@ -53,7 +53,7 @@ class YoAPIServer(YoBaseService):
          return retval
    async def api_test_method(self,**kwargs):
        return {'status':'OK'}
-   async def async_task(self,yo_app):
+   async def async_task(self,yo_app): # pragma: no cover
        yo_app.add_api_method(self.api_enable_transports,'enable_transports')
        yo_app.add_api_method(self.api_get_enabled_transports,'get_enabled_transports')
        yo_app.add_api_method(self.api_test_method,'api_test_method')
