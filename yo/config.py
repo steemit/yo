@@ -10,15 +10,18 @@ class YoConfigManager:
 
    Also handles generation of missing keys where this is appropriate to do so
    """
-   def __init__(self,filename):
+   def __init__(self,filename,defaults={}):
        self.config_data = configparser.ConfigParser(inline_comment_prefixes=';')
-       # a couple of defaults
+       # a couple of defaults to enable stuff to work-ish if the config file is missing
        # TODO - add a general get method with defaults so we don't have to define it all in multiple places
        self.config_data['yo_general'] = {'log_level':'INFO'}
        self.config_data['vapid']      = {}
        self.config_data['blockchain_follower'] = {}
        self.config_data['notification_sender'] = {}
        self.config_data['api_server']          = {}
+       for k,v in defaults.items(): # load defaults passed as param
+           self.config_data[k]=v
+
        self.config_data.read(filename)
        
        for section in self.config_data.sections():

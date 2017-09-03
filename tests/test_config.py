@@ -11,6 +11,11 @@ def test_basic_load():
     yo_config = config.YoConfigManager(source_code_path+'/../yo.cfg')
     # basically if no exceptions are thrown here, we're good
 
+def test_defaults():
+    """Test we can supply defaults and see them without loading a file"""
+    yo_config = config.YoConfigManager('DOESNOTEXIST',defaults={'test_section':{'test_key':'test_val'}})
+    assert yo_config.config_data['test_section'].get('test_key',None) == 'test_val'
+
 def test_env_vars(monkeypatch):
     """Test we can override all variables in the config file with env variables"""
     # first we grab the defaults by loading the config file and throwing away the config manager
