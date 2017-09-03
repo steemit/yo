@@ -15,5 +15,6 @@ def needs_auth(func):
            return {'error':'Could not authenticate request, request is malformed, lacking params','status':'error','error_type':'MALFORMED_REQUEST'}
         if not jsonrpc_auth.verify_request(kwargs['orig_req'],kwargs['username']):
            return {'error':'Could not authenticate request, invalid credentials','status':'error','error_type':'INVALID_CREDENTIALS'}
-        return func(*args,**kwargs)
+        else:
+           return func(*args,**kwargs) # pragma: no cover
     return func_wrapper
