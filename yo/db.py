@@ -7,6 +7,7 @@ import sqlalchemy as sa
 import aiomysql.sa
 import json
 
+from contextlib import contextmanager
 logger = logging.getLogger('__name__')
 
 metadata = sa.MetaData()
@@ -67,70 +68,14 @@ user_transports_table = sa.Table('yo_user_configured_transports', metadata,
                doc='Datetime when preferences were updated'),
 )
 
-from contextlib import contextmanager
-@contextmanager
-def acquire_db_conn(db):
-    conn = db.connect()
-    try:
-       yield conn
-    finally:
-       conn.close()
-
-def create_notification(db, **notification_object):
-    """ Creates an unsent notification in the DB
-    
-    Args:
-        db:                        SQLAlchemy database engine, usually available from the app object as yo_db
-        notification_object(dict): the actual notification to create+store
-
-    Returns:
-       True on success, False on error
-    """
-    with acquire_db_conn(db) as conn:
-         retval = False
-         try:
-            tx = conn.begin()
-            insert_response = conn.execute(notifications_table.insert(), **notification_object)
-            tx.commit()
-            retval = True
-            logger.debug('Created new notification object: %s' % str(notification_object))
-         except:
-            tx.rollback()
-            logger.error('Failed to create new notification object: %s' % str(notification_object))
-    return retval
-
-def get_priority_count(db, to_username, priority,timeframe):
-    """Returns count of notifications to a user of a set priority or higher
-
-    This is used to implement the rate limits
-
-    Args:
-        db:               SQLAlchemy database engine
-        to_username(str): The username to lookup
-        priority(int):    The priority level to lookup
-        timeframe(int):   The timeframe in seconds to check
-
-    Returns:
-        An integer count of the number of notifications sent to the specified user within the specified timeframe of that priority level or higher
-    """
-    start_time = datetime.datetime.now()- datetime.timedelta(seconds=timeframe)
-    retval = 0
-    with acquire_db_conn(db) as conn:
-         try:
-            select_response = conn.execute(notifications_table.select().where(to_username==to_username,priority_level>=priority,sent==True,sent_at>=start_time))
-            retval = select_response.rowcount
-         except:
-            logger.exception('Exception occurred!')
-    return retval
-
-
-def init_db(config):
+class YoDatabase:
+   def __init__(self,config):
       provider = config.config_data['database'].get('provider','sqlite3')
       if provider=='sqlite':
-         engine = sa.create_engine('sqlite:///%s' % config.config_data['sqlite'].get('filename',':memory:'))
+         self.engine = sa.create_engine('sqlite:///%s' % config.config_data['sqlite'].get('filename',':memory:'))
       #TODO - add MySQL here
       if int(config.config_data['database'].get('init_schema',0))==1:
-         metadata.create_all(engine)
+         metadata.create_all(self.engine)
       initdata_file = config.config_data['database'].get('init_data',None)
       if not (initdata_file is None):
          fd = open(initdata_file,'rb')
@@ -139,14 +84,67 @@ def init_db(config):
          for entry in jsondata:
              table_name,data = entry
              if table_name=='user_transports_table':
-                with acquire_db_conn(engine) as conn:
+                with acquire_db_conn(self.engine) as conn:
                      conn.execute(user_transports_table.insert(),**data)
              elif table_name=='notifications_table':
-                with acquire_db_conn(engine) as conn:
+                with acquire_db_conn(self.engine) as conn:
                      conn.execute(notifications_table.insert(),**data)
-      return engine
+   async def close(self):
+       if 'close' in dir(self.engine):
+          self.engine.close()
+          await self.engine.wait_closed()
 
-async def close_db(app):
-    if 'close' in dir(app['config']['db']):
-       app['config']['db'].close()
-       await app['config']['db'].wait_closed()
+   @contextmanager
+   def acquire_db_conn(db):
+       conn = db.connect()
+       try:
+          yield conn
+       finally:
+          conn.close()
+
+   def get_priority_count(self, to_username, priority,timeframe):
+       """Returns count of notifications to a user of a set priority or higher
+
+       This is used to implement the rate limits
+
+       Args:
+           db:               SQLAlchemy database engine
+           to_username(str): The username to lookup
+           priority(int):    The priority level to lookup
+           timeframe(int):   The timeframe in seconds to check
+
+       Returns:
+           An integer count of the number of notifications sent to the specified user within the specified timeframe of that priority level or higher
+       """
+       start_time = datetime.datetime.now()- datetime.timedelta(seconds=timeframe)
+       retval = 0
+       with self.acquire_conn() as conn:
+            try:
+               select_response = conn.execute(notifications_table.select().where(to_username==to_username,priority_level>=priority,sent==True,sent_at>=start_time))
+               retval = select_response.rowcount
+            except:
+               logger.exception('Exception occurred!')
+       return retval
+
+   def create_notification(self, **notification_object):
+       """ Creates an unsent notification in the DB
+       
+       Args:
+           db:                        SQLAlchemy database engine, usually available from the app object as yo_db
+           notification_object(dict): the actual notification to create+store
+
+       Returns:
+          True on success, False on error
+       """
+       with self.acquire_conn() as conn:
+            retval = False
+            try:
+               tx = conn.begin()
+               insert_response = conn.execute(notifications_table.insert(), **notification_object)
+               tx.commit()
+               retval = True
+               logger.debug('Created new notification object: %s' % str(notification_object))
+            except:
+               tx.rollback()
+               logger.error('Failed to create new notification object: %s' % str(notification_object))
+       return retval

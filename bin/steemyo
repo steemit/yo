@@ -6,7 +6,7 @@ import argparse
 
 from yo.app import YoApp
 from yo.config import YoConfigManager
-from yo.db import init_db
+from yo.db import YoDatabase
 from yo.blockchain_follower import YoBlockchainFollower
 from yo.notification_sender import YoNotificationSender
 from yo.api_server import YoAPIServer
@@ -17,7 +17,7 @@ def main():
     args = parser.parse_args(sys.argv[1:])
 
     yo_config   = YoConfigManager(args.config)
-    yo_database = init_db(yo_config)
+    yo_database = YoDatabase(yo_config)
     yo_app      = YoApp(config=yo_config, db=yo_database)
 
     print('Enabled services: %s' % str(yo_config.enabled_services))

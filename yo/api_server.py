@@ -1,5 +1,5 @@
 from .base_service import YoBaseService 
-from .db import acquire_db_conn,user_transports_table
+from .db import user_transports_table
 from .utils import needs_auth
 import asyncio
 import json
@@ -26,7 +26,7 @@ class YoAPIServer(YoBaseService):
              # if we don't already have an entry for each transport, add one now
              # otherwise, we simply update the sub_data
              # TODO - add support for multiple subs
-             with acquire_db_conn(yo_db) as conn:
+             with yo_db.acquire_conn() as conn:
                   query = user_transports_table.select().where(user_transports_table.c.username == username).where(user_transports_table.c.notify_type == k)
                   select_response = conn.execute(query)
                   if select_response.rowcount>0: # we need to update the sub_data
@@ -42,7 +42,7 @@ class YoAPIServer(YoBaseService):
    @needs_auth
    async def api_get_enabled_transports(self,username=None,orig_req=None,yo_db=None,**kwargs):
          retval = []
-         with acquire_db_conn(yo_db) as conn:
+         with yo_db.acquire_db_conn() as conn:
               query = user_transports_table.select().where(user_transports_table.c.username == username)
               select_response = conn.execute(query)
               for row in select_response:

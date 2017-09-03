@@ -21,7 +21,7 @@ class YoBlockchainFollower(YoBaseService):
                                                                          vote_info['author'],
                                                                          vote_info['voter'],
                                                                          vote_info['weight']))
-       create_notification(self.db,trx_id=op['trx_id'],
+       self.db.create_notification(trx_id=op['trx_id'],
                                    from_username=vote_info['voter'],
                                    to_username=vote_info['author'],
                                    json_data=json.dumps(op),

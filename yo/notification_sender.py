@@ -38,7 +38,7 @@ class YoNotificationSender(YoBaseService):
          return {'result':'Succeeded'} # dummy for now
    async def run_send_notify(self,notification_job):
          logger.debug('run_send_notify executing! %s' % notification_job)
-         with acquire_db_conn(self.db) as conn:
+         with self.db.acquire_conn() as conn:
               query = notifications_table.select().where(notifications_table.c.to_username == notification_job['to_username'])
               # TODO - add check for already sent
               select_response = conn.execute(query)
