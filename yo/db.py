@@ -70,26 +70,29 @@ user_transports_table = sa.Table('yo_user_configured_transports', metadata,
 )
 
 class YoDatabase:
-   def __init__(self,config):
+   def __init__(self,config,initdata=None):
       provider = config.config_data['database'].get('provider','sqlite3')
       if provider=='sqlite':
          self.engine = sa.create_engine('sqlite:///%s' % config.config_data['sqlite'].get('filename',':memory:'))
       #TODO - add MySQL here
       if int(config.config_data['database'].get('init_schema',0))==1:
          metadata.create_all(self.engine)
-      initdata_file = config.config_data['database'].get('init_data',None)
-      if not (initdata_file is None):
-         fd = open(initdata_file,'rb')
-         jsondata = json.load(fd)
-         fd.close()
-         for entry in jsondata:
-             table_name,data = entry
-             if table_name=='user_transports_table':
-                with self.acquire_conn() as conn:
-                     conn.execute(user_transports_table.insert(),**data)
-             elif table_name=='notifications_table':
-                with self.acquire_conn() as conn:
-                     conn.execute(notifications_table.insert(),**data)
+      if initdata is None:
+         initdata_file = config.config_data['database'].get('init_data',None)
+         if initdata_file is None:
+            initdata = []
+         else:
+            fd = open(initdata_file,'rb')
+            initdata = json.load(fd)
+            fd.close()
+      for entry in initdata:
+          table_name,data = entry
+          if table_name=='user_transports_table':
+             with self.acquire_conn() as conn:
+                  conn.execute(user_transports_table.insert(),**data)
+          elif table_name=='notifications_table':
+             with self.acquire_conn() as conn:
+                  conn.execute(notifications_table.insert(),**data)
    async def close(self):
        if 'close' in dir(self.engine):
           self.engine.close()
