@@ -41,7 +41,7 @@ def canon_request(request):
     """
     if 'params' in request.keys():
        request['params'] = canon_params(request['params'])
-    json_req = json.dumps(request)
+    json_req = json.dumps(request,separators=(',', ':'),sort_keys=True)
     return json_req
 
 def get_ecdsa_pubkey(wif):

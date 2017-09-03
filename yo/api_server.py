@@ -1,5 +1,6 @@
 from .base_service import YoBaseService 
 from .db import acquire_db_conn,user_transports_table
+from .utils import needs_auth
 import asyncio
 import json
 import steem
@@ -17,9 +18,8 @@ from yo import jsonrpc_auth
 class YoAPIServer(YoBaseService):
    service_name='api_server'
    q = asyncio.Queue()
+   @needs_auth
    async def api_enable_transports(self,username=None,transports={},orig_req=None,yo_db=None,**kwargs):
-         if not jsonrpc_auth.verify_request(orig_req,username):
-            return {'error':'Request could not be authenticated'}
          for k,v in transports.items():
              logger.debug('Updating sub data for %s with %s' % (k,v))
              
@@ -39,9 +39,8 @@ class YoAPIServer(YoBaseService):
                   conn.execute(update_query)
 
          return {'status':'OK'}
+   @needs_auth
    async def api_get_enabled_transports(self,username=None,orig_req=None,yo_db=None,**kwargs):
-         if not jsonrpc_auth.verify_request(orig_req,username):
-            return {'error':'Request could not be authenticated'}
          retval = []
          with acquire_db_conn(yo_db) as conn:
               query = user_transports_table.select().where(user_transports_table.c.username == username)
