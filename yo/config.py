@@ -12,6 +12,13 @@ class YoConfigManager:
    """
    def __init__(self,filename):
        self.config_data = configparser.ConfigParser(inline_comment_prefixes=';')
+       # a couple of defaults
+       # TODO - add a general get method with defaults so we don't have to define it all in multiple places
+       self.config_data['yo_general'] = {'log_level':'INFO'}
+       self.config_data['vapid']      = {}
+       self.config_data['blockchain_follower'] = {}
+       self.config_data['notification_sender'] = {}
+       self.config_data['api_server']          = {}
        self.config_data.read(filename)
        
        for section in self.config_data.sections():
@@ -40,10 +47,13 @@ class YoConfigManager:
        """If needed, regenerates VAPID keys and similar
        """
        self.vapid_priv_key = self.config_data['vapid'].get('priv_key',None)
-       if len(self.vapid_priv_key)==0: self.vapid_priv_key = None
        if self.vapid_priv_key is None:
           self.vapid = py_vapid.Vapid()
           self.vapid.generate_keys()
        else:    
-          self.vapid = py_vapid.Vapid.from_raw(private_raw=self.vapid_priv_key.encode())
+          if len(self.vapid_priv_key)==0:
+             self.vapid = py_vapid.Vapid()
+             self.vapid.generate_keys()
+          else:
+             self.vapid = py_vapid.Vapid.from_raw(private_raw=self.vapid_priv_key.encode())
 

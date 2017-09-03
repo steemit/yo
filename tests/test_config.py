@@ -26,3 +26,7 @@ def test_env_vars(monkeypatch):
             monkeypatch.setenv(env_name,1337)
             yo_config = config.YoConfigManager(source_code_path+'/../yo.cfg')
             assert int(yo_config.config_data[section].get(k))==1337
+
+def test_file_missing():
+    """Test it works when yo.cfg is missing"""
+    yo_config = config.YoConfigManager('DOESNOTEXIST')
