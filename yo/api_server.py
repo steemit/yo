@@ -42,13 +42,10 @@ class YoAPIServer(YoBaseService):
    @needs_auth
    async def api_get_enabled_transports(self,username=None,orig_req=None,yo_db=None,**kwargs):
          retval = []
-         with yo_db.acquire_db_conn() as conn:
-              query = user_transports_table.select().where(user_transports_table.c.username == username)
-              select_response = conn.execute(query)
-              for row in select_response:
-                  retval.append({'transport_type':row.transport_type,
-                                 'notify_type'   :row.notify_type,
-                                 'sub_data'      :row.sub_data})
+         for row in self.db.get_user_transports(username):
+             retval.append({'transport_type':row.transport_type,
+                            'notify_type'   :row.notify_type,
+                            'sub_data'      :row.sub_data})
          return retval
    async def api_test_method(self,**kwargs):
        return {'status':'OK'}

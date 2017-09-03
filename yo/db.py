@@ -102,6 +102,21 @@ class YoDatabase:
        finally:
           conn.close()
 
+   def get_user_transports(self, username):
+       """Returns an SQLAlchemy result proxy with all the user transports enabled for specified username
+
+       Args:
+          username(str): the username to lookup
+       
+       Returns:
+          SQLAlchemy result proxy from the select query
+       """
+       # TODO - make this return a more general-purpose iterator or something
+       with self.acquire_db_conn() as conn:
+            query = user_transports_table.select().where(user_transports_table.c.username == username)
+            select_response = conn.execute(query)
+       return select_response
+
    def get_priority_count(self, to_username, priority,timeframe):
        """Returns count of notifications to a user of a set priority or higher
 
