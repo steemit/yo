@@ -43,6 +43,7 @@ class YoApp:
          request['params']['yo_db']     = req_app['config']['yo_db']
          request['params']['yo_config'] = req_app['config']['yo_config']
          request['params']['orig_req']  = json.loads(orig_request) # needed for authentication
+         request['params']['skip_auth'] = False # without this, user can pass skip_auth, which is obviously bad
          response = await self.api_methods.dispatch(request)
          return web.json_response(response)
    def add_api_method(self,func,func_name):

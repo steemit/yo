@@ -18,6 +18,7 @@ from yo import jsonrpc_auth
 class YoAPIServer(YoBaseService):
    service_name='api_server'
    q = asyncio.Queue()
+
    @needs_auth
    async def api_enable_transports(self,username=None,transports={},orig_req=None,yo_db=None,**kwargs):
          for k,v in transports.items():
@@ -40,7 +41,7 @@ class YoAPIServer(YoBaseService):
    @needs_auth
    async def api_get_enabled_transports(self,username=None,orig_req=None,yo_db=None,**kwargs):
          retval = []
-         for row in self.db.get_user_transports(username):
+         for row in yo_db.get_user_transports(username):
              retval.append({'transport_type':row.transport_type,
                             'notify_type'   :row.notify_type,
                             'sub_data'      :row.sub_data})
