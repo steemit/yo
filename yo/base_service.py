@@ -9,10 +9,10 @@ class YoBaseService:
        self.config=config
        self.db=db
    def init_api(self,yo_app):
-       pass
+       pass # pragma: no cover
    def get_name(self):
        return self.service_name
-   async def async_task(self,yo_app):
+   async def async_task(self,yo_app): # pragma: no cover
        """ This method will run in the background
        """
        return

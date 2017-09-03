@@ -23,7 +23,7 @@ Add WWW push static page
 TestScript: Test each notification priority level
   Configure DB such that notifications already sent at and below hard limit, soft limit and boundary conditions
   Check for each limit that we get proper response
-Setup pytest to work properly
+* Setup pytest to work properly
 Refactor DB, all queries should live in one module + one class
 Make DB access all mockable for sane testing
 Implement locking in DB layer and ensure no double sends

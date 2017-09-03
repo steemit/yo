@@ -3,7 +3,7 @@ from yo import jsonrpc_auth
 def needs_auth(func):
     """Decorator to make sure the request is authorised on JSON-RPC calls"""
     def func_wrapper(*args,**kwargs):
-        if 'skip_auth' in kwargs.keys():
+        if 'skip_auth' in kwargs.keys(): # pragma: no branch
            if kwargs['skip_auth']: return func(*args,**kwargs)
         if not 'username' in kwargs.keys():
            return {'error':'Could not authenticate request, missing username parameter','status':'error','error_type':'MISSING_ARGS'}

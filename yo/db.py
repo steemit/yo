@@ -126,7 +126,7 @@ class YoDatabase:
             select_response = conn.execute(query)
        return select_response
 
-   def get_priority_count(self, to_username, priority,timeframe):
+   def get_priority_count(self, to_username, priority, timeframe, start_time=None):
        """Returns count of notifications to a user of a set priority or higher
 
        This is used to implement the rate limits
@@ -137,10 +137,14 @@ class YoDatabase:
            priority(int):    The priority level to lookup
            timeframe(int):   The timeframe in seconds to check
 
+       Keyword args:
+           start_time(datetime.datetime): the current time to go backwards from, if not set datetime.now() will be used
+
        Returns:
            An integer count of the number of notifications sent to the specified user within the specified timeframe of that priority level or higher
        """
-       start_time = datetime.datetime.now()- datetime.timedelta(seconds=timeframe)
+       if start_time is None:
+          start_time = datetime.datetime.now()- datetime.timedelta(seconds=timeframe)
        retval = 0
        with self.acquire_conn() as conn:
             try:

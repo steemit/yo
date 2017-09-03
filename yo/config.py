@@ -28,9 +28,9 @@ class YoConfigManager:
        self.generate_needed()
        self.update_enabled()
    def get_listen_host(self):
-       return self.config_data['http'].get('listen_host','0.0.0.0')
+       return self.config_data['http'].get('listen_host','0.0.0.0') # pragma: no cover
    def get_listen_port(self):
-       return int(self.config_data['http'].get('listen_port',8080))
+       return int(self.config_data['http'].get('listen_port',8080)) # pragma: no cover
    def update_enabled(self):
        self.enabled_services = []
        if int(self.config_data['blockchain_follower'].get('enabled',0))==1: self.enabled_services.append('blockchain_follower')
@@ -40,8 +40,10 @@ class YoConfigManager:
        """If needed, regenerates VAPID keys and similar
        """
        self.vapid_priv_key = self.config_data['vapid'].get('priv_key',None)
-       self.vapid = py_vapid.Vapid(private_key=self.vapid_priv_key)
+       if len(self.vapid_priv_key)==0: self.vapid_priv_key = None
        if self.vapid_priv_key is None:
+          self.vapid = py_vapid.Vapid()
           self.vapid.generate_keys()
-           
+       else:    
+          self.vapid = py_vapid.Vapid.from_raw(private_raw=self.vapid_priv_key.encode())
 
