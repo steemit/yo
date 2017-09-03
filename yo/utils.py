@@ -1,6 +1,6 @@
 from yo import jsonrpc_auth 
 
-async def needs_auth(func):
+def needs_auth(func):
     """Decorator to make sure the request is authorised on JSON-RPC calls"""
     def func_wrapper(*args,**kwargs):
         if not 'username' in kwargs.keys():

@@ -3,6 +3,7 @@ import logging
 import os
 
 import sqlalchemy as sa
+import datetime
 
 import aiomysql.sa
 import json
@@ -84,10 +85,10 @@ class YoDatabase:
          for entry in jsondata:
              table_name,data = entry
              if table_name=='user_transports_table':
-                with acquire_db_conn(self.engine) as conn:
+                with self.acquire_conn() as conn:
                      conn.execute(user_transports_table.insert(),**data)
              elif table_name=='notifications_table':
-                with acquire_db_conn(self.engine) as conn:
+                with self.acquire_conn() as conn:
                      conn.execute(notifications_table.insert(),**data)
    async def close(self):
        if 'close' in dir(self.engine):
@@ -95,25 +96,30 @@ class YoDatabase:
           await self.engine.wait_closed()
 
    @contextmanager
-   def acquire_db_conn(db):
-       conn = db.connect()
+   def acquire_conn(self):
+       conn = self.engine.connect()
        try:
           yield conn
        finally:
           conn.close()
 
-   def get_user_transports(self, username):
+   def get_user_transports(self, username, notify_type=None):
        """Returns an SQLAlchemy result proxy with all the user transports enabled for specified username
 
        Args:
           username(str): the username to lookup
        
+       Keyword args:
+          notify_type(str): if set, returns only the configured transports for the specified notify_type
+
        Returns:
           SQLAlchemy result proxy from the select query
        """
        # TODO - make this return a more general-purpose iterator or something
        with self.acquire_db_conn() as conn:
             query = user_transports_table.select().where(user_transports_table.c.username == username)
+            if not (notify_type is None):
+               query = query.where(user_transports_table.c.notify_type==notify_type)
             select_response = conn.execute(query)
        return select_response
 
@@ -135,7 +141,11 @@ class YoDatabase:
        retval = 0
        with self.acquire_conn() as conn:
             try:
-               select_response = conn.execute(notifications_table.select().where(to_username==to_username,priority_level>=priority,sent==True,sent_at>=start_time))
+               query = notifications_table.select().where(notifications_table.c.to_username==to_username)
+               query = query.where(notifications_table.c.priority_level>=priority)
+               query = query.where(notifications_table.c.sent==True)
+               query = query.where(notifications_table.c.sent_at>=start_time)
+               select_response = conn.execute(query)
                retval = select_response.rowcount
             except:
                logger.exception('Exception occurred!')

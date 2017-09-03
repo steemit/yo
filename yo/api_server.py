@@ -26,17 +26,15 @@ class YoAPIServer(YoBaseService):
              # if we don't already have an entry for each transport, add one now
              # otherwise, we simply update the sub_data
              # TODO - add support for multiple subs
-             with yo_db.acquire_conn() as conn:
-                  query = user_transports_table.select().where(user_transports_table.c.username == username).where(user_transports_table.c.notify_type == k)
-                  select_response = conn.execute(query)
-                  if select_response.rowcount>0: # we need to update the sub_data
-                     update_query = user_transports_table.update(sub_data=v[1]).where(user_transports_table.c.username==username).where(user_transports_table.c.notify_type==k)
-                  else: # we need to create a new row
-                     update_query = user_transports_table.insert().values(username=username,
-                                                                          notify_type=k,
-                                                                          transport_type=v[0],
-                                                                          sub_data=v[1])
-                  conn.execute(update_query)
+             select_response = yo_db.get_user_transports(username,notify_type=k)
+             if select_response.rowcount>0: # we need to update the sub_data
+                update_query = user_transports_table.update(sub_data=v[1]).where(user_transports_table.c.username==username).where(user_transports_table.c.notify_type==k)
+             else: # we need to create a new row
+                update_query = user_transports_table.insert().values(username=username,
+                                                                     notify_type=k,
+                                                                     transport_type=v[0],
+                                                                     sub_data=v[1])
+             conn.execute(update_query)
 
          return {'status':'OK'}
    @needs_auth

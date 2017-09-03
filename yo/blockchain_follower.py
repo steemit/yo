@@ -1,5 +1,5 @@
 from .base_service import YoBaseService 
-from .db import acquire_db_conn,notifications_table,PRIORITY_LEVELS,create_notification
+from .db import notifications_table,PRIORITY_LEVELS
 import asyncio
 import steem
 from steem.blockchain import Blockchain

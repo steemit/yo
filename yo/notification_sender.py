@@ -1,5 +1,5 @@
 from .base_service import YoBaseService 
-from .db import acquire_db_conn,notifications_table,user_transports_table
+from .db import notifications_table,user_transports_table
 import asyncio
 import json
 
