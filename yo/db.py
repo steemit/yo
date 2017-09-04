@@ -53,7 +53,7 @@ notifications_table = sa.Table('yo_notifications', metadata,
 )
 
 # We basically just store one entry for each configured transport, and delete them with API calls if required
-user_transports_table = sa.Table('yo_user_configured_transports', metadata,
+user_transports_table = sa.Table('yo_user_transports', metadata,
      sa.Column('tid', sa.Integer, primary_key=True),
 
      sa.Column('username', sa.Unicode, index=True),
@@ -87,12 +87,8 @@ class YoDatabase:
             fd.close()
       for entry in initdata:
           table_name,data = entry
-          if table_name=='user_transports_table':
-             with self.acquire_conn() as conn:
-                  conn.execute(user_transports_table.insert(),**data)
-          elif table_name=='notifications_table':
-             with self.acquire_conn() as conn:
-                  conn.execute(notifications_table.insert(),**data)
+          with self.acquire_conn() as conn:
+               conn.execute(metadata.tables['yo_%s' % table_name].insert(),**data)
    async def close(self):
        if 'close' in dir(self.engine):
           self.engine.close()

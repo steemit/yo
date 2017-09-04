@@ -33,7 +33,7 @@ def test_initdata_param():
     yo_config = config.YoConfigManager(None,defaults={'database':{'provider'   :'sqlite',
                                                                   'init_schema':'1'},
                                                       'sqlite':{'filename':':memory:'}})
-    test_initdata = [["user_transports_table", {"username": "testuser", "transport_type": "email", "notify_type": "vote", "sub_data": "test@example.com"}]]
+    test_initdata = [["user_transports", {"username": "testuser", "transport_type": "email", "notify_type": "vote", "sub_data": "test@example.com"}]]
     yo_db = db.YoDatabase(yo_config,initdata=test_initdata)
     results = yo_db.get_user_transports('testuser')
     row_dict = dict(results.fetchone().items())
