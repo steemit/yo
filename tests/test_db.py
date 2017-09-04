@@ -52,4 +52,16 @@ def test_initdata_file():
                                                                   'init_schema':'1',
                                                                   'init_data'  :'%s/../data/init.json' % source_code_path},
                                                       'sqlite':{'filename':':memory:'}})
+    yo_db = db.YoDatabase(yo_config)
     # this is just a "no exceptions were thrown" sanity check
+
+def test_update_subdata():
+    """Test updating subdata on a user transport"""
+    yo_config = config.YoConfigManager(None,defaults={'database':{'provider'   :'sqlite',
+                                                                  'init_schema':'1'},
+                                                      'sqlite':{'filename':':memory:'}})
+    test_initdata = [["user_transports", {"username": "testuser", "transport_type": "email", "notify_type": "vote", "sub_data": "test@example.com"}]]
+    yo_db = db.YoDatabase(yo_config,initdata=test_initdata)
+    yo_db.update_subdata('testuser',transport_type='email',notify_type='vote',sub_data='test2@example.com')
+    updated_transport = dict(yo_db.get_user_transports('testuser',transport_type='email',notify_type='vote').fetchone().items())
+    assert updated_transport['sub_data']=='test2@example.com'

@@ -23,20 +23,7 @@ class YoAPIServer(YoBaseService):
    async def api_enable_transports(self,username=None,transports={},orig_req=None,yo_db=None,**kwargs):
          for k,v in transports.items():
              logger.debug('Updating sub data for %s with %s' % (k,v))
-             
-             # if we don't already have an entry for each transport, add one now
-             # otherwise, we simply update the sub_data
-             # TODO - add support for multiple subs
-             select_response = yo_db.get_user_transports(username,notify_type=k)
-             if select_response.rowcount>0: # we need to update the sub_data
-                update_query = user_transports_table.update(sub_data=v[1]).where(user_transports_table.c.username==username).where(user_transports_table.c.notify_type==k)
-             else: # we need to create a new row
-                update_query = user_transports_table.insert().values(username=username,
-                                                                     notify_type=k,
-                                                                     transport_type=v[0],
-                                                                     sub_data=v[1])
-             conn.execute(update_query)
-
+             yo_db.update_subdata(username,transport_type=v[0],notify_type=k,sub_data=v[1])
          return {'status':'OK'}
    @needs_auth
    async def api_get_enabled_transports(self,username=None,orig_req=None,yo_db=None,**kwargs):

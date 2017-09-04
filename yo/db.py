@@ -71,7 +71,7 @@ user_transports_table = sa.Table('yo_user_transports', metadata,
 
 class YoDatabase:
    def __init__(self,config,initdata=None):
-      provider = config.config_data['database'].get('provider','sqlite3')
+      provider = config.config_data['database'].get('provider','sqlite')
       if provider=='sqlite':
          self.engine = sa.create_engine('sqlite:///%s' % config.config_data['sqlite'].get('filename',':memory:'))
       #TODO - add MySQL here
@@ -90,7 +90,7 @@ class YoDatabase:
           with self.acquire_conn() as conn:
                conn.execute(metadata.tables['yo_%s' % table_name].insert(),**data)
    async def close(self):
-       if 'close' in dir(self.engine):
+       if 'close' in dir(self.engine): # pragma: no cover
           self.engine.close()
           await self.engine.wait_closed()
 
@@ -102,14 +102,15 @@ class YoDatabase:
        finally:
           conn.close()
 
-   def get_user_transports(self, username, notify_type=None):
+   def get_user_transports(self, username, notify_type=None, transport_type=None):
        """Returns an SQLAlchemy result proxy with all the user transports enabled for specified username
 
        Args:
           username(str): the username to lookup
        
        Keyword args:
-          notify_type(str): if set, returns only the configured transports for the specified notify_type
+          notify_type(str):    if set, returns only the configured transports for the specified notify_type
+          transport_type(str): if set, returns the configured transports of that type only
 
        Returns:
           SQLAlchemy result proxy from the select query
@@ -119,8 +120,38 @@ class YoDatabase:
             query = user_transports_table.select().where(user_transports_table.c.username == username)
             if not (notify_type is None):
                query = query.where(user_transports_table.c.notify_type==notify_type)
+            if not (transport_type is None):
+               query = query.where(user_transports_table.c.transport_type==transport_type)
             select_response = conn.execute(query)
        return select_response
+
+   def update_subdata(self, username, transport_type=None, notify_type=None, sub_data=None):
+       """Updates sub_data field for selected transport
+
+       If the transport record does not exist, it is created
+
+       Args:
+          username(str): the user to update
+
+       Keyword args:
+          transport_type(str): the transport type to update
+          notify_type(str):    the notification type to update
+          sub_data(str):       the sub_data (subscription data)
+       """
+       # first check if the transport already exists or not
+       existing_transports = self.get_user_transports(username,notify_type=notify_type,transport_type=transport_type).fetchall()
+       if len(existing_transports)>0: # transport exists, we need to update it
+          update_query = user_transports_table.update().values(sub_data=sub_data)
+          update_query = update_query.where(user_transports_table.c.username==username)
+          update_query = update_query.where(user_transports_table.c.notify_type==notify_type)
+          update_query = update_query.where(user_transports_table.c.transport_type==transport_type)
+       else: # doesn't exist, we need to create it
+          update_query = user_transports_table.insert().values(username=username,
+                                                               notify_type=notify_type,
+                                                               transport_type=transport_type,
+                                                               sub_data=sub_data)
+       with self.acquire_conn() as conn:
+            conn.execute(update_query)
 
    def get_priority_count(self, to_username, priority, timeframe, start_time=None):
        """Returns count of notifications to a user of a set priority or higher
