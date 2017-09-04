@@ -50,6 +50,7 @@ notifications_table = sa.Table('yo_notifications', metadata,
                doc='Datetime when notification was seen (may be identical to read_at for some notification types)'),
      sa.Column('read_at', sa.DateTime, index=True,
                doc='Datetime when notification was read or marked as read'),
+     mysql_engine='InnoDB',
 )
 
 # We basically just store one entry for each configured transport, and delete them with API calls if required
@@ -67,6 +68,7 @@ user_transports_table = sa.Table('yo_user_transports', metadata,
                doc='Datetime when we first created this user preferences entry'),
      sa.Column('updated_at', sa.DateTime, default=sa.func.now(), index=True,
                doc='Datetime when preferences were updated'),
+     mysql_engine='InnoDB',
 )
 
 class YoDatabase:

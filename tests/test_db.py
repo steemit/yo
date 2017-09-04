@@ -65,3 +65,13 @@ def test_update_subdata():
     yo_db.update_subdata('testuser',transport_type='email',notify_type='vote',sub_data='test2@example.com')
     updated_transport = dict(yo_db.get_user_transports('testuser',transport_type='email',notify_type='vote').fetchone().items())
     assert updated_transport['sub_data']=='test2@example.com'
+
+def test_insert_subdata():
+    """Test creating new subdata for user transport"""
+    yo_config = config.YoConfigManager(None,defaults={'database':{'provider'   :'sqlite',
+                                                                  'init_schema':'1'},
+                                                      'sqlite':{'filename':':memory:'}})
+    yo_db = db.YoDatabase(yo_config)
+    yo_db.update_subdata('testuser',transport_type='email',notify_type='vote',sub_data='test2@example.com')
+    updated_transport = dict(yo_db.get_user_transports('testuser',transport_type='email',notify_type='vote').fetchone().items())
+    assert updated_transport['sub_data']=='test2@example.com'
