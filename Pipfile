@@ -25,7 +25,6 @@ pywebpush = "*"
 steem = "*"
 secp256k1 = "*"
 sendgrid = "*"
-pytest-cov = "*"
 
 [dev-packages]
 ipython = "*"
@@ -43,3 +42,4 @@ sphinxcontrib-restbuilder = "*"
 yapf = "*"
 autopep8 = "*"
 Sphinx = "*"
+docker = "*"

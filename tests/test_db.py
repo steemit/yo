@@ -6,9 +6,24 @@ from sqlalchemy import MetaData
 from sqlalchemy import func
 
 import os
+import docker
+import hashlib
 
 source_code_path = os.path.dirname(os.path.realpath(__file__))
 
+def gen_pw():
+    """Hacky as hell but works"""
+    fd = open('/dev/urandom','rb')
+    data = fd.read(32)
+    fd.close()
+    return hashlib.sha256(data).hexdigest()
+
+def test_run_mysql():
+    """Test starting a MySQL server - this is sort of a metatest as the docker trick is used for other tests"""
+    client = docker.from_env()
+    mysql_pw = gen_pw()
+    mysql_container = client.containers.run('mysql',detach=True,environment={'MYSQL_ROOT_PASSWORD':mysql_pw})
+    mysql_container.stop()
 
 def test_empty_sqlite():
     """Test we can get a simple empty sqlite database"""
