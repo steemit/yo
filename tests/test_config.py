@@ -35,3 +35,7 @@ def test_env_vars(monkeypatch):
 def test_file_missing():
     """Test it works when yo.cfg is missing"""
     yo_config = config.YoConfigManager('DOESNOTEXIST')
+
+def test_nofile():
+    """Test using config manager without yo.cfg"""
+    yo_config = config.YoConfigManager(None)

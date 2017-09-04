@@ -119,7 +119,7 @@ class YoDatabase:
           SQLAlchemy result proxy from the select query
        """
        # TODO - make this return a more general-purpose iterator or something
-       with self.acquire_db_conn() as conn:
+       with self.acquire_conn() as conn:
             query = user_transports_table.select().where(user_transports_table.c.username == username)
             if not (notify_type is None):
                query = query.where(user_transports_table.c.notify_type==notify_type)

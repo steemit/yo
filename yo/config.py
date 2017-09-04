@@ -22,7 +22,8 @@ class YoConfigManager:
        for k,v in defaults.items(): # load defaults passed as param
            self.config_data[k]=v
 
-       self.config_data.read(filename)
+       if not (filename is None):
+          self.config_data.read(filename)
        
        for section in self.config_data.sections():
                for k in self.config_data[section]:

@@ -36,7 +36,7 @@ test: build-without-docker test-without-build
 test-without-build: test-without-lint test-pylint
 
 test-without-lint:
-	pipenv run python3.6 -m pytest --cov=yo --cov-report html:cov_html tests/
+	pipenv run python3.6 -m pytest -vv --cov=yo --cov-report term --cov-report html:cov_html tests/
 
 test-pylint:
 	pipenv run pytest -v --pylint
