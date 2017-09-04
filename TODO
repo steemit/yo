@@ -30,3 +30,4 @@ Standardise error_type field values in utils.py and use throughout codebase
 Add other notification types
 Add support for marketing etc and spec API
 Add documentation
+Add last processed block details to DB
