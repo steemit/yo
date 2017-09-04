@@ -5,6 +5,11 @@ from sqlalchemy import select
 from sqlalchemy import MetaData
 from sqlalchemy import func
 
+import os
+
+source_code_path = os.path.dirname(os.path.realpath(__file__))
+
+
 def test_empty_sqlite():
     """Test we can get a simple empty sqlite database"""
     yo_config = config.YoConfigManager(None,defaults={'database':{'provider'   :'sqlite',
@@ -40,3 +45,11 @@ def test_initdata_param():
     for k,v in test_initdata[0][1].items():
         assert row_dict[k]==v
     assert results.fetchone() == None
+
+def test_initdata_file():
+    """Basic sanity check for init.json"""
+    yo_config = config.YoConfigManager(None,defaults={'database':{'provider'   :'sqlite',
+                                                                  'init_schema':'1',
+                                                                  'init_data'  :'%s/../data/init.json' % source_code_path},
+                                                      'sqlite':{'filename':':memory:'}})
+    # this is just a "no exceptions were thrown" sanity check
