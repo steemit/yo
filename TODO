@@ -25,5 +25,8 @@ TestScript: Test each notification priority level
   Check for each limit that we get proper response
 * Setup pytest to work properly
 Refactor DB, all queries should live in one module + one class
-Make DB access all mockable for sane testing
 Implement locking in DB layer and ensure no double sends
+Standardise error_type field values in utils.py and use throughout codebase
+Add other notification types
+Add support for marketing etc and spec API
+Add documentation

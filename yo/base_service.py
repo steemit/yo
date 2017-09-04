@@ -11,7 +11,7 @@ class YoBaseService:
    def init_api(self,yo_app):
        pass # pragma: no cover
    def get_name(self):
-       return self.service_name
+       return self.service_name # pragma: no cover
    async def async_task(self,yo_app): # pragma: no cover
        """ This method will run in the background
        """
