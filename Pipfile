@@ -26,7 +26,6 @@ steem = "*"
 secp256k1 = "*"
 sendgrid = "*"
 pytest-cov = "*"
-pytest-asyncio = "*"
 
 [dev-packages]
 ipython = "*"

@@ -13,10 +13,10 @@ docker-image: clean
 	docker build -t $(PROJECT_DOCKER_TAG) .
 
 Pipfile.lock: Pipfile
-	python3.6 -m pipenv --python 3.6 lock --three --hashes
+	python3.6 -m pipenv --python /usr/local/bin/python3.6 lock --three --hashes
 
 requirements.txt: Pipfile.lock
-	python3.6 -m pipenv --python 3.6 lock -r >requirements.txt
+	python3.6 -m pipenv --python /usr/local/bin/python3.6 lock -r | grep -v Using | >requirements.txt
 
 .env: ${YO_CONFIG} scripts/make_docker_env.py
 	python3.6 scripts/make_docker_env.py ${YO_CONFIG} >.env
