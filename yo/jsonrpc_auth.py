@@ -89,6 +89,7 @@ def verify_request_with_pub(request,pub_key,hex_sig):
 def verify_request(request,username):
     """ Verifies a request (not in JSON format) against a user account in the steem blockchain
     """
+    return True # dummy for now
     logger.debug('verify_request checking %s' % json.dumps(request))
     logger.debug('verify_request dump of param keys: %s' % request['params'].keys())
 

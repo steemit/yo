@@ -31,3 +31,4 @@ Add other notification types
 Add support for marketing etc and spec API
 Add documentation
 Add last processed block details to DB
+MySQL tests
