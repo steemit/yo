@@ -13,17 +13,17 @@ docker-image: clean
 	docker build -t $(PROJECT_DOCKER_TAG) .
 
 Pipfile.lock: Pipfile
-	python3.6 -m pipenv --python /usr/local/bin/python3.6 lock --three --hashes
+	python3.6 -m pipenv --python /usr/local/bin/python3.6 lock --three
 
 requirements.txt: Pipfile.lock
-	python3.6 -m pipenv --python /usr/local/bin/python3.6 lock -r | grep -v Using | >requirements.txt
+	python3.6 -m pipenv --python /usr/local/bin/python3.6 lock --three -r | grep -v Using | >requirements.txt
 
 .env: ${YO_CONFIG} scripts/make_docker_env.py
 	python3.6 scripts/make_docker_env.py ${YO_CONFIG} >.env
 
 build-without-docker: requirements.txt Pipfile.lock
 	mkdir -p build/wheel
-	python3.6 -m pipenv install --python 3.6 --three --dev
+	python3.6 -m pipenv install --python /usr/local/bin/python3.6 --three --dev
 	python3.6 -m pipenv run python3.6 scripts/doc_rst_convert.py
 	python3.6 -m pipenv run python3.6 setup.py build
 	rm README.rst

@@ -40,7 +40,7 @@ pipfile_data = configparser.ConfigParser()
 
 pipfile_data.read(pipfile_path)
 
-required_python_ver = pipfile_data['requires'].get('python_version','3.5')
+required_python_ver = pipfile_data['requires'].get('python_version','3.6')
 default_requirements = []
 dev_requirements = []
 

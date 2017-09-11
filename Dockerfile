@@ -3,11 +3,10 @@ FROM phusion/baseimage:0.9.19
 # Standard stuff
 ENV LANG en_US.UTF-8
 ENV LC_ALL en_US.UTF-8
-ARG APP_ROOT /app
-ARG HTTP_SERVER_PORT 8080
-ARG APP_SERVER_PORT 9000
+ENV HTTP_SERVER_PORT 8080
+ENV APP_SERVER_PORT 9000
 
-ENV APP_ROOT {APP_ROOT}
+ENV APP_ROOT /app
 ENV APP_STATIC_ROOT ${APP_ROOT}/static
 ENV APPRUN_ROOT ${APP_ROOT}/run
 ENV APPRUN_CMD ${APP_ROOT}/bin/steemyo
@@ -71,30 +70,30 @@ RUN chmod +x /etc/service/*/run
 RUN python3.6 -m pip install --upgrade pip
 
 
+# Install PipEnv
+RUN pip3.6 install pipenv
+
 WORKDIR ${APP_ROOT}
 
-# Just enough to build dependencies
-COPY ./Pipfile ${APP_ROOT}/Pipfile
+# Copy code into a suitable place
+COPY ./bin ${APP_ROOT}/bin
+COPY ./data ${APP_ROOT}/data
 COPY ./Makefile ${APP_ROOT}/Makefile
-
-# Install those dependencies
-RUN cd ${APP_ROOT} && \
-    make requirements.txt && \
-    pip3.6 -r requirements.txt
-
-# Copy rest of the code into a suitable place
-COPY . ${APP_ROOT}/src
-WORKDIR ${APP_ROOT/src
+COPY ./package_meta.py ${APP_ROOT}/package_meta.py
+COPY ./Pipfile ${APP_ROOT}/Pipfile
+COPY ./scripts ${APP_ROOT}/scripts
+COPY ./setup.cfg ${APP_ROOT}/setup.cfg
+COPY ./setup.py ${APP_ROOT}/setup.py
+COPY ./tests ${APP_ROOT}/tests
+COPY ./yo ${APP_ROOT}/yo
+COPY ./yo.cfg ${APP_ROOT}/yo.cfg
 
 # Build+install yo
-RUN cd ${APP_ROOT}/src &&
-    make build-without-docker && \
-    make install-global
+RUN make build-without-docker && \
+    make install-pipenv
 
-# Setup www-data with a suitable home
-WORKDIR ${APPRUN_ROOT}
-RUN chown -R www-data:www-data ${APPRUN_ROOT}
-USER www-data
+# let the test suite know it's inside docker
+ENV INDOCKER 1
 
 # Expose the HTTP server port
 EXPOSE {HTTP_SERVER_PORT}

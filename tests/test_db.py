@@ -6,9 +6,12 @@ from sqlalchemy import MetaData
 from sqlalchemy import func
 
 import os
+import pytest
+
 import docker
 import hashlib
 
+no_docker = pytest.mark.skipif(os.getenv('INDOCKER','0')=='1',reason='Does not work inside docker')
 source_code_path = os.path.dirname(os.path.realpath(__file__))
 
 def gen_pw():
@@ -18,6 +21,7 @@ def gen_pw():
     fd.close()
     return hashlib.sha256(data).hexdigest()
 
+@no_docker
 def test_run_mysql():
     """Test starting a MySQL server - this is sort of a metatest as the docker trick is used for other tests"""
     client = docker.from_env()
