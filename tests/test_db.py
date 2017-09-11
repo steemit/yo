@@ -22,7 +22,9 @@ def test_run_mysql():
     """Test starting a MySQL server - this is sort of a metatest as the docker trick is used for other tests"""
     client = docker.from_env()
     mysql_pw = gen_pw()
-    mysql_container = client.containers.run('mysql',detach=True,environment={'MYSQL_ROOT_PASSWORD':mysql_pw})
+
+    mysql_container = client.containers.run('mysql',detach=True,environment={'MYSQL_ROOT_PASSWORD':mysql_pw},ports={'3306/tcp': ('127.0.0.1', 3306)},remove=True)
+
     mysql_container.stop()
 
 def test_empty_sqlite():
