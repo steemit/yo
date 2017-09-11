@@ -88,12 +88,22 @@ COPY ./tests ${APP_ROOT}/tests
 COPY ./yo ${APP_ROOT}/yo
 COPY ./yo.cfg ${APP_ROOT}/yo.cfg
 
+# More deps
+
+RUN apt-get -y install dh-autoreconf pkg-config
+RUN git clone https://github.com/bitcoin-core/secp256k1.git && \
+    cd secp256k1 && \
+    ./autogen.sh && \
+    ./configure && \
+    make all install
+
 # Build+install yo
-RUN make build-without-docker && \
+RUN make Pipfile.lock && \
+    make build-without-docker && \
     make install-pipenv
 
 # let the test suite know it's inside docker
 ENV INDOCKER 1
 
 # Expose the HTTP server port
-EXPOSE {HTTP_SERVER_PORT}
+EXPOSE ${HTTP_SERVER_PORT}

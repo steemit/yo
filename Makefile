@@ -29,7 +29,7 @@ build-without-docker: requirements.txt Pipfile.lock
 	rm README.rst
 
 dockerised-test: docker-image
-	docker run -ti $(PROJECT_DOCKER_TAG) make -C /buildroot/src build-without-docker install-pipenv test-without-build
+	docker run -ti $(PROJECT_DOCKER_TAG) make -C /app test-without-lint
 
 test: build-without-docker test-without-build
 
