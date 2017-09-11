@@ -76,7 +76,12 @@ class YoDatabase:
       provider = config.config_data['database'].get('provider','sqlite')
       if provider=='sqlite':
          self.engine = sa.create_engine('sqlite:///%s' % config.config_data['sqlite'].get('filename',':memory:'))
-      #TODO - add MySQL here
+      elif provider=='mysql':
+         self.engine = sa.create_engine('mysql+pymysql://%s:%s@%s/%s?host=%s' % ( config.config_data['mysql'].get('username',''),
+                                                                                  config.config_data['mysql'].get('password',''),
+                                                                                  config.config_data['mysql'].get('hostname','127.0.0.1'),
+                                                                                  config.config_data['mysql'].get('database','yo'),
+                                                                                  config.config_data['mysql'].get('hostname','127.0.0.1')),pool_size=20)
       if int(config.config_data['database'].get('init_schema',0))==1:
          metadata.create_all(self.engine)
       if initdata is None:

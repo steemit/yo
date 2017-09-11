@@ -10,6 +10,8 @@ import pytest
 
 import docker
 import hashlib
+import socket
+import time
 
 no_docker = pytest.mark.skipif(os.getenv('INDOCKER','0')=='1',reason='Does not work inside docker')
 source_code_path = os.path.dirname(os.path.realpath(__file__))
@@ -21,15 +23,29 @@ def gen_pw():
     fd.close()
     return hashlib.sha256(data).hexdigest()
 
+class MySQLServer:
+   def __init__(self,db_name=None,db_user=None,db_pass=None):
+       self.client = docker.from_env()
+       self.cenv = {'MYSQL_USER':db_user,
+                    'MYSQL_PASSWORD':db_pass,
+                    'MYSQL_DATABASE':db_name,
+                    'MYSQL_ROOT_PASSWORD':gen_pw()}
+       self.container = self.client.containers.run('mysql',detach=True,environment=self.cenv,ports={'3306/tcp': ('127.0.0.1', 3306)},remove=True)
+   def wait(self):
+       while True:
+          for l in self.container.logs(stdout=True,stderr=True,stream=True):
+              log_entry = l.decode('utf-8')
+              if 'MySQL init process done' in log_entry:
+                 time.sleep(1)
+                 return
+   def stop(self):
+       self.container.stop()
+
 @no_docker
 def test_run_mysql():
     """Test starting a MySQL server - this is sort of a metatest as the docker trick is used for other tests"""
-    client = docker.from_env()
-    mysql_pw = gen_pw()
-
-    mysql_container = client.containers.run('mysql',detach=True,environment={'MYSQL_ROOT_PASSWORD':mysql_pw},ports={'3306/tcp': ('127.0.0.1', 3306)},remove=True)
-
-    mysql_container.stop()
+    server = MySQLServer()
+    server.stop()
 
 def test_empty_sqlite():
     """Test we can get a simple empty sqlite database"""
@@ -53,6 +69,25 @@ def test_schema_sqlite():
              query    = table.select().where(True)
              response = conn.execute(query).fetchall()
              assert len(response)==0
+
+@no_docker
+def test_schema_mysql():
+    """Test init_schema with MySQL"""
+    server = MySQLServer(db_name='yo_test',db_user='yo_test',db_pass='1234')
+    server.wait()
+    yo_config = config.YoConfigManager(None,defaults={'database':{'provider'   :'mysql',
+                                                                  'init_schema':'1'},
+                                                         'mysql':{'username':'yo_test','password':'1234','database':'yo_test'}})
+    yo_db = db.YoDatabase(yo_config)
+    assert len(yo_db.engine.table_names()) >0
+    m = MetaData()
+    m.reflect(bind=yo_db.engine)
+    for table in m.tables.values():
+        with yo_db.acquire_conn() as conn:
+             query    = table.select().where(True)
+             response = conn.execute(query).fetchall()
+             assert len(response)==0
+    server.stop()
 
 def test_initdata_param():
     """Test we can pass initdata in from the kwarg"""
