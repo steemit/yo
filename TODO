@@ -32,3 +32,4 @@ Add support for marketing etc and spec API
 Add documentation
 Add last processed block details to DB
 MySQL tests
+Change blockchain follower to put blocks + notifications from blocks into single transaction + last processed block number
