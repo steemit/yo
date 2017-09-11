@@ -34,8 +34,8 @@ notifications_table = sa.Table('yo_notifications', metadata,
                doc='The trx_id from the blockchain'),
      sa.Column('json_data', sa.UnicodeText),
 
-     sa.Column('to_username', sa.Unicode, index=True),
-     sa.Column('from_username', sa.Unicode, index=True),
+     sa.Column('to_username',   sa.String(20), index=True),
+     sa.Column('from_username', sa.String(20), index=True),
 
      sa.Column('type', sa.Enum(NOTIFICATION_TYPES), nullable=False, index=True),
 
@@ -57,12 +57,12 @@ notifications_table = sa.Table('yo_notifications', metadata,
 user_transports_table = sa.Table('yo_user_transports', metadata,
      sa.Column('tid', sa.Integer, primary_key=True),
 
-     sa.Column('username', sa.Unicode, index=True),
+     sa.Column('username', sa.String(20), index=True),
 
      sa.Column('notify_type', sa.Enum(NOTIFICATION_TYPES), nullable=False, index=True),
      sa.Column('transport_type', sa.Enum(TRANSPORT_TYPES), nullable=False, index=True),
 
-     sa.Column('sub_data', sa.Unicode, index=False),
+     sa.Column('sub_data', sa.String(1024), index=False),
 
      sa.Column('created_at', sa.DateTime, default=sa.func.now(), index=True,
                doc='Datetime when we first created this user preferences entry'),
