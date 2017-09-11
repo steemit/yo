@@ -14,6 +14,7 @@ import socket
 import time
 
 no_docker = pytest.mark.skipif(os.getenv('INDOCKER','0')=='1',reason='Does not work inside docker')
+mysql_test = pytest.mark.skipif(os.getenv('SKIPMYSQL','0')=='1',reason='Skipping MySQL tests')
 source_code_path = os.path.dirname(os.path.realpath(__file__))
 
 def gen_pw():
@@ -41,6 +42,7 @@ class MySQLServer:
    def stop(self):
        self.container.stop()
 
+@mysql_test
 @no_docker
 def test_run_mysql():
     """Test starting a MySQL server - this is sort of a metatest as the docker trick is used for other tests"""
@@ -70,6 +72,7 @@ def test_schema_sqlite():
              response = conn.execute(query).fetchall()
              assert len(response)==0
 
+@mysql_test
 @no_docker
 def test_schema_mysql():
     """Test init_schema with MySQL"""
@@ -89,6 +92,7 @@ def test_schema_mysql():
              assert len(response)==0
     server.stop()
 
+@mysql_test
 @no_docker
 def test_initdata_mysql():
     """Test we can pass initdata in from the kwarg with MySQL"""
@@ -150,6 +154,7 @@ def test_insert_subdata():
     updated_transport = dict(yo_db.get_user_transports('testuser',transport_type='email',notify_type='vote').fetchone().items())
     assert updated_transport['sub_data']=='test2@example.com'
 
+@mysql_test
 @no_docker
 def test_update_subdata_mysql():
     """Test updating subdata on a user transport"""
@@ -166,6 +171,7 @@ def test_update_subdata_mysql():
     assert updated_transport['sub_data']=='test2@example.com'
     server.stop()
 
+@mysql_test
 @no_docker
 def test_insert_subdata_mysql():
     """Test creating new subdata for user transport"""
