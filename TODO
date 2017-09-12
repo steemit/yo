@@ -34,4 +34,8 @@ Add documentation
 * Add last processed block details to DB
 * MySQL tests
 Change blockchain follower to put blocks + notifications from blocks into single transaction + last processed block number
+  Add column locked_by
+  Generate unique integer ID at startup
+  Before going further: update set locked_by where locked_by==0
+                        check locked_by is our ID, if not, sleep
 Change API server to have general "run all unsent" internal method
