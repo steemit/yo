@@ -71,6 +71,11 @@ user_transports_table = sa.Table('yo_user_transports', metadata,
      mysql_engine='InnoDB',
 )
 
+# bad practice i know, single row
+block_status_table = sa.Table('yo_block_status', metadata,
+     sa.Column('last_processed_block', sa.Integer),
+)
+
 class YoDatabase:
    def __init__(self,config,initdata=None):
       provider = config.config_data['database'].get('provider','sqlite')
@@ -106,6 +111,17 @@ class YoDatabase:
        conn = self.engine.connect()
        try:
           yield conn
+       finally:
+          conn.close()
+
+   @contextmanager
+   def start_tx(self):
+       conn = self.engine.connect()
+       tx   = conn.begin()
+       try:
+          yield tx
+       except:
+          tx.rollback()
        finally:
           conn.close()
 

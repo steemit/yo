@@ -30,8 +30,8 @@ Standardise error_type field values in utils.py and use throughout codebase
 Add other notification types
 Add support for marketing etc and spec API
 Add documentation
-Make MySQL test use /dev/shm for speed
-Add last processed block details to DB
+* Make MySQL test use /dev/shm for speed
+* Add last processed block details to DB
 * MySQL tests
 Change blockchain follower to put blocks + notifications from blocks into single transaction + last processed block number
 Change API server to have general "run all unsent" internal method
