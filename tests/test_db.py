@@ -31,7 +31,7 @@ class MySQLServer:
                     'MYSQL_PASSWORD':db_pass,
                     'MYSQL_DATABASE':db_name,
                     'MYSQL_ROOT_PASSWORD':gen_pw()}
-       self.container = self.client.containers.run('mysql',detach=True,environment=self.cenv,ports={'3306/tcp': ('127.0.0.1', 3306)},remove=True)
+       self.container = self.client.containers.run('mysql',detach=True,environment=self.cenv,ports={'3306/tcp': ('127.0.0.1', 3306)},tmpfs={'/var/lib/mysql':''},remove=True)
    def wait(self):
        while True:
           for l in self.container.logs(stdout=True,stderr=True,stream=True):
