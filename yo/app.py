@@ -57,9 +57,12 @@ class YoApp:
    async def api_healthcheck(self,**kwargs):
        return({'status'  :'OK',
                'datetime':datetime.datetime.utcnow().isoformat()})
+   async def healthcheck_handler(self,request):
+       return web.json_response(await self.api_healthcheck())
    async def setup_standard_api(self,app):
        self.add_api_method(self.api_healthcheck,'healthcheck')
        self.web_app.router.add_post('/', self.handle_api)
+       self.web_app.router.add_get('/.well-known/healthcheck.json',self.healthcheck_handler)
    def run(self):
        self.running = True
        self.web_app.on_startup.append(self.start_background_tasks)
