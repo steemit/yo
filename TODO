@@ -1,0 +1,42 @@
+* Fix environment variable override
+* API server JSON-RPC healthcheck method
+* Testscript: check healthcheck method
+* Fix issue with enabled_services
+* API server: add test method for API server component
+* TestScript: check test method in API server component
+* TestScript: Send enable_transport for emails+votes
+* API server: Implement enable_transports method, complete with verification of request
+* Have notification sender lookup notifications when triggered to do so and pass to configured transport
+* Ensure notification sender updates sent_at value
+* Testscript: Add user preference for vote notification, signed by posting key pasted in on console with getpass
+* Add sendgrid
+* Fix bug with notification sender not invoking configured transports
+* Refactor services private_api_methods stuff - init in one place
+* Add initdata to DB layer
+* Add API method for grabbing currently configured transports
+Add WWW push static page
+* Rate limiting DB schema
+* Add priority level to notifications
+* Implement ratelimit dummy function
+* Add function in db.py to query notification count
+* Check whether recent notifications sent within X amount of time at same or lower priority level
+TestScript: Test each notification priority level
+  Configure DB such that notifications already sent at and below hard limit, soft limit and boundary conditions
+  Check for each limit that we get proper response
+* Setup pytest to work properly
+Refactor DB, all queries should live in one module + one class
+Implement locking in DB layer and ensure no double sends
+Standardise error_type field values in utils.py and use throughout codebase
+Add other notification types
+Add support for marketing etc and spec API
+Add documentation
+* Make MySQL test use /dev/shm for speed
+* Add last processed block details to DB
+* MySQL tests
+Change blockchain follower to put blocks + notifications from blocks into single transaction + last processed block number
+  Add column locked_by
+  Generate unique integer ID at startup
+  Before going further: update set locked_by where locked_by==0
+                        check locked_by is our ID, if not, sleep
+Change API server to have general "run all unsent" internal method
+Add YO_DATABASE_URL parsing
