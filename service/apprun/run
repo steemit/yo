@@ -3,6 +3,8 @@
 # Make sure we're in the right place
 cd "${APPRUN_ROOT}"
 
+chown -R www-data:www-data /app/*
+
 # Run the actual app here
 	exec 2>&1 \
 	  chpst -u www-data \
