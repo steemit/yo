@@ -95,13 +95,17 @@ RUN git clone https://github.com/bitcoin-core/secp256k1.git && \
     ./configure && \
     make all install
 
+ENV HOME ${APP_ROOT}
 # Build+install yo
 RUN make Pipfile.lock && \
     make build-without-docker && \
-    make install-pipenv
+    make install-global
+
+RUN pip3.6 install -e git+https://github.com/steemit/steem-python.git#egg=steem
 
 # let the test suite know it's inside docker
 ENV INDOCKER 1
 
 # Expose the HTTP server port
 EXPOSE ${HTTP_SERVER_PORT}
+

@@ -1,11 +1,11 @@
 #!/bin/bash -e
 
 # Make sure we're in the right place
-cd "${APPRUN_ROOT}"
+cd /app
 
-chown -R www-data:www-data /app/*
+
+export HOME=/app
 
 # Run the actual app here
 	exec 2>&1 \
-	  chpst -u www-data \
-	     pipenv run /app/bin/steemyo 2>&1
+	     /app/bin/steemyo 2>&1
