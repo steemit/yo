@@ -85,7 +85,7 @@ COPY ./setup.py ${APP_ROOT}/setup.py
 COPY ./tests ${APP_ROOT}/tests
 COPY ./yo ${APP_ROOT}/yo
 COPY ./yo.cfg ${APP_ROOT}/yo.cfg
-
+COPY ./docs ${APP_ROOT}/docs
 # More deps
 
 RUN apt-get -y install dh-autoreconf pkg-config

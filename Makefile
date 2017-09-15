@@ -26,6 +26,7 @@ build-without-docker: requirements.txt Pipfile.lock
 	python3.6 -m pipenv install --python /usr/local/bin/python3.6 --three --dev
 	python3.6 -m pipenv run python3.6 scripts/doc_rst_convert.py
 	python3.6 -m pipenv run python3.6 setup.py build
+	pipenv run make -C docs/ html
 	rm README.rst
 
 dockerised-test: docker-image
