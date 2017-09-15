@@ -25,6 +25,7 @@ pywebpush = "*"
 steem = "*"
 secp256k1 = "*"
 sendgrid = "*"
+sphinx_rtd_theme = "*"
 
 [dev-packages]
 ipython = "*"
@@ -43,3 +44,5 @@ yapf = "*"
 autopep8 = "*"
 Sphinx = "*"
 docker = "*"
+sphinxcontrib-napoleon = "*"
+sphinx_rtd_theme = "*"

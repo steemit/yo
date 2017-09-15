@@ -19,8 +19,16 @@ class YoAPIServer(YoBaseService):
    service_name='api_server'
    q = asyncio.Queue()
 
-   @needs_auth
    async def api_enable_transports(self,username=None,transports={},orig_req=None,yo_db=None,**kwargs):
+         """ Enables/updates selected transports
+
+         Keyword args:
+            username(str):    The user to update
+            transports(dict): A dictionary mapping notification types to [transport_type,sub_data] values
+
+         Returns:
+            dict: {'status':'OK'} on success
+         """
          for k,v in transports.items():
              logger.debug('Updating sub data for %s with %s' % (k,v))
              yo_db.update_subdata(username,transport_type=v[0],notify_type=k,sub_data=v[1])
