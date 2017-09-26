@@ -57,7 +57,8 @@ class YoBlockchainFollower(YoBaseService):
    async def async_ops(self,loop,b):
        ops = b.stream_from(start_block=int(self.yo_app.config.config_data['blockchain_follower']['start_block']) )
        while True:
-           yield await loop.run_in_executor(None,next,ops)
+           next_val = await loop.run_in_executor(None,next,ops)
+           if not (next_val is None): yield next_val
    async def async_task(self,yo_app):
        queue = asyncio.Queue()
        logger.info('Blockchain follower started')
