@@ -98,7 +98,7 @@ RUN git clone https://github.com/bitcoin-core/secp256k1.git && \
 ENV HOME ${APP_ROOT}
 
 # update setuptools
-pip3.6 install -U setuptools
+RUN pip3.6 install -U setuptools
 
 
 # Build+install yo
