@@ -96,6 +96,11 @@ RUN git clone https://github.com/bitcoin-core/secp256k1.git && \
     make all install
 
 ENV HOME ${APP_ROOT}
+
+# update setuptools
+pip3.6 install -U setuptools
+
+
 # Build+install yo
 RUN make Pipfile.lock && \
     make build-without-docker && \
