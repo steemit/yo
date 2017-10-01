@@ -101,8 +101,7 @@ RUN pip3.6 install -U setuptools
 
 
 # Build+install yo
-RUN make Pipfile.lock && \
-    make build-without-docker && \
+RUN make build-without-docker && \
     make install-global
 
 RUN pip3.6 install -e git+https://github.com/steemit/steem-python.git#egg=steem
