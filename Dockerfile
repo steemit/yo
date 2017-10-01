@@ -79,6 +79,7 @@ COPY ./data ${APP_ROOT}/data
 COPY ./Makefile ${APP_ROOT}/Makefile
 COPY ./package_meta.py ${APP_ROOT}/package_meta.py
 COPY ./Pipfile ${APP_ROOT}/Pipfile
+COPY ./Pipfile.lock ${APP_ROOT}/Pipfile.lock
 COPY ./scripts ${APP_ROOT}/scripts
 COPY ./setup.cfg ${APP_ROOT}/setup.cfg
 COPY ./setup.py ${APP_ROOT}/setup.py

@@ -24,10 +24,7 @@ requirements.txt: Pipfile.lock
 build-without-docker: requirements.txt Pipfile.lock
 	mkdir -p build/wheel
 	python3.6 -m pipenv install --python /usr/local/bin/python3.6 --dev
-	python3.6 -m pipenv run python3.6 scripts/doc_rst_convert.py
 	python3.6 -m pipenv run python3.6 setup.py build
-	pipenv run make -C docs/ html
-	rm README.rst
 
 dockerised-test: docker-image
 	docker run -ti $(PROJECT_DOCKER_TAG) make -C /app test-without-lint
@@ -60,7 +57,5 @@ install-global: clean
 	pip3.6 install -e .
 
 pypi:
-	python3.6 scripts/doc_rst_convert.py
 	python3.6 setup.py bdist_wheel --universal
 	python3.6 setup.py sdist bdist_wheel upload
-	rm README.rst
