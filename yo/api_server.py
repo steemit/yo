@@ -7,13 +7,21 @@ import steem
 import hashlib
 from steem.account import Account
 import json
+import datetime
 
 import logging
 logger = logging.getLogger(__name__)
 
 from yo import jsonrpc_auth
 
-
+def mock_notification():
+    return {notification_id:1337,
+            read:False,
+            shown:False,
+            notification_type: 'VOTE',
+            created:datetime.datetime.now().isoformat(),
+            author:'test',
+            data:{}}
 
 class YoAPIServer(YoBaseService):
    service_name='api_server'
@@ -41,6 +49,17 @@ class YoAPIServer(YoBaseService):
                             'notify_type'   :row.notify_type,
                             'sub_data'      :row.sub_data})
          return retval
+   async def api_get_notifications(self,username=None,since=None,orig_req=None,yo_db=None):
+       """ Get all notifications since the specified time
+
+       Keyword args:
+          username(str): The username to query for
+          since(str):    The iso8601 formatted timestamp to query since
+
+       Returns:
+          list: list of notifications
+       """
+       return [mock_notification()]
    async def api_test_method(self,**kwargs):
        return {'status':'OK'}
    async def async_task(self,yo_app): # pragma: no cover
