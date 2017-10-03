@@ -15,13 +15,13 @@ logger = logging.getLogger(__name__)
 from yo import jsonrpc_auth
 
 def mock_notification():
-    return {notification_id:1337,
-            read:False,
-            shown:False,
-            notification_type: 'VOTE',
-            created:datetime.datetime.now().isoformat(),
-            author:'test',
-            data:{}}
+    return {'notification_id':1337,
+            'read':False,
+            'shown':False,
+            'notification_type': 'VOTE',
+            'created':datetime.datetime.now().isoformat(),
+            'author':'test',
+            'data':{}}
 
 class YoAPIServer(YoBaseService):
    service_name='api_server'
@@ -49,7 +49,7 @@ class YoAPIServer(YoBaseService):
                             'notify_type'   :row.notify_type,
                             'sub_data'      :row.sub_data})
          return retval
-   async def api_get_notifications(self,username=None,since=None,orig_req=None,yo_db=None):
+   async def api_get_notifications(self,username=None,since=None,orig_req=None,yo_db=None,**kwargs):
        """ Get all notifications since the specified time
 
        Keyword args:
