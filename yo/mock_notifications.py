@@ -3,6 +3,7 @@
 
 import random
 import datetime
+import dateutil
 
 class YoMockData:
    """ A set of in-memory mock notifications
@@ -37,7 +38,12 @@ class YoMockData:
        self.notifications_by_id[notify_id]['seen'] = True
    def get_notifications(self,username=None,created_before=None,updated_after=None,read=None,notify_type=None):
        retval = []
+       if not (created_before is None):
+          created_before_query = dateutil.parser.parse(created_before)
        for k,v in self.notifications_by_id.items():
            if not (username is None):
               if v['username'] != username: continue
-
+           if not (created_before is None):
+              created_curval = dateutil.parser.parse(v['created'])
+              if created_curval >= created_before_query: continue
+       return retval
