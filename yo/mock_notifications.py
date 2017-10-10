@@ -21,6 +21,8 @@ class YoMockData:
        self.add_new_notification(notify_type='feed',username='test_user',data=dict(item=dict(author='some_user',category='test',permlink='another-test',summary='Stuff etc')))
        self.add_new_notification(notify_type='reward',username='test_user',data=dict(reward_type='curation',item=dict(author='test_user',category='test',permlink='test-post',summary='A test post'),
                                                                                                             amount=dict(SBD=6.66,SP=13.37)))
+       for x in range(60):
+           self.add_new_notification(notify_type='vote',username='test_user',data=dict(author='some_other_user',weight=100,item=dict(author='test_user',permlink='test-post-%s' % x, summary='A test post')))
    def add_new_notification(self,notify_type=None,created=None,username=None,data={}):
        notify_id = random.randint(1,9999999)
        if created is None:
@@ -39,7 +41,7 @@ class YoMockData:
    def mark_notification_seen(self,notify_id=None):
        self.notifications_by_id[notify_id]['seen'] = True
        self.notifications_by_id[notify_id]['updated'] = datetime.datetime.now().isoformat()
-   def get_notifications(self,username=None,created_before=None,updated_after=None,read=None,notify_type=None):
+   def get_notifications(self,username=None,created_before=None,updated_after=None,read=None,notify_type=None,limit=30):
        retval = []
        if not (created_before is None):
           created_before_query = dateutil.parser.parse(created_before)
@@ -55,8 +57,8 @@ class YoMockData:
               updated_curval = dateutil.parser.parse(v['updated'])
               if updated_curval <= updated_after_query: continue
            if not (read is None):
-              if k['read'] != read: continue
+              if v['read'] != read: continue
            if not (notify_type is None):
-              if k['notify_type'] != notify_type: continue
+              if v['notify_type'] != notify_type: continue
            retval.append(v)
-       return retval
+       return retval[:limit]
