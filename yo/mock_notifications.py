@@ -25,7 +25,8 @@ class YoMockData:
        notify_id = random.randint(1,9999999)
        if created is None:
           created = datetime.datetime.now().isoformat()
-       self.notifications_by_id[notify_id] = {'notify_type':notify_type,
+       self.notifications_by_id[notify_id] = {'notify_id':  notify_id,
+                                              'notify_type':notify_type,
                                               'created':    created,
                                               'updated':    created,
                                               'read':       False,
@@ -40,10 +41,20 @@ class YoMockData:
        retval = []
        if not (created_before is None):
           created_before_query = dateutil.parser.parse(created_before)
+       if not (updated_after is None):
+          updated_after_query = dateutil.parser.parse(updated_after)
        for k,v in self.notifications_by_id.items():
            if not (username is None):
               if v['username'] != username: continue
            if not (created_before is None):
               created_curval = dateutil.parser.parse(v['created'])
               if created_curval >= created_before_query: continue
+           if not (updated_after is None):
+              updated_curval = dateutil.parser.parse(v['updated'])
+              if updated_curval <= updated_after_query: continue
+           if not (read is None):
+              if k['read'] != read: continue
+           if not (notify_type is None):
+              if k['notify_type'] != notify_type: continue
+           retval.append(v)
        return retval
