@@ -1,5 +1,6 @@
 from .base_service import YoBaseService 
 from .db import user_transports_table
+from .mock_notifications import YoMockData
 from .utils import needs_auth
 import asyncio
 import json
@@ -32,7 +33,7 @@ class YoAPIServer(YoBaseService):
    service_name='api_server'
    q = asyncio.Queue()
 
-   test_notifications = gen_test_notifications()
+   test_notifications = YoMockData()
 
    async def api_enable_transports(self,username=None,transports={},orig_req=None,yo_db=None,**kwargs):
          """ Enables/updates selected transports
@@ -72,11 +73,11 @@ class YoAPIServer(YoBaseService):
           list: list of notifications represented in dictionary format
        """
        if test:
-          return self.test_notifications # TODO - implement generation of lots of notifications, return only the relevant ones
+          return self.test_notifications.get_notifications(username=username,created_before=created_before,updated_after=updated_after,notify_type=notify_type,read=read)
        else: 
           # TODO - implement real thing here
          return []
-   async def api_mark_read(self,notification_ids=[],orig_req=None,yo_db=None,**kwargs):
+   async def api_mark_read(self,notification_ids=[],orig_req=None,test=False,yo_db=None,**kwargs):
        """ Mark a list of notifications as read
 
        Keyword args:
@@ -85,7 +86,11 @@ class YoAPIServer(YoBaseService):
        Returns:
            list: list of notifications updated
        """
-       return []
+       if test:
+          for notify_id in notification_ids:
+              self.test_notificiations.mark_read(notify_id)
+       else:
+          return []
    async def api_reset_test_data(self,**kwargs):
        return {'status':'OK'}
    async def api_test_method(self,**kwargs):
