@@ -35,7 +35,7 @@ needed mocks:
     permlink
     summary
  reward
-  type
+  reward_type
    curation
    author
   item
