@@ -24,7 +24,6 @@ py-vapid = "*"
 pywebpush = "*"
 python-dateutil = "*"
 steem = "*"
-secp256k1 = "*"
 sendgrid = "*"
 
 [dev-packages]

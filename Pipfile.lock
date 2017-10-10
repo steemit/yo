@@ -92,9 +92,6 @@
         "requests": {
             "version": "==2.18.4"
         },
-        "secp256k1": {
-            "version": "==0.13.2"
-        },
         "sendgrid": {
             "version": "==5.2.0"
         },
