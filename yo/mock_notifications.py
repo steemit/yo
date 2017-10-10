@@ -22,7 +22,8 @@ class YoMockData:
        self.add_new_notification(notify_type='reward',username='test_user',data=dict(reward_type='curation',item=dict(author='test_user',category='test',permlink='test-post',summary='A test post'),
                                                                                                             amount=dict(SBD=6.66,SP=13.37)))
        for x in range(60):
-           self.add_new_notification(notify_type='vote',username='test_user',data=dict(author='some_other_user',weight=100,item=dict(author='test_user',permlink='test-post-%s' % x, summary='A test post')))
+           self.add_new_notification(notify_type='vote',username='test_user',data=dict(author='some_other_user',weight=100,item=dict(author='test_user',permlink='test-post-%s' % x, summary='A test post',
+                                                                                                                                     category='test',depth=0)))
    def add_new_notification(self,notify_type=None,created=None,username=None,data={}):
        notify_id = random.randint(1,9999999)
        if created is None:
