@@ -13,22 +13,6 @@ import datetime
 import logging
 logger = logging.getLogger(__name__)
 
-from yo import jsonrpc_auth
-
-def gen_mock_notification(notify_id,read,shown,notify_type,created,author,data):
-    return {'notification_id':notify_id,
-            'read':read,
-            'shown':shown,
-            'notification_type': notify_type,
-            'created':created,
-            'author':author,
-            'data':data}
-
-def gen_test_notifications():
-    """ Returns a dictionary mapping a set of notification IDs to full data
-    """
-    return {0:gen_mock_notification(0,False,False,'VOTE',datetime.datetime.now().isoformat(),'test',{})}
-
 class YoAPIServer(YoBaseService):
    service_name='api_server'
    q = asyncio.Queue()
@@ -49,7 +33,6 @@ class YoAPIServer(YoBaseService):
              logger.debug('Updating sub data for %s with %s' % (k,v))
              yo_db.update_subdata(username,transport_type=v[0],notify_type=k,sub_data=v[1])
          return {'status':'OK'}
-   @needs_auth
    async def api_get_enabled_transports(self,username=None,orig_req=None,yo_db=None,**kwargs):
          retval = []
          for row in yo_db.get_user_transports(username):
@@ -92,7 +75,7 @@ class YoAPIServer(YoBaseService):
        else:
           return []
    async def api_reset_test_data(self,**kwargs):
-       return {'status':'OK'}
+       self.test_notifications.reset()
    async def api_test_method(self,**kwargs):
        return {'status':'OK'}
    async def async_task(self,yo_app): # pragma: no cover
