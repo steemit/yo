@@ -36,4 +36,8 @@ class YoMockData:
    def mark_notification_seen(self,notify_id=None):
        self.notifications_by_id[notify_id]['seen'] = True
    def get_notifications(self,username=None,created_before=None,updated_after=None,read=None,notify_type=None):
-       pass
+       retval = []
+       for k,v in self.notifications_by_id.items():
+           if not (username is None):
+              if v['username'] != username: continue
+

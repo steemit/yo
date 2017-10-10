@@ -8,13 +8,21 @@ import datetime
 import aiomysql.sa
 import json
 
+import enum
+
 from contextlib import contextmanager
 logger = logging.getLogger('__name__')
 
 metadata = sa.MetaData()
 
-NOTIFICATION_TYPES=('vote')
-TRANSPORT_TYPES   =('email','sms','polled')
+class NOTIFICATION_TYPES(enum.Enum):
+   vote = 0
+
+class TRANSPORT_TYPES(enum.Enum):
+   email  = 0
+   sms    = 1
+   polled = 2
+
 PRIORITY_LEVELS   ={'always'   :5,
                     'priority' :4,
                     'normal'   :3,
