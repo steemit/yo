@@ -22,7 +22,7 @@ http-ece = "*"
 requests = "*"
 py-vapid = "*"
 pywebpush = "*"
-steem = "*"
+steem = { git = 'https://github.com/steemit/steem-python.git' }
 secp256k1 = "*"
 sendgrid = "*"
 

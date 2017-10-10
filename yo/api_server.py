@@ -14,18 +14,25 @@ logger = logging.getLogger(__name__)
 
 from yo import jsonrpc_auth
 
-def mock_notification():
-    return {'notification_id':1337,
-            'read':False,
-            'shown':False,
-            'notification_type': 'VOTE',
-            'created':datetime.datetime.now().isoformat(),
-            'author':'test',
-            'data':{}}
+def gen_mock_notification(notify_id,read,shown,notify_type,created,author,data):
+    return {'notification_id':notify_id,
+            'read':read,
+            'shown':shown,
+            'notification_type': notify_type,
+            'created':created,
+            'author':author,
+            'data':data}
+
+def gen_test_notifications():
+    """ Returns a dictionary mapping a set of notification IDs to full data
+    """
+    return {0:gen_mock_notification(0,False,False,'VOTE',datetime.datetime.now().isoformat(),'test',{})}
 
 class YoAPIServer(YoBaseService):
    service_name='api_server'
    q = asyncio.Queue()
+
+   test_notifications = gen_test_notifications()
 
    async def api_enable_transports(self,username=None,transports={},orig_req=None,yo_db=None,**kwargs):
          """ Enables/updates selected transports
@@ -49,7 +56,7 @@ class YoAPIServer(YoBaseService):
                             'notify_type'   :row.notify_type,
                             'sub_data'      :row.sub_data})
          return retval
-   async def api_get_notifications(self,username=None,created_before=None,updated_after=None,read=None,notify_type=None,orig_req=None,yo_db=None,**kwargs):
+   async def api_get_notifications(self,username=None,created_before=None,updated_after=None,read=None,notify_type=None,limit=30,test=False,orig_req=None,yo_db=None,**kwargs):
        """ Get all notifications since the specified time
 
        Keyword args:
@@ -58,11 +65,17 @@ class YoAPIServer(YoBaseService):
           updated_after(str): ISO8601-formatted timestamp
           read(bool): If set, only returns notifications with read flag set to this value
           notify_type(str): The notification type to return
+          limit(int): The maximum number of notifications to return, defaults to 30
+          test(bool): If True, uses mock data only instead of talking to the database backend
 
        Returns:
           list: list of notifications represented in dictionary format
        """
-       return [mock_notification()]
+       if test:
+          return self.test_notifications # TODO - implement generation of lots of notifications, return only the relevant ones
+       else: 
+          # TODO - implement real thing here
+         return []
    async def api_mark_read(self,notification_ids=[],orig_req=None,yo_db=None,**kwargs):
        """ Mark a list of notifications as read
 
@@ -73,11 +86,14 @@ class YoAPIServer(YoBaseService):
            list: list of notifications updated
        """
        return []
+   async def api_reset_test_data(self,**kwargs):
+       return {'status':'OK'}
    async def api_test_method(self,**kwargs):
        return {'status':'OK'}
    async def async_task(self,yo_app): # pragma: no cover
        yo_app.add_api_method(self.api_enable_transports,'enable_transports')
        yo_app.add_api_method(self.api_get_enabled_transports,'get_enabled_transports')
        yo_app.add_api_method(self.api_get_notifications,'get_notifications')
+       yo_app.add_api_method(self.api_reset_test_data,'reset_test_data')
        yo_app.add_api_method(self.api_mark_read,'mark_read')
        yo_app.add_api_method(self.api_test_method,'api_test_method')
