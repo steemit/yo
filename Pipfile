@@ -23,7 +23,7 @@ requests = "*"
 py-vapid = "*"
 pywebpush = "*"
 python-dateutil = "*"
-steem = { git = 'https://github.com/steemit/steem-python.git' }
+steem = "*"
 secp256k1 = "*"
 sendgrid = "*"
 

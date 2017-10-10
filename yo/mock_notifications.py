@@ -35,8 +35,10 @@ class YoMockData:
                                               'data':       data}
    def mark_notification_read(self,notify_id=None):
        self.notifications_by_id[notify_id]['read'] = True
+       self.notifications_by_id[notify_id]['updated'] = datetime.datetime.now().isoformat()
    def mark_notification_seen(self,notify_id=None):
        self.notifications_by_id[notify_id]['seen'] = True
+       self.notifications_by_id[notify_id]['updated'] = datetime.datetime.now().isoformat()
    def get_notifications(self,username=None,created_before=None,updated_after=None,read=None,notify_type=None):
        retval = []
        if not (created_before is None):

@@ -88,13 +88,6 @@ COPY ./yo ${APP_ROOT}/yo
 COPY ./yo.cfg ${APP_ROOT}/yo.cfg
 # More deps
 
-RUN apt-get -y install dh-autoreconf pkg-config
-RUN git clone https://github.com/bitcoin-core/secp256k1.git && \
-    cd secp256k1 && \
-    ./autogen.sh && \
-    ./configure && \
-    make all install
-
 ENV HOME ${APP_ROOT}
 
 # update setuptools
@@ -105,7 +98,6 @@ RUN pip3.6 install -U setuptools
 RUN make build-without-docker && \
     make install-global
 
-RUN pip3.6 install -e git+https://github.com/steemit/steem-python.git#egg=steem
 
 # let the test suite know it's inside docker
 ENV INDOCKER 1
