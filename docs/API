@@ -21,7 +21,7 @@ needed mocks:
   amount
  power_up
   amount
- resteem
+ resteem - user has had post resteemed
   resteemed_item
     author
     category
