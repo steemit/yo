@@ -14,7 +14,7 @@ logger = logging.getLogger('__name__')
 metadata = sa.MetaData()
 
 NOTIFICATION_TYPES=('vote')
-TRANSPORT_TYPES   =('email')
+TRANSPORT_TYPES   =('email','sms','polled')
 PRIORITY_LEVELS   ={'always'   :5,
                     'priority' :4,
                     'normal'   :3,

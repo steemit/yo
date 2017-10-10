@@ -1,48 +1,48 @@
-Notification types:
- TOTAL
- POWER_DOWN
- POWER_UP
- RESTEEM 
- FEED
- REWARD
- SEND
- MENTION
- FOLLOW
- VOTE
- COMMENT_REPLY
- POST_REPLY
- ACCOUNT_UPDATE
- MESSAGE
- RECEIVE
+notification types:
+ total
+ power_down
+ power_up
+ resteem 
+ feed
+ reward
+ send
+ mention
+ follow
+ vote
+ comment_reply
+ post_reply
+ account_update
+ message
+ receive
 
-Needed mocks:
- TOTAL
- POWER_DOWN
+needed mocks:
+ total
+ power_down
   amount
- POWER_UP
+ power_up
   amount
- RESTEEM
+ resteem
   resteemed_item
     author
     category
     permlink
     summary
     resteemed_by
- FEED
+ feed
   item
     author
     category
     permlink
     summary
- REWARD
+ reward
   type
-   CURATION
-   AUTHOR
+   curation
+   author
   item
     author
     category
     permlink
     summary
   amount
-   SBD
-   SP
+   sbd
+   sp
