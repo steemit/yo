@@ -60,18 +60,32 @@ class YoAPIServer(YoBaseService):
        else: 
           # TODO - implement real thing here
          return []
-   async def api_mark_read(self,notification_ids=[],orig_req=None,test=False,yo_db=None,**kwargs):
+   async def api_mark_read(self,ids=[],orig_req=None,test=False,yo_db=None,**kwargs):
        """ Mark a list of notifications as read
 
        Keyword args:
-           notification_ids(list): List of notifications to mark read
+           ids(list): List of notifications to mark read
        
        Returns:
            list: list of notifications updated
        """
        if test:
-          for notify_id in notification_ids:
-              self.test_notificiations.mark_read(notify_id)
+          for notify_id in ids:
+              self.test_notifications.mark_read(notify_id)
+       else:
+          return []
+   async def api_mark_seen(self,ids=[],orig_req=None,test=False,yo_db=None,**kwargs):
+       """ Mark a list of notifications as seen
+
+       Keyword args:
+           ids(list): List of notifications to mark seen
+
+       Returns:
+           list: list of notifications updated
+       """
+       if test:
+          for notify_id in ids:
+              self.test_notifications.mark_seen(notify_id)
        else:
           return []
    async def api_reset_test_data(self,**kwargs):
