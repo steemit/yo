@@ -71,7 +71,7 @@ class YoAPIServer(YoBaseService):
        """
        if test:
           for notify_id in ids:
-              self.test_notifications.mark_read(notify_id)
+              self.test_notifications.mark_notification_read(notify_id)
        else:
           return []
    async def api_mark_seen(self,ids=[],orig_req=None,test=False,yo_db=None,**kwargs):
@@ -85,7 +85,7 @@ class YoAPIServer(YoBaseService):
        """
        if test:
           for notify_id in ids:
-              self.test_notifications.mark_seen(notify_id)
+              self.test_notifications.mark_notification_seen(notify_id)
        else:
           return []
    async def api_reset_test_data(self,**kwargs):
