@@ -15,7 +15,7 @@ asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 from jsonrpcserver.async_methods import AsyncMethods
 import json
 
-
+ALLOWED_ORIGINS=['http://localhost:8080','https://steemitdev.com']
 
 class YoApp:
    def __init__(self,config=None,db=None):
@@ -35,6 +35,9 @@ class YoApp:
 
    async def handle_api(self,request):
          req_app = request.app
+         origin = request.headers['Origin']
+         if not origin in ALLOWED_ORIGINS:
+            return web.Response(status=403)
          request = await request.json()
          orig_request = json.dumps(request) # silly hack
          logger.debug('Incoming request: %s' % request)
@@ -45,7 +48,7 @@ class YoApp:
          request['params']['orig_req']  = json.loads(orig_request) # needed for authentication
          request['params']['skip_auth'] = False # without this, user can pass skip_auth, which is obviously bad
          response = await self.api_methods.dispatch(request)
-         return web.json_response(response)
+         return web.json_response(response,headers={'Access-Control-Allow-Methods': 'POST','Access-Control-Allow-Origin': origin})
    def add_api_method(self,func,func_name):
        logger.debug('Adding API method %s' % func_name)
        self.api_methods.add(func,name='yo.%s' % func_name)
@@ -59,8 +62,16 @@ class YoApp:
                'datetime':datetime.datetime.utcnow().isoformat()})
    async def healthcheck_handler(self,request):
        return web.json_response(await self.api_healthcheck())
+   async def handle_options(self,request):
+       origin = request.headers['Origin']
+       if origin in ALLOWED_ORIGINS:
+          response = web.Response(status=204,headers={'Access-Control-Allow-Methods': 'POST','Access-Control-Allow-Origin': origin})
+       else:
+          response = web.Response(status=403)
+       return response
    async def setup_standard_api(self,app):
        self.add_api_method(self.api_healthcheck,'healthcheck')
+       self.web_app.router.add_route('OPTIONS','/',self.handle_options)
        self.web_app.router.add_post('/', self.handle_api)
        self.web_app.router.add_get('/.well-known/healthcheck.json',self.healthcheck_handler)
    def run(self):
