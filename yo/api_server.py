@@ -58,7 +58,7 @@ class YoAPIServer(YoBaseService):
        if test:
           return self.test_notifications.get_notifications(username=username,created_before=created_before,updated_after=updated_after,notify_type=notify_type,read=read)
        else: 
-          # TODO - implement real thing here
+          # TODO  - implement real thing here
          return []
    async def api_mark_read(self,ids=[],orig_req=None,test=False,yo_db=None,**kwargs):
        """ Mark a list of notifications as read
