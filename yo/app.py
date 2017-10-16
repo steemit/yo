@@ -65,7 +65,9 @@ class YoApp:
    async def handle_options(self,request):
        origin = request.headers['Origin']
        if origin in ALLOWED_ORIGINS:
-          response = web.Response(status=204,headers={'Access-Control-Allow-Methods': 'POST','Access-Control-Allow-Origin': origin})
+          response = web.Response(status=204,headers={'Access-Control-Allow-Methods': 'POST',
+                                                      'Access-Control-Allow-Origin': origin,
+                                                      'Access-Control-Allow-Headers': '*'})
        else:
           response = web.Response(status=403)
        return response
