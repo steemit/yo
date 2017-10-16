@@ -35,9 +35,6 @@ class YoApp:
 
    async def handle_api(self,request):
          req_app = request.app
-         origin = request.headers['Origin']
-         if not origin in ALLOWED_ORIGINS:
-            return web.Response(status=403)
          request = await request.json()
          orig_request = json.dumps(request) # silly hack
          logger.debug('Incoming request: %s' % request)
