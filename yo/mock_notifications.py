@@ -15,17 +15,22 @@ class YoMockData:
            Also freshly generates a new set of data
        """
        self.notifications_by_id = {}
-       self.add_new_notification(notify_type='power_down',username='test_user',data=dict(amount=6.66))
-       self.add_new_notification(notify_type='power_up',username='test_user',data=dict(amount=13.37))
-       self.add_new_notification(notify_type='resteem',username='test_user',data=dict(resteemed_item=dict(author='test_user',category='test',permlink='test-post',summary='A test post',resteemed_by='some_user')))
-       self.add_new_notification(notify_type='feed',username='test_user',data=dict(item=dict(author='some_user',category='test',permlink='another-test',summary='Stuff etc')))
+       self.add_new_notification(notify_type='power_down',username='test_user',data=dict(amount=6.66),id=161)
+       self.add_new_notification(notify_type='power_up',username='test_user',data=dict(amount=13.37),id=162)
+       self.add_new_notification(notify_type='resteem',username='test_user',data=dict(resteemed_item=dict(author='test_user',category='test',permlink='test-post',summary='A test post',resteemed_by='some_user')),id=163)
+       self.add_new_notification(notify_type='feed',username='test_user',data=dict(item=dict(author='some_user',category='test',permlink='another-test',summary='Stuff etc')),id=164)
        self.add_new_notification(notify_type='reward',username='test_user',data=dict(reward_type='curation',item=dict(author='test_user',category='test',permlink='test-post',summary='A test post'),
-                                                                                                            amount=dict(SBD=6.66,SP=13.37)))
+                                                                                                            amount=dict(SBD=6.66,SP=13.37)),id=165)
        for x in range(60):
            self.add_new_notification(notify_type='vote',username='test_user',data=dict(author='some_other_user',weight=100,item=dict(author='test_user',permlink='test-post-%s' % x, summary='A test post',
-                                                                                                                                     category='test',depth=0)))
-   def add_new_notification(self,notify_type=None,created=None,username=None,data={}):
-       notify_id = random.randint(1,9999999)
+                                                                                                                                     category='test',depth=0)),id=x)
+   def add_new_notification(self,notify_type=None,created=None,username=None,data={}, id=None):
+       notify_id = id
+
+       if id is None:
+          notify_id = random.randint(1,9999999)
+
+
        if created is None:
           created = datetime.datetime.now().isoformat()
        self.notifications_by_id[notify_id] = {'notify_id':  notify_id,

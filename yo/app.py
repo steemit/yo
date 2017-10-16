@@ -32,6 +32,7 @@ class YoApp:
        }
        self.api_methods = AsyncMethods()
        self.running = False
+       
 
    async def handle_api(self,request):
          req_app = request.app
@@ -48,7 +49,7 @@ class YoApp:
          request['params']['orig_req']  = json.loads(orig_request) # needed for authentication
          request['params']['skip_auth'] = False # without this, user can pass skip_auth, which is obviously bad
          response = await self.api_methods.dispatch(request)
-         return web.json_response(response,headers={'Access-Control-Allow-Methods': 'POST','Access-Control-Allow-Origin': origin})
+         return web.json_response(response, headers={'Access-Control-Allow-Methods': 'POST','Access-Control-Allow-Origin': origin})
    def add_api_method(self,func,func_name):
        logger.debug('Adding API method %s' % func_name)
        self.api_methods.add(func,name='yo.%s' % func_name)
