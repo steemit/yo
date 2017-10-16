@@ -34,6 +34,7 @@ class YoApp:
        self.running = False
 
    async def handle_api(self,request):
+         origin = request.headers['Origin']
          req_app = request.app
          request = await request.json()
          orig_request = json.dumps(request) # silly hack
