@@ -35,7 +35,6 @@ class YoApp:
        
 
    async def handle_api(self,request):
-         origin = request.headers['Origin']
          req_app = request.app
          request = await request.json()
          orig_request = json.dumps(request) # silly hack
@@ -47,7 +46,7 @@ class YoApp:
          request['params']['orig_req']  = json.loads(orig_request) # needed for authentication
          request['params']['skip_auth'] = False # without this, user can pass skip_auth, which is obviously bad
          response = await self.api_methods.dispatch(request)
-         return web.json_response(response, headers={'Access-Control-Allow-Methods': 'POST','Access-Control-Allow-Origin': origin})
+         return web.json_response(response)
    def add_api_method(self,func,func_name):
        logger.debug('Adding API method %s' % func_name)
        self.api_methods.add(func,name='yo.%s' % func_name)
@@ -72,7 +71,6 @@ class YoApp:
        return response
    async def setup_standard_api(self,app):
        self.add_api_method(self.api_healthcheck,'healthcheck')
-       self.web_app.router.add_route('OPTIONS','/',self.handle_options)
        self.web_app.router.add_post('/', self.handle_api)
        self.web_app.router.add_get('/.well-known/healthcheck.json',self.healthcheck_handler)
    def run(self):
