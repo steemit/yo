@@ -1,6 +1,7 @@
 from .base_service import YoBaseService 
 from .db import user_transports_table
 from .mock_notifications import YoMockData
+from .mock_settings import YoMockSettings
 from .utils import needs_auth
 import asyncio
 import json
@@ -18,6 +19,7 @@ class YoAPIServer(YoBaseService):
    q = asyncio.Queue()
 
    test_notifications = YoMockData()
+   test_settings = YoMockSettings()
 
    async def api_enable_transports(self,username=None,transports={},orig_req=None,yo_db=None,**kwargs):
          """ Enables/updates selected transports
@@ -125,11 +127,31 @@ class YoAPIServer(YoBaseService):
 
    async def api_reset_test_data(self,**kwargs):
        self.test_notifications.reset()
+       self.test_settings.reset()
    async def api_test_method(self,**kwargs):
        return {'status':'OK'}
+   async def api_set_transports(self,username=None,transports={},orig_req=None,test=False,yo_db=None,**kwargs):
+       # do some quick sanity checks first
+       if len(transports.items())==0: return None # this should be an error of course
+       for k,v in transports.items():
+           if len(v.items()) != 2: return None # each transport should only have 2 fields
+           if not 'notification_types' in v.keys(): return None
+           if not 'sub_data' in v.keys(): return None
+
+       retval = transports
+       if test:
+          retval = self.test_settings.set_transports(username,transports)
+       return retval
+   async def api_get_transports(self,username=None,orig_req=None,test=False,yo_db=None,**kwargs):
+       retval = {}
+       if test:
+          retval = self.test_settings.get_transports(username)
+       return retval
    async def async_task(self,yo_app): # pragma: no cover
-       yo_app.add_api_method(self.api_enable_transports,'enable_transports')
-       yo_app.add_api_method(self.api_get_enabled_transports,'get_enabled_transports')
+#       yo_app.add_api_method(self.api_enable_transports,'enable_transports')
+#       yo_app.add_api_method(self.api_get_enabled_transports,'get_enabled_transports')
+       yo_app.add_api_method(self.api_set_transports,'set_transports')
+       yo_app.add_api_method(self.api_get_transports,'get_transports')
        yo_app.add_api_method(self.api_get_notifications,'get_notifications')
        yo_app.add_api_method(self.api_reset_test_data,'reset_test_data')
        yo_app.add_api_method(self.api_mark_read,'mark_read')
