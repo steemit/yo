@@ -69,11 +69,12 @@ class YoAPIServer(YoBaseService):
        Returns:
            list: list of notifications updated
        """
+       retval = []
        if test:
           for notify_id in ids:
               self.test_notifications.mark_notification_read(notify_id)
-       else:
-          return []
+              retval.append(self.test_notifications.get_notification(notify_id))
+       return retval
    async def api_mark_seen(self,ids=[],orig_req=None,test=False,yo_db=None,**kwargs):
        """ Mark a list of notifications as seen
 
@@ -83,11 +84,12 @@ class YoAPIServer(YoBaseService):
        Returns:
            list: list of notifications updated
        """
+       retval = []
        if test:
           for notify_id in ids:
               self.test_notifications.mark_notification_seen(notify_id)
-       else:
-          return []
+              retval.append(self.test_notifications.get_notification(notify_id))
+       return retval
    async def api_reset_test_data(self,**kwargs):
        self.test_notifications.reset()
    async def api_test_method(self,**kwargs):
@@ -98,4 +100,5 @@ class YoAPIServer(YoBaseService):
        yo_app.add_api_method(self.api_get_notifications,'get_notifications')
        yo_app.add_api_method(self.api_reset_test_data,'reset_test_data')
        yo_app.add_api_method(self.api_mark_read,'mark_read')
+       yo_app.add_api_method(self.api_mark_seen,'mark_seen')
        yo_app.add_api_method(self.api_test_method,'api_test_method')

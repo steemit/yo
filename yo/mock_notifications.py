@@ -33,7 +33,7 @@ class YoMockData:
 
        if created is None:
           created = datetime.datetime.now().isoformat()
-       self.notifications_by_id[notify_id] = {'notify_id':  notify_id,
+       self.notifications_by_id[notify_id] = {'notify_id':  int(notify_id),
                                               'notify_type':notify_type,
                                               'created':    created,
                                               'updated':    created,
@@ -47,6 +47,12 @@ class YoMockData:
    def mark_notification_seen(self,notify_id=None):
        self.notifications_by_id[notify_id]['seen'] = True
        self.notifications_by_id[notify_id]['updated'] = datetime.datetime.now().isoformat()
+   def get_notification(self,notify_id=None):
+       """ Return a single notification
+           If not found, returns None
+       """
+       if not notify_id in self.notifications_by_id.keys(): return None
+       return self.notifications_by_id[notify_id]
    def get_notifications(self,username=None,created_before=None,updated_after=None,read=None,notify_type=None,limit=30):
        retval = []
        if not (created_before is None):
