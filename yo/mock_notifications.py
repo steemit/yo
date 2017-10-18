@@ -47,6 +47,12 @@ class YoMockData:
    def mark_notification_seen(self,notify_id=None):
        self.notifications_by_id[notify_id]['seen'] = True
        self.notifications_by_id[notify_id]['updated'] = datetime.datetime.now().isoformat()
+   def mark_notification_unread(self,notify_id=None):
+       self.notifications_by_id[notify_id]['read'] = False
+       self.notifications_by_id[notify_id]['updated'] = datetime.datetime.now().isoformat()
+   def mark_notification_unseen(self,notify_id=None):
+       self.notifications_by_id[notify_id]['seen'] = False
+       self.notifications_by_id[notify_id]['updated'] = datetime.datetime.now().isoformat()
    def get_notification(self,notify_id=None):
        """ Return a single notification
            If not found, returns None
