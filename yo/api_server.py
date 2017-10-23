@@ -42,7 +42,7 @@ class YoAPIServer(YoBaseService):
                             'notify_type'   :row.notify_type,
                             'sub_data'      :row.sub_data})
          return retval
-   async def api_get_notifications(self,username=None,created_before=None,updated_after=None,read=None,notify_type=None,limit=30,test=False,orig_req=None,yo_db=None,**kwargs):
+   async def api_get_notifications(self,username=None,created_before=None,updated_after=None,read=None,notify_types=None,limit=30,test=False,orig_req=None,yo_db=None,**kwargs):
        """ Get all notifications since the specified time
 
        Keyword args:
@@ -50,7 +50,7 @@ class YoAPIServer(YoBaseService):
           created_before(str): ISO8601-formatted timestamp
           updated_after(str): ISO8601-formatted timestamp
           read(bool): If set, only returns notifications with read flag set to this value
-          notify_type(str): The notification type to return
+          notify_types(str): The notification type to return
           limit(int): The maximum number of notifications to return, defaults to 30
           test(bool): If True, uses mock data only instead of talking to the database backend
 
@@ -58,7 +58,7 @@ class YoAPIServer(YoBaseService):
           list: list of notifications represented in dictionary format
        """
        if test:
-          return self.test_notifications.get_notifications(username=username,created_before=created_before,updated_after=updated_after,notify_type=notify_type,read=read)
+          return self.test_notifications.get_notifications(username=username,created_before=created_before,updated_after=updated_after,notify_types=notify_types,read=read)
        else: 
           # TODO  - implement real thing here
          return []

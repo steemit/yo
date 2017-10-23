@@ -62,7 +62,7 @@ class YoMockData:
        """
        if not notify_id in self.notifications_by_id.keys(): return None
        return self.notifications_by_id[notify_id]
-   def get_notifications(self,username=None,created_before=None,updated_after=None,read=None,notify_type=None,limit=30):
+   def get_notifications(self,username=None,created_before=None,updated_after=None,read=None,notify_types=None,limit=30):
        retval = []
        if not (created_before is None):
           created_before_query = dateutil.parser.parse(created_before)
@@ -79,7 +79,7 @@ class YoMockData:
               if updated_curval <= updated_after_query: continue
            if not (read is None):
               if v['read'] != read: continue
-           if not (notify_type is None):
-              if v['notify_type'] != notify_type: continue
+           if not (notify_types is None):
+              if v['notify_type'] not in notify_types: continue
            retval.append(v)
        return retval[:limit]
