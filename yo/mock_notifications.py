@@ -6,6 +6,177 @@ import datetime
 import dateutil
 import dateutil.parser
 
+ACCOUNT_UPDATE = 'account_update'
+ANNOUNCEMENT_IMPORTANT = 'announcement_important'
+COMMENT_REPLY = 'comment_reply'
+FEED = 'feed'
+FOLLOW = 'follow'
+MENTION = 'mention'
+POST_REPLY = 'post_reply'
+POWER_DOWN = 'power_down'
+SEND_STEEM = 'send'
+RECEIVE_STEEM = 'receive'
+RESTEEM = 'resteem'
+REWARD = 'reward'
+VOTE = 'vote'
+
+authors = ['razu','the-alien', 'dreemit', 'timcliff','abh12345','richq11','larkenrose']
+# .id and .created should be auto generated for all.
+mockNotificationTemplates = [
+    dict(
+        read=False,
+        shown=False,
+        notify_type=POWER_DOWN,
+        data=dict(
+            author="roadscape",
+            amount=10000.2
+        )
+    ),
+    dict(
+        read=False,
+        shown=False,
+        notify_type=ANNOUNCEMENT_IMPORTANT,
+        data=dict(
+            author="steemit",
+            item=dict(
+                author="wolfcat",
+                category="introduceyourself",
+                depth=0,
+                permlink="from-the-hills-of-ireland-to-planet-steem-a-wolfy-hello",
+                summary="From the Hills of Ireland to Planet Steem, A Wolfy Hello!"
+            )
+
+        )
+    ),
+    dict( #UID1
+        read=False,
+        shown=False,
+        notify_type=RESTEEM,
+        data=dict(
+            author="roadscape",
+            item=dict(
+                author="wolfcat",
+                category="introduceyourself",
+                depth=0,
+                permlink="from-the-hills-of-ireland-to-planet-steem-a-wolfy-hello",
+                summary="From the Hills of Ireland to Planet Steem, A Wolfy Hello!"
+            )
+
+        )
+    ),
+    dict( #UID2
+        read=False,
+        shown=False,
+        notify_type=VOTE,
+        data=dict(
+            author="beanz",
+            item=dict(
+                author="wolfcat",
+                category="introduceyourself",
+                depth=0,
+                permlink="from-the-hills-of-ireland-to-planet-steem-a-wolfy-hello",
+                summary="From the Hills of Ireland to Planet Steem, A Wolfy Hello!"
+            )
+
+        )
+    ),
+    dict( #UID3
+        read=False,
+        shown=False,
+        notify_type=RECEIVE_STEEM,
+        data=dict(
+            author="roadscape",
+            amount=10000.3
+        )
+    ),
+    dict( #UID4
+        read=False,
+        shown=False,
+        notify_type=MENTION,
+        data=dict(
+            author="lovejoy",
+            item=dict(
+                author="wolfcat",
+                category="introduceyourself",
+                depth=2,
+                permlink="re-steemcleaners-re-steemcleaners-re-wolfcat-from-the-hills-of-ireland-to-planet-steem-a-wolfy-hello-20170919t120245144z",
+                summary="@wolfcat is a new user who normally doesn't spend a lot of time online, plus we are ",
+                parentSummary="You may want to retract your votes.The account has ignored our many requests to confirm the identity. It seems to be another case of fake identity. Thanks."
+            ),
+            rootItem=dict(
+                author="wolfcat",
+                category="introduceyourself",
+                depth=0,
+                permlink="from-the-hills-of-ireland-to-planet-steem-a-wolfy-hello",
+                summary="From the Hills of Ireland to Planet Steem, A Wolfy Hello!"
+            )
+
+        )
+    ),
+    dict( #UID5
+        read=False,
+        shown=False,
+        notify_type=VOTE,
+        data=dict(
+            author="roadscape",
+            item=dict(
+                author="wolfcat",
+                category="introduceyourself",
+                depth=0,
+                permlink="from-the-hills-of-ireland-to-planet-steem-a-wolfy-hello",
+                summary="From the Hills of Ireland to Planet Steem, A Wolfy Hello!"
+            )
+
+        )
+    ),
+    dict( #UID6
+        read=False,
+        shown=False,
+        notify_type=POST_REPLY,
+        data=dict(
+            author="lovejoy",
+            item=dict(
+                author="lovejoy",
+                category="introduceyourself",
+                depth=2,
+                permlink="re-steemcleaners-re-steemcleaners-re-wolfcat-from-the-hills-of-ireland-to-planet-steem-a-wolfy-hello-20170919t120245144z",
+                summary="@wolfcat is a new user who normally doesn't spend a lot of time online, plus we are "
+            ),
+            rootItem=dict(
+                author="wolfcat",
+                category="introduceyourself",
+                permlink="from-the-hills-of-ireland-to-planet-steem-a-wolfy-hello",
+                summary="From the Hills of Ireland to Planet Steem, A Wolfy Hello!"
+            )
+
+        )
+    ),
+    dict( #UID7
+        read=False,
+        shown=False,
+        notify_type=COMMENT_REPLY,
+        data=dict(
+            author="dbzfan4awhile",
+            item=dict(
+                author="dbzfan4awhile",
+                category="introduceyourself",
+                depth=3,
+                permlink="re-wolfcat-re-dbzfan4awhile-re-wolfcat-from-the-hills-of-ireland-to-planet-steem-a-wolfy-hello-20170918t172118886z",
+                summary="Awesome",
+                parentSummary="Yes! Ill look for you there :)"
+            ),
+            rootItem=dict(
+                author="wolfcat",
+                category="introduceyourself",
+                permlink="from-the-hills-of-ireland-to-planet-steem-a-wolfy-hello",
+                summary="From the Hills of Ireland to Planet Steem, A Wolfy Hello!"
+            )
+
+        )
+    ),
+]
+
+
 class YoMockData:
    """ A set of in-memory mock notifications
    """
@@ -15,7 +186,7 @@ class YoMockData:
        """ Reset the current status of the mock notifications
            Also freshly generates a new set of data
        """
-       authors = ['razu','the-alien', 'dreemit', 'timcliff','abh12345','richq11','larkenrose ']
+
        self.notifications_by_id = {}
        self.add_new_notification(notify_type='power_down',username='test_user',data=dict(amount=6.66),id=161)
        self.add_new_notification(notify_type='power_up',username='test_user',data=dict(amount=13.37),id=162)
@@ -24,9 +195,10 @@ class YoMockData:
        self.add_new_notification(notify_type='reward',username='test_user',data=dict(reward_type='curation',item=dict(author='test_user',category='test',permlink='test-post',summary='A test post'),
                                                                                                             amount=dict(SBD=6.66,SP=13.37)),id=165)
 
-       for x in range(60):
-           self.add_new_notification(notify_type='vote',username='test_user',data=dict(author=authors[random.randint(0, (len(authors)-1))],weight=100,item=dict(author='test_user',permlink='test-post-%s' % x, summary='A test post',
-                                                                                                                                     category='test',depth=0)),id=x)
+
+       #for x in range(60):
+       #    self.add_new_notification(notify_type='vote',username='test_user',data=dict(author=authors[random.randint(0, (len(authors)-1))],weight=100,item=dict(author='test_user',permlink='test-post-%s' % x, summary='A test post',
+       #                                                                                                                              category='test',depth=0)),id=x)
    def add_new_notification(self,notify_type=None,created=None,username=None,data={}, id=None):
        notify_id = id
 
