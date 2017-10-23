@@ -7,6 +7,7 @@ import steem
 import hashlib
 from steem.account import Account
 import json
+import os
 
 import logging
 logger = logging.getLogger(__name__)
@@ -24,7 +25,9 @@ class YoAPIServer(YoBaseService):
          for k,v in transports.items():
              logger.debug('Updating sub data for %s with %s' % (k,v))
              yo_db.update_subdata(username,transport_type=v[0],notify_type=k,sub_data=v[1])
-         return {'status':'OK'}
+         return {'status':'OK',
+                 'source_commit': os.environ.get('SOURCE_COMMIT'),
+                 'docker_tag':os.environ.get('DOCKER_TAG')}
    @needs_auth
    async def api_get_enabled_transports(self,username=None,orig_req=None,yo_db=None,**kwargs):
          retval = []
@@ -34,7 +37,7 @@ class YoAPIServer(YoBaseService):
                             'sub_data'      :row.sub_data})
          return retval
    async def api_test_method(self,**kwargs):
-       return {'status':'OK'}
+       return {'status':'OK', }
    async def async_task(self,yo_app): # pragma: no cover
        yo_app.add_api_method(self.api_enable_transports,'enable_transports')
        yo_app.add_api_method(self.api_get_enabled_transports,'get_enabled_transports')
