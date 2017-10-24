@@ -32,6 +32,23 @@ PRIORITY_LOW       = 2
 PRIORITY_MARKETING = 1
 
 
+
+# This is the table queried by API server for the wwwpoll transport
+wwwpoll_table = sa.Table('yo_wwwpoll', metadata,
+
+     sa.Column('notify_id', sa.Integer, primary_key=True),
+     sa.Column('notify_type', sa.String(10), nullable=False, index=True),
+     sa.Column('created', sa.DateTime, index=True),
+     sa.Column('updated', sa.DateTime, index=True),
+     sa.Column('read',sa.Boolean(), nullable=True, default=False),
+     sa.Column('seen',sa.Boolean(), nullable=True, default=False),
+     sa.Column('username',sa.String(20), index=True),
+     sa.Column('data',sa.UnicodeText),
+
+     mysql_engine='InnoDB',
+)
+
+# This is where ALL notifications go, not to be confused with the wwwpoll transport specific table above
 notifications_table = sa.Table('yo_notifications', metadata,
      sa.Column('nid', sa.Integer, primary_key=True),
      sa.Column('trx_id', sa.String(40), index=True, nullable=False,
@@ -50,10 +67,6 @@ notifications_table = sa.Table('yo_notifications', metadata,
                doc='Datetime when notification was created and stored in db'),
      sa.Column('sent_at', sa.DateTime, index=True,
                doc='Datetime when notification was sent'),
-     sa.Column('seen_at', sa.DateTime, index=True,
-               doc='Datetime when notification was seen (may be identical to read_at for some notification types)'),
-     sa.Column('read_at', sa.DateTime, index=True,
-               doc='Datetime when notification was read or marked as read'),
      mysql_engine='InnoDB',
 )
 
