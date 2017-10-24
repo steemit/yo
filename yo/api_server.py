@@ -36,7 +36,7 @@ class YoAPIServer(YoBaseService):
        Returns:
           list: list of notifications represented in dictionary format
        """
-       if test:
+       if test and self.testing_allowed:
           return self.test_notifications.get_notifications(username=username,created_before=created_before,updated_after=updated_after,notify_types=notify_types,read=read)
        else: 
           # TODO  - implement real thing here
@@ -51,7 +51,7 @@ class YoAPIServer(YoBaseService):
            list: list of notifications updated
        """
        retval = []
-       if test:
+       if test and self.testing_allowed:
           for notify_id in ids:
               self.test_notifications.mark_notification_read(notify_id)
               retval.append(self.test_notifications.get_notification(notify_id))
@@ -66,7 +66,7 @@ class YoAPIServer(YoBaseService):
            list: list of notifications updated
        """
        retval = []
-       if test:
+       if test and self.testing_allowed:
           for notify_id in ids:
               self.test_notifications.mark_notification_seen(notify_id)
               retval.append(self.test_notifications.get_notification(notify_id))
@@ -83,7 +83,7 @@ class YoAPIServer(YoBaseService):
            list: list of notifications updated
        """
        retval = []
-       if test:
+       if test and self.testing_allowed:
           for notify_id in ids:
               self.test_notifications.mark_notification_unread(notify_id)
               retval.append(self.test_notifications.get_notification(notify_id))
@@ -98,15 +98,16 @@ class YoAPIServer(YoBaseService):
            list: list of notifications updated
        """
        retval = []
-       if test:
+       if test and self.testing_allowed:
           for notify_id in ids:
               self.test_notifications.mark_notification_unseen(notify_id)
               retval.append(self.test_notifications.get_notification(notify_id))
        return retval
 
    async def api_reset_test_data(self,**kwargs):
-       self.test_notifications.reset()
-       self.test_settings.reset()
+       if self.testing_allowed:
+          self.test_notifications.reset()
+          self.test_settings.reset()
    async def api_test_method(self,**kwargs):
        return {'status':'OK'}
    async def api_set_transports(self,username=None,transports={},orig_req=None,test=False,yo_db=None,**kwargs):
@@ -127,6 +128,7 @@ class YoAPIServer(YoBaseService):
           retval = self.test_settings.get_transports(username)
        return retval
    async def async_task(self,yo_app): # pragma: no cover
+       self.testing_allowed = (int(yo_app.config.config_data['api_server'].get('allow_testing',0))==1)
        yo_app.add_api_method(self.api_set_transports,'set_transports')
        yo_app.add_api_method(self.api_get_transports,'get_transports')
        yo_app.add_api_method(self.api_get_notifications,'get_notifications')
