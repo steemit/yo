@@ -102,7 +102,7 @@ mockNotificationTemplates = [
                 depth=2,
                 permlink="re-steemcleaners-re-steemcleaners-re-wolfcat-from-the-hills-of-ireland-to-planet-steem-a-wolfy-hello-20170919t120245144z",
                 summary="@wolfcat is a new user who normally doesn't spend a lot of time online, plus we are ",
-                parentSummary="You may want to retract your votes.The account has ignored our many requests to confirm the identity. It seems to be another case of fake identity. Thanks."
+                parent_summary="You may want to retract your votes.The account has ignored our many requests to confirm the identity. It seems to be another case of fake identity. Thanks."
             ),
             rootItem=dict(
                 author="wolfcat",
@@ -164,7 +164,7 @@ mockNotificationTemplates = [
                 depth=3,
                 permlink="re-wolfcat-re-dbzfan4awhile-re-wolfcat-from-the-hills-of-ireland-to-planet-steem-a-wolfy-hello-20170918t172118886z",
                 summary="Awesome",
-                parentSummary="Yes! Ill look for you there :)"
+                parent_summary="Yes! Ill look for you there :)"
             ),
             rootItem=dict(
                 author="wolfcat",
