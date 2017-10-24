@@ -21,27 +21,6 @@ class YoAPIServer(YoBaseService):
    test_notifications = YoMockData()
    test_settings = YoMockSettings()
 
-   async def api_enable_transports(self,username=None,transports={},orig_req=None,yo_db=None,**kwargs):
-         """ Enables/updates selected transports
-
-         Keyword args:
-            username(str):    The user to update
-            transports(dict): A dictionary mapping notification types to [transport_type,sub_data] values
-
-         Returns:
-            dict: {'status':'OK'} on success
-         """
-         for k,v in transports.items():
-             logger.debug('Updating sub data for %s with %s' % (k,v))
-             yo_db.update_subdata(username,transport_type=v[0],notify_type=k,sub_data=v[1])
-         return {'status':'OK'}
-   async def api_get_enabled_transports(self,username=None,orig_req=None,yo_db=None,**kwargs):
-         retval = []
-         for row in yo_db.get_user_transports(username):
-             retval.append({'transport_type':row.transport_type,
-                            'notify_type'   :row.notify_type,
-                            'sub_data'      :row.sub_data})
-         return retval
    async def api_get_notifications(self,username=None,created_before=None,updated_after=None,read=None,notify_types=None,limit=30,test=False,orig_req=None,yo_db=None,**kwargs):
        """ Get all notifications since the specified time
 
@@ -148,8 +127,6 @@ class YoAPIServer(YoBaseService):
           retval = self.test_settings.get_transports(username)
        return retval
    async def async_task(self,yo_app): # pragma: no cover
-#       yo_app.add_api_method(self.api_enable_transports,'enable_transports')
-#       yo_app.add_api_method(self.api_get_enabled_transports,'get_enabled_transports')
        yo_app.add_api_method(self.api_set_transports,'set_transports')
        yo_app.add_api_method(self.api_get_transports,'get_transports')
        yo_app.add_api_method(self.api_get_notifications,'get_notifications')
