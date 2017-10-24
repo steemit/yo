@@ -5,6 +5,7 @@ import random
 import datetime
 import dateutil
 import dateutil.parser
+import time
 
 ACCOUNT_UPDATE = 'account_update'
 ANNOUNCEMENT_IMPORTANT = 'announcement_important'
@@ -188,27 +189,30 @@ class YoMockData:
        """
 
        self.notifications_by_id = {}
-       self.add_new_notification(notify_type='power_down',username='test_user',data=dict(amount=6.66),id=161)
-       self.add_new_notification(notify_type='power_up',username='test_user',data=dict(amount=13.37),id=162)
-       self.add_new_notification(notify_type='resteem',username='test_user',data=dict(resteemed_item=dict(author='test_user',category='test',permlink='test-post',summary='A test post',resteemed_by='some_user')),id=163)
-       self.add_new_notification(notify_type='feed',username='test_user',data=dict(item=dict(author='some_user',category='test',permlink='another-test',summary='Stuff etc')),id=164)
+       self.add_new_notification(notify_type='power_down',username='test_user',data=dict(amount=6.66),id=61)
+       self.add_new_notification(notify_type='power_up',username='test_user',data=dict(amount=13.37),id=62)
+       self.add_new_notification(notify_type='resteem',username='test_user',data=dict(resteemed_item=dict(author='test_user',category='test',permlink='test-post',summary='A test post',resteemed_by='some_user')),id=63)
+       self.add_new_notification(notify_type='feed',username='test_user',data=dict(item=dict(author='some_user',category='test',permlink='another-test',summary='Stuff etc')),id=64)
        self.add_new_notification(notify_type='reward',username='test_user',data=dict(reward_type='curation',item=dict(author='test_user',category='test',permlink='test-post',summary='A test post'),
-                                                                                                            amount=dict(SBD=6.66,SP=13.37)),id=165)
+                                                                                                            amount=dict(SBD=6.66,SP=13.37)),id=65)
 
 
-       #for x in range(60):
+       for x in range(60):
+           self.add_new_notification(username='test_user', id=x)
        #    self.add_new_notification(notify_type='vote',username='test_user',data=dict(author=authors[random.randint(0, (len(authors)-1))],weight=100,item=dict(author='test_user',permlink='test-post-%s' % x, summary='A test post',
        #                                                                                                                              category='test',depth=0)),id=x)
    def add_new_notification(self,notify_type=None,created=None,username=None,data={}, id=None):
        notify_id = id
 
        if id is None:
-          notify_id = random.randint(1,9999999)
+          notify_id = random.randint(100,9999999)
 
 
        if created is None:
-          created = datetime.datetime.now().isoformat()
-       self.notifications_by_id[notify_id] = {'notify_id':  int(notify_id),
+           seconds = time.time() - (60 * notify_id)
+           created = datetime.datetime.fromtimestamp(seconds).isoformat()
+       if id > 60 & id < 66:
+           self.notifications_by_id[notify_id] = {'notify_id':  int(notify_id),
                                               'notify_type':notify_type,
                                               'created':    created,
                                               'updated':    created,
@@ -216,6 +220,21 @@ class YoMockData:
                                               'seen':       False,
                                               'username':   username,
                                               'data':       data}
+       else:
+           index = id if id < len(mockNotificationTemplates) else random.randint(0, len(mockNotificationTemplates) -1)
+           print(index)
+           notif = mockNotificationTemplates[index]
+           print(notif)
+           self.notifications_by_id[notify_id] = {'notify_id':  int(notify_id),
+                                                  'notify_type': notif.get('notify_type'),
+                                                  'created':    created,
+                                                  'updated':    created,
+                                                  'read':       notif.get('read'),
+                                                  'seen':       notif.get('seen'),
+                                                  'username':   username,
+                                                  'data':       notif.get('data')}
+
+
    def mark_notification_read(self,notify_id=None):
        self.notifications_by_id[notify_id]['read'] = True
        self.notifications_by_id[notify_id]['updated'] = datetime.datetime.now().isoformat()
