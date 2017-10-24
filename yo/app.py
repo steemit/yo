@@ -15,7 +15,7 @@ asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 from jsonrpcserver.async_methods import AsyncMethods
 import json
 
-
+ALLOWED_ORIGINS=['http://localhost:8080','https://steemitdev.com']
 
 class YoApp:
    def __init__(self,config=None,db=None):
@@ -32,6 +32,7 @@ class YoApp:
        }
        self.api_methods = AsyncMethods()
        self.running = False
+       
 
    async def handle_api(self,request):
          req_app = request.app
@@ -59,6 +60,15 @@ class YoApp:
                'datetime':datetime.datetime.utcnow().isoformat()})
    async def healthcheck_handler(self,request):
        return web.json_response(await self.api_healthcheck())
+   async def handle_options(self,request):
+       origin = request.headers['Origin']
+       if origin in ALLOWED_ORIGINS:
+          response = web.Response(status=204,headers={'Access-Control-Allow-Methods': 'POST',
+                                                      'Access-Control-Allow-Origin': origin,
+                                                      'Access-Control-Allow-Headers': '*'})
+       else:
+          response = web.Response(status=403)
+       return response
    async def setup_standard_api(self,app):
        self.add_api_method(self.api_healthcheck,'healthcheck')
        self.web_app.router.add_post('/', self.handle_api)

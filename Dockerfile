@@ -79,29 +79,29 @@ COPY ./data ${APP_ROOT}/data
 COPY ./Makefile ${APP_ROOT}/Makefile
 COPY ./package_meta.py ${APP_ROOT}/package_meta.py
 COPY ./Pipfile ${APP_ROOT}/Pipfile
+COPY ./Pipfile.lock ${APP_ROOT}/Pipfile.lock
 COPY ./scripts ${APP_ROOT}/scripts
 COPY ./setup.cfg ${APP_ROOT}/setup.cfg
 COPY ./setup.py ${APP_ROOT}/setup.py
 COPY ./tests ${APP_ROOT}/tests
 COPY ./yo ${APP_ROOT}/yo
 COPY ./yo.cfg ${APP_ROOT}/yo.cfg
-
 # More deps
 
-RUN apt-get -y install dh-autoreconf pkg-config
-RUN git clone https://github.com/bitcoin-core/secp256k1.git && \
-    cd secp256k1 && \
-    ./autogen.sh && \
-    ./configure && \
-    make all install
+ENV HOME ${APP_ROOT}
+
+# update setuptools
+RUN pip3.6 install -U setuptools
+
 
 # Build+install yo
-RUN make Pipfile.lock && \
-    make build-without-docker && \
-    make install-pipenv
+RUN make build-without-docker && \
+    make install-global
+
 
 # let the test suite know it's inside docker
 ENV INDOCKER 1
 
 # Expose the HTTP server port
 EXPOSE ${HTTP_SERVER_PORT}
+

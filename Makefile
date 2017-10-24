@@ -13,20 +13,18 @@ docker-image: clean
 	docker build -t $(PROJECT_DOCKER_TAG) .
 
 Pipfile.lock: Pipfile
-	python3.6 -m pipenv --python /usr/local/bin/python3.6 lock --three
+	python3.6 -m pipenv --python /usr/local/bin/python3.6 lock
 
 requirements.txt: Pipfile.lock
-	python3.6 -m pipenv --python /usr/local/bin/python3.6 lock --three -r | grep -v Using | >requirements.txt
+	python3.6 -m pipenv --python /usr/local/bin/python3.6 lock -r | grep -v Using | >requirements.txt
 
 .env: ${YO_CONFIG} scripts/make_docker_env.py
 	python3.6 scripts/make_docker_env.py ${YO_CONFIG} >.env
 
 build-without-docker: requirements.txt Pipfile.lock
 	mkdir -p build/wheel
-	python3.6 -m pipenv install --python /usr/local/bin/python3.6 --three --dev
-	python3.6 -m pipenv run python3.6 scripts/doc_rst_convert.py
+	python3.6 -m pipenv install --python /usr/local/bin/python3.6 --dev
 	python3.6 -m pipenv run python3.6 setup.py build
-	rm README.rst
 
 dockerised-test: docker-image
 	docker run -ti $(PROJECT_DOCKER_TAG) make -C /app test-without-lint
@@ -56,11 +54,8 @@ install-pipenv: clean
 	python3.6 -m pipenv run pip3.6 install -e .
 
 install-global: clean
-	python3.6 scripts/doc_rst_convert.py
 	pip3.6 install -e .
 
 pypi:
-	python3.6 scripts/doc_rst_convert.py
 	python3.6 setup.py bdist_wheel --universal
 	python3.6 setup.py sdist bdist_wheel upload
-	rm README.rst
