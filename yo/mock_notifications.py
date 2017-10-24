@@ -189,19 +189,11 @@ class YoMockData:
        """
 
        self.notifications_by_id = {}
-       #self.add_new_notification(notify_type='power_down',username='test_user',data=dict(amount=6.66),id=61)
-       #self.add_new_notification(notify_type='power_up',username='test_user',data=dict(amount=13.37),id=62)
-       #self.add_new_notification(notify_type='resteem',username='test_user',data=dict(resteemed_item=dict(author='test_user',category='test',permlink='test-post',summary='A test post',resteemed_by='some_user')),id=63)
-       #self.add_new_notification(notify_type='feed',username='test_user',data=dict(item=dict(author='some_user',category='test',permlink='another-test',summary='Stuff etc')),id=64)
-       #self.add_new_notification(notify_type='reward',username='test_user',data=dict(reward_type='curation',item=dict(author='test_user',category='test',permlink='test-post',summary='A test post'),
-       #                                                                                                     amount=dict(SBD=6.66,SP=13.37)),id=65)
-
 
        for x in range(60):
            self.add_new_notification(username='test_user', id=x)
-       #    self.add_new_notification(notify_type='vote',username='test_user',data=dict(author=authors[random.randint(0, (len(authors)-1))],weight=100,item=dict(author='test_user',permlink='test-post-%s' % x, summary='A test post',
-       #                                                                                                                              category='test',depth=0)),id=x)
-   def add_new_notification(self,notify_type=None,created=None,username=None,data={}, id=None):
+
+   def add_new_notification(self,created=None,username=None, id=None):
        notify_id = id
 
        if id is None:
@@ -211,17 +203,7 @@ class YoMockData:
        if created is None:
            seconds = time.time() - (60 * notify_id)
            created = datetime.datetime.fromtimestamp(seconds).isoformat()
-       '''
-       if notify_id > 60 and notify_id < 66:
-           self.notifications_by_id[notify_id] = {'notify_id':  int(notify_id),
-                                              'notify_type': notify_type,
-                                              'created':    created,
-                                              'updated':    created,
-                                              'read':       False,
-                                              'seen':       False,
-                                              'username':   username,
-                                              'data':       data}
-           '''
+
 
        index = notify_id if notify_id < len(mockNotificationTemplates) else random.randint(0, len(mockNotificationTemplates) -1)
        print("Notification " + str(notify_id) + " " + str(index))
