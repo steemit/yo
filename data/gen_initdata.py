@@ -1,8 +1,12 @@
 import json
 
-data = (('user_transports_table',{'username'      :'garethnelsonuk',
-                                  'notify_type'   :'vote',
-                                  'transport_type':'email',
-                                  'sub_data'      :'gareth@steemit.com'}),)
+from yo import mock_notifications
 
-print json.dumps(data)
+mock_data = mock_notifications.YoMockData()
+
+data = []
+
+for notification in mock_data.get_notifications(limit=9999):
+    data.append(('yo_wwwpoll',notification))
+
+print(json.dumps(data))
