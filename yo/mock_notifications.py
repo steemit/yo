@@ -211,9 +211,9 @@ class YoMockData:
        if created is None:
            seconds = time.time() - (60 * notify_id)
            created = datetime.datetime.fromtimestamp(seconds).isoformat()
-       if id > 60 & id < 66:
+       if notify_id > 60 and notify_id < 66:
            self.notifications_by_id[notify_id] = {'notify_id':  int(notify_id),
-                                              'notify_type':notify_type,
+                                              'notify_type': notify_type,
                                               'created':    created,
                                               'updated':    created,
                                               'read':       False,
@@ -221,8 +221,8 @@ class YoMockData:
                                               'username':   username,
                                               'data':       data}
        else:
-           index = id if id < len(mockNotificationTemplates) else random.randint(0, len(mockNotificationTemplates) -1)
-           print(index)
+           index = notify_id if notify_id < len(mockNotificationTemplates) else random.randint(0, len(mockNotificationTemplates) -1)
+           print("Notification " + str(notify_id) + " " + str(index))
            notif = mockNotificationTemplates[index]
            print(notif)
            self.notifications_by_id[notify_id] = {'notify_id':  int(notify_id),
@@ -233,6 +233,7 @@ class YoMockData:
                                                   'seen':       notif.get('seen'),
                                                   'username':   username,
                                                   'data':       notif.get('data')}
+           print(self.notifications_by_id[notify_id])
 
 
    def mark_notification_read(self,notify_id=None):
