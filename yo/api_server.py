@@ -37,10 +37,11 @@ class YoAPIServer(YoBaseService):
           list: list of notifications represented in dictionary format
        """
        if test and self.testing_allowed:
-          return self.test_notifications.get_notifications(username=username,created_before=created_before,updated_after=updated_after,notify_types=notify_types,read=read)
+          retval = self.test_notifications.get_notifications(username=username,created_before=created_before,updated_after=updated_after,notify_types=notify_types,read=read)
        else: 
           # TODO  - implement real thing here
-         return []
+         retval = []
+       return retval[:limit]
    async def api_mark_read(self,ids=[],orig_req=None,test=False,yo_db=None,**kwargs):
        """ Mark a list of notifications as read
 
