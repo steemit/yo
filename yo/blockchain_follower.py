@@ -4,6 +4,7 @@ import asyncio
 import steem
 from steem.blockchain import Blockchain
 import json
+import re
 
 import logging
 
@@ -28,6 +29,8 @@ RESTEEM = 'resteem'
 REWARD = 'reward'
 VOTE = 'vote'
 
+# any valid @username with a trailing whitespace
+MENTION_PATTERN = re.compile(r'@([a-z][a-z0-9\-]{2,15})\s')
 
 class YoBlockchainFollower(YoBaseService):
     service_name = 'blockchain_follower'
@@ -120,7 +123,22 @@ class YoBlockchainFollower(YoBaseService):
         return True
 
     async def handle_mention(self, op):
-        logger.debug('handle_mention recevied %s op' % ['op'][0])
+        comment_data = op['op'][1]
+        haystack = comment_data['body'] + '\n'
+        data = {
+            'author': comment_data['author'],
+            'permlink': comment_data['permlink'],
+        }
+        for match in re.findall(MENTION_PATTERN, haystack):
+            # TODO: only allow N mentions per operation?
+            # TODO: validate mentioned user exists on chain?
+            logger.debug('Mention: %s mentioned %s', data['author'], match)
+            await self.send_notification(trx_id=op['trx_id'],
+                                         to_username=match,
+                                         from_username=data['author'],
+                                         json_data=json.dumps(data),
+                                         type=MENTION,
+                                         priority_level=PRIORITY_LEVELS['low'])
         return True
 
     async def handle_comment_reply(self, op):
