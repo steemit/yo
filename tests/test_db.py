@@ -8,8 +8,7 @@ from sqlalchemy import func
 import os
 import pytest
 
-import docker
-import hashlib
+from _test_utils import MySQLServer
 import socket
 import time
 
@@ -17,30 +16,6 @@ no_docker = pytest.mark.skipif(os.getenv('INDOCKER','0')=='1',reason='Does not w
 mysql_test = pytest.mark.skipif(os.getenv('SKIPMYSQL','0')=='1',reason='Skipping MySQL tests')
 source_code_path = os.path.dirname(os.path.realpath(__file__))
 
-def gen_pw():
-    """Hacky as hell but works"""
-    fd = open('/dev/urandom','rb')
-    data = fd.read(32)
-    fd.close()
-    return hashlib.sha256(data).hexdigest()
-
-class MySQLServer:
-   def __init__(self,db_name=None,db_user=None,db_pass=None):
-       self.client = docker.from_env()
-       self.cenv = {'MYSQL_USER':db_user,
-                    'MYSQL_PASSWORD':db_pass,
-                    'MYSQL_DATABASE':db_name,
-                    'MYSQL_ROOT_PASSWORD':gen_pw()}
-       self.container = self.client.containers.run('mysql',detach=True,environment=self.cenv,ports={'3306/tcp': ('127.0.0.1', 3306)},tmpfs={'/var/lib/mysql':''},remove=True)
-   def wait(self):
-       while True:
-          for l in self.container.logs(stdout=True,stderr=True,stream=True):
-              log_entry = l.decode('utf-8')
-              if 'MySQL init process done' in log_entry:
-                 time.sleep(1)
-                 return
-   def stop(self):
-       self.container.stop()
 
 @mysql_test
 @no_docker
