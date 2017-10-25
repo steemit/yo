@@ -141,12 +141,22 @@ class YoBlockchainFollower(YoBaseService):
                                          priority_level=PRIORITY_LEVELS['low'])
         return True
 
-    async def handle_comment_reply(self, op):
-        logger.debug('handle_comment_reply recevied %s op' % ['op'][0])
-        return True
-
-    async def handle_post_reply(self, op):
-        logger.debug('handle_post_reply recevied %s op' % ['op'][0])
+    async def handle_comment(self, op):
+        logger.debug('handle_comment recevied %s op' % ['op'][0])
+        op_data = op['op'][1]
+        if op_data['parent_author'] == '':
+            # top level post
+            return True
+        parent_id = '@'+op_data['parent_author']+'/'+op_data['parent_permlink']
+        parent = steem.post.Post(parent_id)
+        note_type = COMMENT_REPLY if parent.is_comment() else POST_REPLY
+        logger.debug('Comment(%s): %s replied to %s', note_type, op_data['author'], parent_id)
+        await self.send_notification(trx_id=op['trx_id'],
+                                     to_username=op_data['parent_author'],
+                                     from_username=op_data['author'],
+                                     json_data=json.dumps(op_data),
+                                     type=note_type,
+                                     priority_level=PRIORITY_LEVELS['low'])
         return True
 
     async def handle_resteem(self, op):
@@ -212,8 +222,7 @@ class YoBlockchainFollower(YoBaseService):
             logger.debug('Incoming comment operation')
             return await asyncio.gather(
                    self.handle_mention(blockchain_op),
-                   self.handle_comment_reply(blockchain_op) ,
-                   self.handle_post_reply(blockchain_op))
+                   self.handle_comment(blockchain_op))
 
         # reward
         # feed
