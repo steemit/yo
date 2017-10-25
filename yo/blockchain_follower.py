@@ -42,13 +42,16 @@ class YoBlockchainFollower(YoBaseService):
 
     async def handle_vote(self, op):
         logger.debug('handle_vote received %s op' % ['op'][0])
-        retval = True
         vote_info = op['op'][1]
         logger.debug('Vote on %s (written by %s) by %s with weight %s' % (
-        vote_info['permlink'],
-        vote_info['author'],
-        vote_info['voter'],
-        vote_info['weight']))
+            vote_info['permlink'], vote_info['author'],
+            vote_info['voter'], vote_info['weight']))
+        await self.send_notification(trx_id=op['trx_id'],
+                                     from_username=vote_info['voter'],
+                                     to_username=vote_info['author'],
+                                     json_data=json.dumps(vote_info),
+                                     type=VOTE,
+                                     priority_level=PRIORITY_LEVELS['low'])
 
     async def handle_follow(self, op):
         op_data = op['op'][1]
