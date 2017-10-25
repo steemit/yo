@@ -93,7 +93,6 @@ class YoBlockchainFollower(YoBaseService):
         logger.debug('handle_post_reply recevied %s op' % ['op'][0])
 
     async def handle_resteem(self, op):
-        logger.debug('handle_resteem recevied %s op' % op['op'][0])
         op_data = op['op'][1]
         resteem_data = json.loads(op_data['json'])
         if resteem_data[0] != 'reblog':
@@ -108,7 +107,12 @@ class YoBlockchainFollower(YoBaseService):
             logger.error('invalid resteem op, account must be signer')
             return False
         logger.debug('Resteem: %s reblogged @%s/%s' % (account, author, permlink))
-        # TODO: insert into db
+        await self.send_notification(trx_id=op['trx_id'],
+                                     from_username=account,
+                                     to_username=author,
+                                     json_data=json.dumps(resteem_data[1]),
+                                     type=RESTEEM,
+                                     priority_level=PRIORITY_LEVELS['low'])
 
     async def notify(self, blockchain_op):
         """ Handle notification for a particular op
