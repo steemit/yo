@@ -32,6 +32,14 @@ VOTE = 'vote'
 class YoBlockchainFollower(YoBaseService):
     service_name = 'blockchain_follower'
 
+    async def send_notification(self, **data):
+        data['sent'] = False
+        self.db.create_notification(**data)
+        sender_response = await self.yo_app.invoke_private_api(
+            'notification_sender', 'trigger_notification',
+            username=data['to_username'])
+        logger.debug('Got %s from notification sender' % str(sender_response))
+
     async def handle_vote(self, op):
         logger.debug('handle_vote received %s op' % ['op'][0])
         retval = True
@@ -41,26 +49,8 @@ class YoBlockchainFollower(YoBaseService):
         vote_info['author'],
         vote_info['voter'],
         vote_info['weight']))
-        
-        # note from Gareth: the below is commented out, but is required to actually send the notification
-        # leaving it commented out for now as it could perhaps be refactored, but obviously needs to come back
-        
-        '''
-        self.db.create_notification(trx_id=op['trx_id'],
-                                    from_username=vote_info['voter'],
-                                    to_username=vote_info['author'],
-                                    json_data=json.dumps(op),
-                                    sent=False,
-                                    type='vote',
-                                    priority_level=PRIORITY_LEVELS['low'])
-        sender_response = await self.yo_app.invoke_private_api(
-            'notification_sender', 'trigger_notification',
-            username=vote_info['author'])
-        logger.debug('Got %s from notification sender' % str(sender_response))
-        '''
 
     async def handle_follow(self, op):
-        logger.debug('handle_follow recevied %s op' % op['op'][0])
         op_data = op['op'][1]
         follow_data = json.loads(op_data['json'])
         if follow_data[0] != 'follow':
@@ -74,7 +64,12 @@ class YoBlockchainFollower(YoBaseService):
             logger.error('invalid follow op, follower must be signer')
             return False
         logger.debug('Follow: %s started following %s', follower, following)
-        # TODO: insert into db
+        await self.send_notification(trx_id=op['trx_id'],
+                                     from_username=follower,
+                                     to_username=following,
+                                     json_data=json.dumps(follow_data[1]),
+                                     type=FOLLOW,
+                                     priority_level=PRIORITY_LEVELS['low'])
 
     async def handle_account_update(self, op):
         logger.debug('handle_account_update recevied %s op' % ['op'][0])
