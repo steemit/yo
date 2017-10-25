@@ -33,7 +33,7 @@ class YoBlockchainFollower(YoBaseService):
     service_name = 'blockchain_follower'
 
     async def handle_vote(self, op):
-        logger.debug('handle_vote recevied %s op' % ['op'][0])
+        logger.debug('handle_vote received %s op' % ['op'][0])
         retval = True
         vote_info = op['op'][1]
         logger.debug('Vote on %s (written by %s) by %s with weight %s' % (
@@ -41,6 +41,10 @@ class YoBlockchainFollower(YoBaseService):
         vote_info['author'],
         vote_info['voter'],
         vote_info['weight']))
+        
+        # note from Gareth: the below is commented out, but is required to actually send the notification
+        # leaving it commented out for now as it could perhaps be refactored, but obviously needs to come back
+        
         '''
         self.db.create_notification(trx_id=op['trx_id'],
                                     from_username=vote_info['voter'],
@@ -96,9 +100,9 @@ class YoBlockchainFollower(YoBaseService):
             if blockchain_op['op'][1]['id'] == 'follow':
                 logger.debug('Incoming custom_json operation')
                 # handle follow notifications here
-                return await asyncio.gather([
+                return await asyncio.gather(
                     self.handle_follow(blockchain_op),
-                    self.handle_resteem(blockchain_op)])
+                    self.handle_resteem(blockchain_op))
 
         # account_update
         elif blockchain_op['op'][0] == 'account_update':
@@ -108,9 +112,9 @@ class YoBlockchainFollower(YoBaseService):
         # send, receive
         elif blockchain_op['op'][0] == 'transfer':
             logger.debug('Incoming transfer operation')
-            return await asyncio.gather([
+            return await asyncio.gather(
                 self.handle_send(blockchain_op),
-                self.handle_receive(blockchain_op)])
+                self.handle_receive(blockchain_op))
 
         # power_down
         elif blockchain_op['op'][0] == 'withdraw_vesting':
@@ -120,10 +124,10 @@ class YoBlockchainFollower(YoBaseService):
         # mention, comment-reply, post-reply
         elif blockchain_op['op'][0] == 'comment':
             logger.debug('Incoming comment operation')
-            return await asyncio.gather([
+            return await asyncio.gather(
                    self.handle_mention(blockchain_op),
                    self.handle_comment_reply(blockchain_op) ,
-                   self.handle_post_reply(blockchain_op)])
+                   self.handle_post_reply(blockchain_op))
 
         # reward
         # feed
