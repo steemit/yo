@@ -60,7 +60,21 @@ class YoBlockchainFollower(YoBaseService):
         '''
 
     async def handle_follow(self, op):
-        logger.debug('handle_follow recevied %s op' % ['op'][0])
+        logger.debug('handle_follow recevied %s op' % op['op'][0])
+        op_data = op['op'][1]
+        follow_data = json.loads(op_data['json'])
+        if follow_data[0] != 'follow':
+            return False
+        follower = follow_data[1]['follower']
+        following = follow_data[1]['following']
+        if len(op_data['required_posting_auths']) != 1:
+            logger.error('inavlid follow op, got %d posting auths, expected 1' % op_data['required_posting_auths'])
+            return False
+        if op_data['required_posting_auths'][0] != follower:
+            logger.error('invalid follow op, follower must be signer')
+            return False
+        logger.debug('Follow: %s started following %s', follower, following)
+        # TODO: insert into db
 
     async def handle_account_update(self, op):
         logger.debug('handle_account_update recevied %s op' % ['op'][0])
