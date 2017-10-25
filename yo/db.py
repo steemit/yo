@@ -148,6 +148,38 @@ class YoDatabase:
        finally:
           conn.close()
 
+   def get_wwwpoll_notifications(self, username=None, created_before=None, updated_after=None, read=None, notify_types=None, limit=30):
+       """Returns an SQLAlchemy result proxy with the notifications stored in wwwpoll table matching the specified params
+
+       Keyword args:
+          username(str):       the username to lookup notifications for
+          created_before(str): ISO8601-formatted timestamp
+          updated_after(str):  ISO8601-formatted
+          read(bool):          if set, only return notifications where the read flag is set to this value
+          notify_types(list):  if set, only return notifications of one of the types specified in this list
+          limit(int):          return at most this number of notifications
+
+       Returns:
+          SQLAlchemy result proxy from the select query
+       """
+       with self.acquire_conn() as conn:
+            query = wwwpoll_table.select()
+            if not (username is None):
+               query = query.where(wwwpoll_table.c.username == username)
+            if not (created_before is None):
+               created_before_val = dateutil.parser.parse(created_before)
+               query = query.where(wwwpoll_table.c.created >= created_before_val)
+            if not (updated_after is None):
+               updated_after_val = dateutil.parser.parse(updated_after)
+               query = query.where(wwwpoll_table.c.updated <= updated_after_val)
+            if not (read is None):
+               query = query.where(wwwpoll_table.c.read == read)
+            if not (notify_types is None):
+               query = query.filter(wwwpoll_table.c.notify_type.in_(notify_types))
+            query = query.limit(limit)
+            resp = conn.execute(query)
+       return resp     
+
    def get_user_transports(self, username, notify_type=None, transport_type=None):
        """Returns an SQLAlchemy result proxy with all the user transports enabled for specified username
 

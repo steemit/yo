@@ -36,12 +36,14 @@ class YoAPIServer(YoBaseService):
        Returns:
           list: list of notifications represented in dictionary format
        """
-       if test and self.testing_allowed:
-          retval = self.test_notifications.get_notifications(username=username,created_before=created_before,updated_after=updated_after,notify_types=notify_types,read=read)
+       if test:
+          if self.testing_allowed:
+             retval = self.test_notifications.get_notifications(username=username,created_before=created_before,updated_after=updated_after,notify_types=notify_types,read=read)[:limit]
+          else:
+             return {'error':'tried to use testing mode in prod'} # TODO - conform to proper error format as per github issue https://github.com/steemit/yo/issues/19
        else: 
-          # TODO  - implement real thing here
-         retval = []
-       return retval[:limit]
+         retval = yo_db.get_wwwpoll_notifications(username=username,created_before=created_before,updated_after=updated_after,notify_types=notify_types,read=read,limit=limit).fetchall()
+       return retval
    async def api_mark_read(self,ids=[],orig_req=None,test=False,yo_db=None,**kwargs):
        """ Mark a list of notifications as read
 

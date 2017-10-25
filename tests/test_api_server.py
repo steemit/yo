@@ -41,5 +41,5 @@ async def test_api_get_notifications_real():
       API = api_server.YoAPIServer()
       API.testing_allowed = False # we only want real DB data
       db = get_mockdata_db()
-      some_notifications = await API.api_get_notifications(username='test_user',limit=5)
+      some_notifications = await API.api_get_notifications(username='test_user',limit=5,yo_db=db)
       assert len(some_notifications)==5
