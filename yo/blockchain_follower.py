@@ -119,7 +119,14 @@ class YoBlockchainFollower(YoBaseService):
         return True
 
     async def handle_power_down(self, op):
-        logger.debug('handle_power_down recevied %s op' % ['op'][0])
+        op_data = op['op'][1]
+        logger.debug('Powerdown: %s powered down %s',
+            op_data['account'], op_data['vesting_shares'])
+        await self.send_notification(trx_id=op['trx_id'],
+                                     to_username=op_data['account'],
+                                     json_data=json.dumps(op_data),
+                                     type=POWER_DOWN,
+                                     priority_level=PRIORITY_LEVELS['low'])
         return True
 
     async def handle_mention(self, op):
