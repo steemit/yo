@@ -75,10 +75,38 @@ class YoBlockchainFollower(YoBaseService):
         logger.debug('handle_account_update recevied %s op' % ['op'][0])
 
     async def handle_send(self, op):
-        logger.debug('handle_send recevied %s op' % ['op'][0])
+        op_data = op['op'][1]
+        send_data = {
+            'amount': op_data['amount'],
+            'from': op_data['from'],
+            'memo': op_data['memo'],
+            'to': op_data['to'],
+        }
+        logger.debug('Send: %s sent %s to %s',
+            send_data['from'], send_data['amount'], send_data['to'])
+        await self.send_notification(trx_id=op['trx_id'],
+                                     to_username=send_data['from'],
+                                     json_data=json.dumps(send_data),
+                                     type=SEND_STEEM,
+                                     priority_level=PRIORITY_LEVELS['low'])
 
     async def handle_receive(self, op):
-        logger.debug('handle_receive recevied %s op' % ['op'][0])
+        op_data = op['op'][1]
+        receive_data = {
+            'amount': op_data['amount'],
+            'from': op_data['from'],
+            'memo': op_data['memo'],
+            'to': op_data['to'],
+        }
+        logger.debug('Receive: %s got %s from %s',
+            receive_data['to'], receive_data['amount'], receive_data['from'])
+        await self.send_notification(trx_id=op['trx_id'],
+                                     to_username=receive_data['to'],
+                                     from_username=receive_data['from'],
+                                     json_data=json.dumps(receive_data),
+                                     type=SEND_STEEM,
+                                     priority_level=PRIORITY_LEVELS['low'])
+
 
     async def handle_power_down(self, op):
         logger.debug('handle_power_down recevied %s op' % ['op'][0])
