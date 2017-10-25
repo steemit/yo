@@ -5,6 +5,9 @@ import os
 import sqlalchemy as sa
 import datetime
 
+import dateutil
+import dateutil.parser
+
 import aiomysql.sa
 import json
 
@@ -117,6 +120,9 @@ class YoDatabase:
       for entry in initdata:
           table_name,data = entry
           with self.acquire_conn() as conn:
+               for k,v in data.items():
+                   if str(metadata.tables['yo_%s' % table_name].columns[k].type) == 'DATETIME':
+                      data[k] = dateutil.parser.parse(v)
                conn.execute(metadata.tables['yo_%s' % table_name].insert(),**data)
    async def close(self):
        if 'close' in dir(self.engine): # pragma: no cover
