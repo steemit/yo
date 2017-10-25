@@ -52,6 +52,7 @@ class YoBlockchainFollower(YoBaseService):
                                      json_data=json.dumps(vote_info),
                                      type=VOTE,
                                      priority_level=PRIORITY_LEVELS['low'])
+        return True
 
     async def handle_follow(self, op):
         op_data = op['op'][1]
@@ -73,9 +74,11 @@ class YoBlockchainFollower(YoBaseService):
                                      json_data=json.dumps(follow_data[1]),
                                      type=FOLLOW,
                                      priority_level=PRIORITY_LEVELS['low'])
+        return True
 
     async def handle_account_update(self, op):
-        logger.debug('handle_account_update recevied %s op' % ['op'][0])
+        logger.debug('handle_account_update recevied %s op' % op['op'][0])
+        return True
 
     async def handle_send(self, op):
         op_data = op['op'][1]
@@ -92,6 +95,7 @@ class YoBlockchainFollower(YoBaseService):
                                      json_data=json.dumps(send_data),
                                      type=SEND_STEEM,
                                      priority_level=PRIORITY_LEVELS['low'])
+        return True
 
     async def handle_receive(self, op):
         op_data = op['op'][1]
@@ -109,34 +113,38 @@ class YoBlockchainFollower(YoBaseService):
                                      json_data=json.dumps(receive_data),
                                      type=RECEIVE_STEEM,
                                      priority_level=PRIORITY_LEVELS['low'])
-
+        return True
 
     async def handle_power_down(self, op):
         logger.debug('handle_power_down recevied %s op' % ['op'][0])
+        return True
 
     async def handle_mention(self, op):
         logger.debug('handle_mention recevied %s op' % ['op'][0])
+        return True
 
     async def handle_comment_reply(self, op):
         logger.debug('handle_comment_reply recevied %s op' % ['op'][0])
+        return True
 
     async def handle_post_reply(self, op):
         logger.debug('handle_post_reply recevied %s op' % ['op'][0])
+        return True
 
     async def handle_resteem(self, op):
         op_data = op['op'][1]
         resteem_data = json.loads(op_data['json'])
         if resteem_data[0] != 'reblog':
-            return False
+            return True
         account = resteem_data[1]['account']
         author = resteem_data[1]['author']
         permlink = resteem_data[1]['permlink']
         if len(op_data['required_posting_auths']) != 1:
             logger.error('inavlid resteem op, got %d posting auths, expected 1' % op_data['required_posting_auths'])
-            return False
+            return True
         if op_data['required_posting_auths'][0] != account:
             logger.error('invalid resteem op, account must be signer')
-            return False
+            return True
         logger.debug('Resteem: %s reblogged @%s/%s' % (account, author, permlink))
         await self.send_notification(trx_id=op['trx_id'],
                                      from_username=account,
@@ -144,6 +152,7 @@ class YoBlockchainFollower(YoBaseService):
                                      json_data=json.dumps(resteem_data[1]),
                                      type=RESTEEM,
                                      priority_level=PRIORITY_LEVELS['low'])
+        return True
 
     async def notify(self, blockchain_op):
         """ Handle notification for a particular op
