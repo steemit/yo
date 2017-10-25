@@ -1,3 +1,6 @@
+# Security-sensitive local config
+yo-with-rds.cfg
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

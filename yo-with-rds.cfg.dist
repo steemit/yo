@@ -28,6 +28,7 @@ allow_testing=1 ; left on default, we want to be able to compare the results wit
 provider=     ; this is ignored due to using yo_db_url above
 init_schema=1 ; always try to setup the DB schema on startup
 init_data=    ; if set, this is a JSON file to load default data from
+reset_db=0    ; if set or YO_RESET_DB environment variable set to 1, causes a DROP TABLES on startup
 
 ; this whole section is ignored, set db_url above or use YO_DB_URL environment variable
 [mysql]

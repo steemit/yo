@@ -98,15 +98,21 @@ block_status_table = sa.Table('yo_block_status', metadata,
 
 class YoDatabase:
    def __init__(self,config,initdata=None):
-      provider = config.config_data['database'].get('provider','sqlite')
-      if provider=='sqlite':
-         self.engine = sa.create_engine('sqlite:///%s' % config.config_data['sqlite'].get('filename',':memory:'))
-      elif provider=='mysql':
-         self.engine = sa.create_engine('mysql+pymysql://%s:%s@%s/%s?host=%s' % ( config.config_data['mysql'].get('username',''),
-                                                                                  config.config_data['mysql'].get('password',''),
-                                                                                  config.config_data['mysql'].get('hostname','127.0.0.1'),
-                                                                                  config.config_data['mysql'].get('database','yo'),
-                                                                                  config.config_data['mysql'].get('hostname','127.0.0.1')),pool_size=20)
+      db_url   = config.config_data['yo_general'].get('db_url','')
+      if len(db_url)>0:
+         self.engine = sa.create_engine(db_url,pool_size=20)
+      else:
+         provider = config.config_data['database'].get('provider','sqlite')
+         if provider=='sqlite':
+            self.engine = sa.create_engine('sqlite:///%s' % config.config_data['sqlite'].get('filename',':memory:'))
+         elif provider=='mysql':
+            self.engine = sa.create_engine('mysql+pymysql://%s:%s@%s/%s?host=%s' % ( config.config_data['mysql'].get('username',''),
+                                                                                     config.config_data['mysql'].get('password',''),
+                                                                                     config.config_data['mysql'].get('hostname','127.0.0.1'),
+                                                                                     config.config_data['mysql'].get('database','yo'),
+                                                                                     config.config_data['mysql'].get('hostname','127.0.0.1')),pool_size=20)
+      if int(config.config_data['database'].get('reset_db',0))==1:
+         metadata.drop_all(self.engine)
       if int(config.config_data['database'].get('init_schema',0))==1:
          metadata.create_all(self.engine)
       if initdata is None:
