@@ -107,7 +107,7 @@ class YoBlockchainFollower(YoBaseService):
                                      to_username=receive_data['to'],
                                      from_username=receive_data['from'],
                                      json_data=json.dumps(receive_data),
-                                     type=SEND_STEEM,
+                                     type=RECEIVE_STEEM,
                                      priority_level=PRIORITY_LEVELS['low'])
 
 
