@@ -34,3 +34,8 @@ clean-pyc:
 
 install: clean
 	pipenv install
+
+.PHONY: install-python-steem-macos
+install-python-steem-macos: ## install steem-python lib on macos using homebrew's openssl
+	env LDFLAGS="-L$(brew --prefix openssl)/lib" CFLAGS="-I$(brew --prefix openssl)/include" pipenv install steem
+
