@@ -23,6 +23,8 @@ RUN \
     apt-get update && \
     apt-get install -y \
         build-essential \
+        checkinstall \
+        pkg-config \
         daemontools \
         git \
         libffi-dev \
@@ -36,7 +38,6 @@ RUN \
         libxslt-dev \
         runit \
         nginx \
-        nodejs \
         wget \
         libsqlite3-dev \
         pandoc
@@ -70,43 +71,30 @@ ADD ./service /etc/service
 RUN chmod +x /etc/service/*/run
 
 # This updates the distro-provided pip and gives us pip3.6 binary
-RUN python3.6 -m pip install --upgrade pip
-
-
-# Install PipEnv
-RUN pip3.6 install pipenv
+RUN python3.6 -m pip install --upgrade pip pipenv
 
 WORKDIR ${APP_ROOT}
 
 # Copy code into a suitable place
-COPY ./bin ${APP_ROOT}/bin
 COPY ./data ${APP_ROOT}/data
 COPY ./Makefile ${APP_ROOT}/Makefile
-COPY ./package_meta.py ${APP_ROOT}/package_meta.py
 COPY ./Pipfile ${APP_ROOT}/Pipfile
+COPY ./Pipfile.lock ${APP_ROOT}/Pipfile.lock
 COPY ./scripts ${APP_ROOT}/scripts
-COPY ./setup.cfg ${APP_ROOT}/setup.cfg
-COPY ./setup.py ${APP_ROOT}/setup.py
 COPY ./tests ${APP_ROOT}/tests
 COPY ./yo ${APP_ROOT}/yo
 COPY ./yo.cfg ${APP_ROOT}/yo.cfg
 
-# More deps
+ENV HOME ${APP_ROOT}
 
-RUN apt-get -y install dh-autoreconf pkg-config
-RUN git clone https://github.com/bitcoin-core/secp256k1.git && \
-    cd secp256k1 && \
-    ./autogen.sh && \
-    ./configure && \
-    make all install
-
-# Build+install yo
-RUN make Pipfile.lock && \
-    make build-without-docker && \
-    make install-pipenv
+RUN pipenv install  --dev
 
 # let the test suite know it's inside docker
 ENV INDOCKER 1
 
+# Build+install yo
+RUN pipenv run pytest -vv tests
+
 # Expose the HTTP server port
 EXPOSE ${HTTP_SERVER_PORT}
+

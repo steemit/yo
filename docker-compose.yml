@@ -1,0 +1,29 @@
+version: '3'
+services:
+  mysql:
+    image: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_USERNAME: yo_dude
+      MYSQL_PASSWORD: testuserpass
+      MYSQL_DATABASE: yo
+    ports:
+     - 3306:3306
+  yo:
+    depends_on:
+      - mysql
+    image: steemit/yo
+    build: .
+    environment:
+      DATABASE_URL: mysql://root:root_password@mysql:3306/yo
+      LOG_LEVEL: DEBUG
+    env_file:
+      - .env
+    links:
+      - mysql:db
+    ports:
+      - 8080:8080
+    #volumes:
+    #  - .:/app
+    restart: always
+
