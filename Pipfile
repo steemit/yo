@@ -25,6 +25,8 @@ python-dateutil = "*"
 steem = "*"
 sendgrid = "*"
 SQLAlchemy = "*"
+twilio = "*"
+
 
 [dev-packages]
 ipython = "*"
