@@ -5,13 +5,16 @@ import os
 import sqlalchemy as sa
 import datetime
 
+import dateutil
+import dateutil.parser
+
 import aiomysql.sa
 import json
 
 import enum
 
 from contextlib import contextmanager
-logger = logging.getLogger('__name__')
+logger = logging.getLogger(__name__)
 
 metadata = sa.MetaData()
 
@@ -32,6 +35,23 @@ PRIORITY_LOW       = 2
 PRIORITY_MARKETING = 1
 
 
+
+# This is the table queried by API server for the wwwpoll transport
+wwwpoll_table = sa.Table('yo_wwwpoll', metadata,
+
+     sa.Column('notify_id', sa.Integer, primary_key=True),
+     sa.Column('notify_type', sa.String(10), nullable=False, index=True),
+     sa.Column('created', sa.DateTime, index=True),
+     sa.Column('updated', sa.DateTime, index=True),
+     sa.Column('read',sa.Boolean(), nullable=True, default=False),
+     sa.Column('seen',sa.Boolean(), nullable=True, default=False),
+     sa.Column('username',sa.String(20), index=True),
+     sa.Column('data',sa.UnicodeText),
+
+     mysql_engine='InnoDB',
+)
+
+# This is where ALL notifications go, not to be confused with the wwwpoll transport specific table above
 notifications_table = sa.Table('yo_notifications', metadata,
      sa.Column('nid', sa.Integer, primary_key=True),
      sa.Column('trx_id', sa.String(40), index=True, nullable=False,
@@ -50,10 +70,6 @@ notifications_table = sa.Table('yo_notifications', metadata,
                doc='Datetime when notification was created and stored in db'),
      sa.Column('sent_at', sa.DateTime, index=True,
                doc='Datetime when notification was sent'),
-     sa.Column('seen_at', sa.DateTime, index=True,
-               doc='Datetime when notification was seen (may be identical to read_at for some notification types)'),
-     sa.Column('read_at', sa.DateTime, index=True,
-               doc='Datetime when notification was read or marked as read'),
      mysql_engine='InnoDB',
 )
 
@@ -82,29 +98,50 @@ block_status_table = sa.Table('yo_block_status', metadata,
 
 class YoDatabase:
    def __init__(self,config,initdata=None):
-      provider = config.config_data['database'].get('provider','sqlite')
-      if provider=='sqlite':
-         self.engine = sa.create_engine('sqlite:///%s' % config.config_data['sqlite'].get('filename',':memory:'))
-      elif provider=='mysql':
-         self.engine = sa.create_engine('mysql+pymysql://%s:%s@%s/%s?host=%s' % ( config.config_data['mysql'].get('username',''),
-                                                                                  config.config_data['mysql'].get('password',''),
-                                                                                  config.config_data['mysql'].get('hostname','127.0.0.1'),
-                                                                                  config.config_data['mysql'].get('database','yo'),
-                                                                                  config.config_data['mysql'].get('hostname','127.0.0.1')),pool_size=20)
+      db_url   = config.config_data['yo_general'].get('db_url','')
+      if len(db_url)>0:
+         logger.info('Connecting to user-provided database URL from DB_URL variable...')
+         self.engine = sa.create_engine(db_url,pool_size=20)
+      else:
+         provider = config.config_data['database'].get('provider','sqlite')
+         if provider=='sqlite':
+            logger.info('Using sqlite engine for database storage')
+            self.engine = sa.create_engine('sqlite:///%s' % config.config_data['sqlite'].get('filename',':memory:'))
+         elif provider=='mysql':
+            logger.info('Using MySQL provider to build SQLAlchemy URL')
+            self.engine = sa.create_engine('mysql+pymysql://%s:%s@%s/%s?host=%s' % ( config.config_data['mysql'].get('username',''),
+                                                                                     config.config_data['mysql'].get('password',''),
+                                                                                     config.config_data['mysql'].get('hostname','127.0.0.1'),
+                                                                                     config.config_data['mysql'].get('database','yo'),
+                                                                                     config.config_data['mysql'].get('hostname','127.0.0.1')),pool_size=20)
+      if int(config.config_data['database'].get('reset_db',0))==1:
+         logger.info('Wiping old data due to YO_DATABASE_RESET_DB=1')
+         metadata.drop_all(self.engine)
+         logger.info('Finished wiping old data')
       if int(config.config_data['database'].get('init_schema',0))==1:
+         logger.info('Creating/updating database schema...')
          metadata.create_all(self.engine)
       if initdata is None:
          initdata_file = config.config_data['database'].get('init_data',None)
          if initdata_file is None:
+            logger.info('No initial data file specified, not loading initdata')
             initdata = []
          else:
+            logger.info('Loading initdata from file %s' % initdata_file)
             fd = open(initdata_file,'rb')
             initdata = json.load(fd)
             fd.close()
+            logger.info('Finished reading initdata file')
+      logger.debug('Inserting %d items from initdata into database...' % len(initdata))
       for entry in initdata:
           table_name,data = entry
           with self.acquire_conn() as conn:
+               for k,v in data.items():
+                   if str(metadata.tables['yo_%s' % table_name].columns[k].type) == 'DATETIME':
+                      data[k] = dateutil.parser.parse(v)
                conn.execute(metadata.tables['yo_%s' % table_name].insert(),**data)
+      logger.debug('Finished inserting %d items from initdata' % len(initdata))
+      logger.info('DB Layer ready')
    async def close(self):
        if 'close' in dir(self.engine): # pragma: no cover
           self.engine.close()
@@ -128,6 +165,38 @@ class YoDatabase:
           tx.rollback()
        finally:
           conn.close()
+
+   def get_wwwpoll_notifications(self, username=None, created_before=None, updated_after=None, read=None, notify_types=None, limit=30):
+       """Returns an SQLAlchemy result proxy with the notifications stored in wwwpoll table matching the specified params
+
+       Keyword args:
+          username(str):       the username to lookup notifications for
+          created_before(str): ISO8601-formatted timestamp
+          updated_after(str):  ISO8601-formatted
+          read(bool):          if set, only return notifications where the read flag is set to this value
+          notify_types(list):  if set, only return notifications of one of the types specified in this list
+          limit(int):          return at most this number of notifications
+
+       Returns:
+          SQLAlchemy result proxy from the select query
+       """
+       with self.acquire_conn() as conn:
+            query = wwwpoll_table.select()
+            if not (username is None):
+               query = query.where(wwwpoll_table.c.username == username)
+            if not (created_before is None):
+               created_before_val = dateutil.parser.parse(created_before)
+               query = query.where(wwwpoll_table.c.created >= created_before_val)
+            if not (updated_after is None):
+               updated_after_val = dateutil.parser.parse(updated_after)
+               query = query.where(wwwpoll_table.c.updated <= updated_after_val)
+            if not (read is None):
+               query = query.where(wwwpoll_table.c.read == read)
+            if not (notify_types is None):
+               query = query.filter(wwwpoll_table.c.notify_type.in_(notify_types))
+            query = query.limit(limit)
+            resp = conn.execute(query)
+       return resp     
 
    def get_user_transports(self, username, notify_type=None, transport_type=None):
        """Returns an SQLAlchemy result proxy with all the user transports enabled for specified username

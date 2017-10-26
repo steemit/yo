@@ -243,8 +243,8 @@ class YoBlockchainFollower(YoBaseService):
             if not resp:
                 logger.debug('Re-queueing operation: %s' % str(op))
                 return op
-        return None
-
+       return None
+   
     async def async_ops(self, loop, b):
         ops = b.stream_from(start_block=int(
                 self.yo_app.config.config_data['blockchain_follower'][
@@ -252,21 +252,23 @@ class YoBlockchainFollower(YoBaseService):
         while True:
             yield await loop.run_in_executor(None, next, ops)
 
-    async def async_task(self, yo_app):
-        queue = asyncio.Queue()
-        logger.info('Blockchain follower started')
-        while True:
-            try:
-                b = Blockchain()
-                while True:
-                    try:
-                        async for op in self.async_ops(yo_app.loop, b):
-                            await queue.put(op)
-                            await asyncio.sleep(0)
-                            runner_resp = await self.run_queue(queue)
-                            if not (runner_resp is None): queue.put(runner_resp)
-                    except Exception as e:
-                        logger.exception('Exception occurred')
-            except Exception as e:
-                logger.exception('Exception occurred')
-
+    async def async_task(self,yo_app):
+       steemd_url = yo_app.config.config_data['blockchain_follower'].get('steemd_url','https://api.steemit.com')
+       self.steemd_rpc = steem.steemd.Steemd(nodes=[steemd_url])
+       queue = asyncio.Queue()
+       logger.info('Blockchain follower started')
+       while True:
+          try:
+             b = Blockchain(steemd_instance=self.steemd_rpc)
+             while True:
+               try:
+                  async for op in self.async_ops(yo_app.loop,b):
+                     await queue.put(op)
+                     await asyncio.sleep(0)
+                     runner_resp = await self.run_queue(queue)
+                     if not (runner_resp is None): queue.put(runner_resp)
+               except Exception as e:
+                   logger.exception('Exception occurred')
+          except Exception as e:
+              logger.exception('Exception occurred')
+        return None

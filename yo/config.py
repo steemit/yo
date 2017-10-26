@@ -14,7 +14,7 @@ class YoConfigManager:
        self.config_data = configparser.ConfigParser(inline_comment_prefixes=';')
        # a couple of defaults to enable stuff to work-ish if the config file is missing
        # TODO - add a general get method with defaults so we don't have to define it all in multiple places
-       self.config_data['yo_general'] = {'log_level':'INFO'}
+       self.config_data['yo_general'] = {'log_level':'INFO','yo_db_url':''}
        self.config_data['vapid']      = {}
        self.config_data['blockchain_follower'] = {}
        self.config_data['notification_sender'] = {}
