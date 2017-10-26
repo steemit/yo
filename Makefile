@@ -59,3 +59,7 @@ install-global: clean
 pypi:
 	python3.6 setup.py bdist_wheel --universal
 	python3.6 setup.py sdist bdist_wheel upload
+
+.PHONY: install-python-steem-macos
+install-python-steem-macos: ## install steem-python lib on macos using homebrew's openssl
+	env LDFLAGS="-L$(brew --prefix openssl)/lib" CFLAGS="-I$(brew --prefix openssl)/include" pipenv install steem
