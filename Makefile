@@ -37,7 +37,14 @@ clean-pyc:
 	find . -name '*~' -exec rm -f {} +
 
 install: clean
-	pipenv install --three --dev
+	if [[ $(shell uname) == 'Darwin' ]]; then \
+    	brew install openssl; \
+        env LDFLAGS="-L$(brew --prefix openssl)/lib" CFLAGS="-I$(brew --prefix openssl)/include" pipenv install --python 3.6 --dev; \
+        else \
+        	pipenv install --python 3.6 --dev; \
+        fi
+
+
 
 .PHONY: install-python-steem-macos
 install-python-steem-macos: ## install steem-python lib on macos using homebrew's openssl
