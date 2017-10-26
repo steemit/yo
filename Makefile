@@ -37,7 +37,7 @@ clean-pyc:
 	find . -name '*~' -exec rm -f {} +
 
 install: clean
-	pipenv install
+	pipenv install --three --dev
 
 .PHONY: install-python-steem-macos
 install-python-steem-macos: ## install steem-python lib on macos using homebrew's openssl
