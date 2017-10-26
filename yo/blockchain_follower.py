@@ -83,7 +83,13 @@ class YoBlockchainFollower(YoBaseService):
         return True
 
     async def handle_account_update(self, op):
-        logger.debug('handle_account_update recevied %s op' % op['op'][0])
+        op_data = op['op'][1]
+        logger.debug('Account: %s updated their account info', op_data['account'])
+        await self.send_notification(trx_id=op['trx_id'],
+                                     to_username=op_data['account'],
+                                     json_data=json.dumps(op_data),
+                                     type=ACCOUNT_UPDATE,
+                                     priority_level=PRIORITY_LEVELS['low'])
         return True
 
     async def handle_send(self, op):
