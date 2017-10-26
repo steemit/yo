@@ -100,38 +100,38 @@ class YoDatabase:
    def __init__(self,config,initdata=None):
       db_url   = config.config_data['yo_general'].get('db_url','')
       if len(db_url)>0:
-         logger.debug('Connecting to user-provided database URL from DB_URL variable...')
+         logger.info('Connecting to user-provided database URL from DB_URL variable...')
          self.engine = sa.create_engine(db_url,pool_size=20)
       else:
          provider = config.config_data['database'].get('provider','sqlite')
          if provider=='sqlite':
-            logger.debug('Using sqlite engine for database storage')
+            logger.info('Using sqlite engine for database storage')
             self.engine = sa.create_engine('sqlite:///%s' % config.config_data['sqlite'].get('filename',':memory:'))
          elif provider=='mysql':
-            logger.debug('Using MySQL provider to build SQLAlchemy URL')
+            logger.info('Using MySQL provider to build SQLAlchemy URL')
             self.engine = sa.create_engine('mysql+pymysql://%s:%s@%s/%s?host=%s' % ( config.config_data['mysql'].get('username',''),
                                                                                      config.config_data['mysql'].get('password',''),
                                                                                      config.config_data['mysql'].get('hostname','127.0.0.1'),
                                                                                      config.config_data['mysql'].get('database','yo'),
                                                                                      config.config_data['mysql'].get('hostname','127.0.0.1')),pool_size=20)
       if int(config.config_data['database'].get('reset_db',0))==1:
-         logger.debug('Wiping old data due to YO_DATABASE_RESET_DB=1')
+         logger.info('Wiping old data due to YO_DATABASE_RESET_DB=1')
          metadata.drop_all(self.engine)
-         logger.debug('Finished wiping old data')
+         logger.info('Finished wiping old data')
       if int(config.config_data['database'].get('init_schema',0))==1:
-         logger.debug('Creating/updating database schema...')
+         logger.info('Creating/updating database schema...')
          metadata.create_all(self.engine)
       if initdata is None:
          initdata_file = config.config_data['database'].get('init_data',None)
          if initdata_file is None:
-            logger.debug('No initial data file specified, not loading initdata')
+            logger.info('No initial data file specified, not loading initdata')
             initdata = []
          else:
-            logger.debug('Loading initial data from file %s' % initdata_file)
+            logger.info('Loading initdata from file %s' % initdata_file)
             fd = open(initdata_file,'rb')
             initdata = json.load(fd)
             fd.close()
-            logger.debug('Finished reading initdata file')
+            logger.info('Finished reading initdata file')
       logger.debug('Inserting %d items from initdata into database...' % len(initdata))
       for entry in initdata:
           table_name,data = entry
@@ -141,6 +141,7 @@ class YoDatabase:
                       data[k] = dateutil.parser.parse(v)
                conn.execute(metadata.tables['yo_%s' % table_name].insert(),**data)
       logger.debug('Finished inserting %d items from initdata' % len(initdata))
+      logger.info('DB Layer ready')
    async def close(self):
        if 'close' in dir(self.engine): # pragma: no cover
           self.engine.close()
