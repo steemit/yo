@@ -8,7 +8,7 @@ from sqlalchemy import func
 import os
 import pytest
 
-from _test_utils import MySQLServer
+from .conftest import MySQLServer
 import socket
 import time
 

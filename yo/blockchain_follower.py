@@ -32,6 +32,7 @@ VOTE = 'vote'
 # any valid @username with a trailing whitespace
 MENTION_PATTERN = re.compile(r'@([a-z][a-z0-9\-]{2,15})\s')
 
+
 class YoBlockchainFollower(YoBaseService):
     service_name = 'blockchain_follower'
 
@@ -39,8 +40,8 @@ class YoBlockchainFollower(YoBaseService):
         data['sent'] = False
         self.db.create_notification(**data)
         sender_response = await self.yo_app.invoke_private_api(
-            'notification_sender', 'trigger_notification',
-            username=data['to_username'])
+                'notification_sender', 'trigger_notification',
+                username=data['to_username'])
         logger.debug('Got %s from notification sender' % str(sender_response))
 
     async def handle_vote(self, op):
@@ -65,7 +66,9 @@ class YoBlockchainFollower(YoBaseService):
         follower = follow_data[1]['follower']
         following = follow_data[1]['following']
         if len(op_data['required_posting_auths']) != 1:
-            logger.error('inavlid follow op, got %d posting auths, expected 1' % op_data['required_posting_auths'])
+            logger.error(
+                'inavlid follow op, got %d posting auths, expected 1' % op_data[
+                    'required_posting_auths'])
             return False
         if op_data['required_posting_auths'][0] != follower:
             logger.error('invalid follow op, follower must be signer')
@@ -87,12 +90,12 @@ class YoBlockchainFollower(YoBaseService):
         op_data = op['op'][1]
         send_data = {
             'amount': op_data['amount'],
-            'from': op_data['from'],
-            'memo': op_data['memo'],
-            'to': op_data['to'],
+            'from': op_data  ['from'],
+            'memo': op_data  ['memo'],
+            'to': op_data    ['to'],
         }
         logger.debug('Send: %s sent %s to %s',
-            send_data['from'], send_data['amount'], send_data['to'])
+                     send_data['from'], send_data['amount'], send_data['to'])
         await self.send_notification(trx_id=op['trx_id'],
                                      to_username=send_data['from'],
                                      json_data=json.dumps(send_data),
@@ -104,12 +107,13 @@ class YoBlockchainFollower(YoBaseService):
         op_data = op['op'][1]
         receive_data = {
             'amount': op_data['amount'],
-            'from': op_data['from'],
-            'memo': op_data['memo'],
-            'to': op_data['to'],
+            'from': op_data  ['from'],
+            'memo': op_data  ['memo'],
+            'to': op_data    ['to'],
         }
         logger.debug('Receive: %s got %s from %s',
-            receive_data['to'], receive_data['amount'], receive_data['from'])
+                     receive_data['to'], receive_data['amount'],
+                     receive_data['from'])
         await self.send_notification(trx_id=op['trx_id'],
                                      to_username=receive_data['to'],
                                      from_username=receive_data['from'],
@@ -121,7 +125,7 @@ class YoBlockchainFollower(YoBaseService):
     async def handle_power_down(self, op):
         op_data = op['op'][1]
         logger.debug('Powerdown: %s powered down %s',
-            op_data['account'], op_data['vesting_shares'])
+                     op_data['account'], op_data['vesting_shares'])
         await self.send_notification(trx_id=op['trx_id'],
                                      to_username=op_data['account'],
                                      json_data=json.dumps(op_data),
@@ -133,7 +137,7 @@ class YoBlockchainFollower(YoBaseService):
         comment_data = op['op'][1]
         haystack = comment_data['body'] + '\n'
         data = {
-            'author': comment_data['author'],
+            'author': comment_data  ['author'],
             'permlink': comment_data['permlink'],
         }
         for match in re.findall(MENTION_PATTERN, haystack):
@@ -154,10 +158,12 @@ class YoBlockchainFollower(YoBaseService):
         if op_data['parent_author'] == '':
             # top level post
             return True
-        parent_id = '@'+op_data['parent_author']+'/'+op_data['parent_permlink']
+        parent_id = '@' + op_data['parent_author'] + '/' + op_data[
+            'parent_permlink']
         parent = steem.post.Post(parent_id)
         note_type = COMMENT_REPLY if parent.is_comment() else POST_REPLY
-        logger.debug('Comment(%s): %s replied to %s', note_type, op_data['author'], parent_id)
+        logger.debug('Comment(%s): %s replied to %s', note_type,
+                     op_data['author'], parent_id)
         await self.send_notification(trx_id=op['trx_id'],
                                      to_username=op_data['parent_author'],
                                      from_username=op_data['author'],
@@ -175,12 +181,15 @@ class YoBlockchainFollower(YoBaseService):
         author = resteem_data[1]['author']
         permlink = resteem_data[1]['permlink']
         if len(op_data['required_posting_auths']) != 1:
-            logger.error('inavlid resteem op, got %d posting auths, expected 1' % op_data['required_posting_auths'])
+            logger.error(
+                'inavlid resteem op, got %d posting auths, expected 1' %
+                op_data['required_posting_auths'])
             return True
         if op_data['required_posting_auths'][0] != account:
             logger.error('invalid resteem op, account must be signer')
             return True
-        logger.debug('Resteem: %s reblogged @%s/%s' % (account, author, permlink))
+        logger.debug(
+            'Resteem: %s reblogged @%s/%s' % (account, author, permlink))
         await self.send_notification(trx_id=op['trx_id'],
                                      from_username=account,
                                      to_username=author,
@@ -204,8 +213,8 @@ class YoBlockchainFollower(YoBaseService):
                 logger.debug('Incoming custom_json operation')
                 # handle follow notifications here
                 return await asyncio.gather(
-                    self.handle_follow(blockchain_op),
-                    self.handle_resteem(blockchain_op))
+                        self.handle_follow(blockchain_op),
+                        self.handle_resteem(blockchain_op))
 
         # account_update
         elif blockchain_op['op'][0] == 'account_update':
@@ -216,8 +225,8 @@ class YoBlockchainFollower(YoBaseService):
         elif blockchain_op['op'][0] == 'transfer':
             logger.debug('Incoming transfer operation')
             return await asyncio.gather(
-                self.handle_send(blockchain_op),
-                self.handle_receive(blockchain_op))
+                    self.handle_send(blockchain_op),
+                    self.handle_receive(blockchain_op))
 
         # power_down
         elif blockchain_op['op'][0] == 'withdraw_vesting':
@@ -228,8 +237,8 @@ class YoBlockchainFollower(YoBaseService):
         elif blockchain_op['op'][0] == 'comment':
             logger.debug('Incoming comment operation')
             return await asyncio.gather(
-                   self.handle_mention(blockchain_op),
-                   self.handle_comment(blockchain_op))
+                    self.handle_mention(blockchain_op),
+                    self.handle_comment(blockchain_op))
 
         # reward
         # feed
@@ -243,8 +252,8 @@ class YoBlockchainFollower(YoBaseService):
             if not resp:
                 logger.debug('Re-queueing operation: %s' % str(op))
                 return op
-       return None
-   
+        return None
+
     async def async_ops(self, loop, b):
         ops = b.stream_from(start_block=int(
                 self.yo_app.config.config_data['blockchain_follower'][
@@ -252,23 +261,24 @@ class YoBlockchainFollower(YoBaseService):
         while True:
             yield await loop.run_in_executor(None, next, ops)
 
-    async def async_task(self,yo_app):
-       steemd_url = yo_app.config.config_data['blockchain_follower'].get('steemd_url','https://api.steemit.com')
-       self.steemd_rpc = steem.steemd.Steemd(nodes=[steemd_url])
-       queue = asyncio.Queue()
-       logger.info('Blockchain follower started')
-       while True:
-          try:
-             b = Blockchain(steemd_instance=self.steemd_rpc)
-             while True:
-               try:
-                  async for op in self.async_ops(yo_app.loop,b):
-                     await queue.put(op)
-                     await asyncio.sleep(0)
-                     runner_resp = await self.run_queue(queue)
-                     if not (runner_resp is None): queue.put(runner_resp)
-               except Exception as e:
-                   logger.exception('Exception occurred')
-          except Exception as e:
-              logger.exception('Exception occurred')
-        return None
+    async def async_task(self, yo_app):
+        steemd_url = yo_app.config.config_data['blockchain_follower'].get(
+            'steemd_url', 'https://api.steemit.com')
+        self.steemd_rpc = steem.steemd.Steemd(nodes=[steemd_url])
+        queue = asyncio.Queue()
+        logger.info('Blockchain follower started')
+        while True:
+            try:
+                b = Blockchain(steemd_instance=self.steemd_rpc)
+                while True:
+                    try:
+                        async for op in self.async_ops(yo_app.loop, b):
+                            await queue.put(op)
+                            await asyncio.sleep(0)
+                            runner_resp = await self.run_queue(queue)
+                            if not (runner_resp is None): queue.put(runner_resp)
+                    except Exception as e:
+                        logger.exception('Exception occurred')
+            except Exception as e:
+                logger.exception('Exception occurred')
+
