@@ -255,11 +255,24 @@ class YoBlockchainFollower(YoBaseService):
         return None
 
     async def async_ops(self, loop, b):
-        ops = b.stream_from(start_block=int(
-                self.yo_app.config.config_data['blockchain_follower'][
-                    'start_block']))
+        start_block = str(self.yo_app.config.config_data['blockchain_follower'].get('start_block',''))
+        # turn the start_block into something understandable to steem-python:
+        # blank value is None
+        # negative values are the head block minus that amount
+        if start_block=='':
+           start_block = None # TODO: at some point go back and implement the block_status thing for multiple blockchain followers
+        else:
+           start_block = int(start_block) # TODO: handle malformed config in the config module and spit out appropriate errors
+           if start_block < 0:
+              start_block = b.get_current_block_num() - start_block
+        ops = b.stream_from(start_block=start_block)
         while True:
-            yield await loop.run_in_executor(None, next, ops)
+            next_val = None
+            try:
+               next_val = await loop.run_in_executor(None,next,ops)
+            except Exception as e:
+               logger.exception('Exception occurred')
+            if not (next_val is None): yield next_val
 
     async def async_task(self, yo_app):
         steemd_url = yo_app.config.config_data['blockchain_follower'].get(
