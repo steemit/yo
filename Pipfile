@@ -26,6 +26,7 @@ pywebpush = "*"
 "python-dateutil" = "*"
 steem = "*"
 sendgrid = "*"
+twilio = "*"
 
 [dev-packages]
 

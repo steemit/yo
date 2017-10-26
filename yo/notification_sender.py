@@ -6,6 +6,7 @@ import json
 from .ratelimits import check_ratelimit
 from .transports import base_transport
 from .transports import sendgrid
+from .transports import twilio
 import datetime
 import logging
 logger = logging.getLogger(__name__)
@@ -59,6 +60,13 @@ class YoNotificationSender(YoBaseService):
 
    def init_api(self,yo_app):
        self.private_api_methods['trigger_notification'] = self.api_trigger_notification
-       self.configured_transports={'email':sendgrid.SendGridTransport(yo_app.config.config_data['sendgrid']['priv_key'])}
+       self.configured_transports={
+           'email': sendgrid.SendGridTransport(yo_app.config.config_data['sendgrid']['priv_key']),
+           'sms': twilio.TwilioTransport(
+              yo_app.config.config_data['twilio']['account_sid'],
+              yo_app.config.config_data['twilio']['auth_token'],
+              yo_app.config.config_data['twilio']['from_number'],
+            ),
+       }
    async def async_task(self,yo_app):
        logger.info('Notification sender started')
