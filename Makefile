@@ -17,10 +17,14 @@ docker-image: clean
 test: test-without-lint test-pylint
 
 test-without-lint:
-	pipenv run pytest -vv --cov=yo --cov-report term --cov-report html:cov_html
+	pipenv run pytest -vv --cov=yo --cov-report term tests
 
 test-pylint:
 	pipenv run pytest -v --pylint
+
+.PHONY: run-local
+run-local:
+	pipenv run python -m yo.cli
 
 clean: clean-build clean-pyc
 

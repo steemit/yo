@@ -6,7 +6,7 @@ from yo import config
 from yo import db
 from yo import api_server
 
-from _test_utils import MySQLServer
+from .conftest import MySQLServer
 
 source_code_path = os.path.dirname(os.path.realpath(__file__))
 no_docker = pytest.mark.skipif(os.getenv('INDOCKER','0')=='1',reason='Does not work inside docker')
