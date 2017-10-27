@@ -30,12 +30,6 @@ By default, Yo will run a node with ALL components available and will use sqlite
 
 See yo.cfg for details on the environment variables used (when specified, these will override the contents of yo.cfg).
 
-You should probably make use of pipenv to run yo cleanly, to do so use the provided makefile to configure pipenv and install all dependencies inside it first:
-```
-make build-without-docker
-make install-pipenv
-pipenv run steemyo -c /path/to/yo.cfg
-```
 
 A Dockerfile is also provided for building and running yo inside a docker container, as well as a simple tool that creates a docker env file for use with the docker container by pulling values from yo.cfg.
 Copy yo.cfg into my-yo.cfg or similar and then do the following:
@@ -45,13 +39,533 @@ YO_CONFIG=my-yo.cfg make .env
 docker run -ti steemit/yo:latest
 ```
 
-## Yo API - Authentication
-
-Yo's API methods sometimes require authentication, this is handled by signing the JSON-RPC request body with a user's private key and adding it to the HTTP request header in x-yo-signature. Depending on the exact API method, different keys may be required but usually for a user-facing API call the posting key from the steem blockchain is used.
-
    
-## Yo API - methods
+## # Yo JSON-RPC API
 
-Please see documentation under docs/ for further information on single API methods
+Calls related to notifications via [Jussi](https://github.com/steemit/jussi).
 
+## About the different notification types
 
+These are the notification types:
+
+* `account_update`
+* `comment_reply`
+* `feed`
+* `follow`
+* `mention`
+* `post_reply`
+* `power_down`
+* `send`
+* `receive`
+* `resteem`
+* `reward`
+* `vote`
+
+All notification types share the same basic structure:
+
+```js
+        {
+            "notify_id": 39,
+            "notify_type": "power_down",
+            "created": "2017-10-27T01:31:29.382749",
+            "updated": "2017-10-27T15:16:06.178975",
+            "read": true,
+            "shown": false,
+            "username": "test_user",
+            "data": {
+                "author": "roadscape",
+                "amount": 10000.2
+            }
+        }
+```
+
+The types differ in the `data` property.
+
+How are the types different? TODO
+
+## JSON-RPC endpoint [/]
+
+### Get notifications [POST]
+Get a user's notifications, with filters & limit.
+
++ Request (application/json)
+
+```js
+        {
+            "jsonrpc": "2.0",
+            "id": 1,
+            "method": "yo.get_notifications",
+            "params": {
+                "username": "money", // required
+                "created_before": "2017-10-27T02:38:29.906376",
+                "updated_after": "2017-10-27T02:38:29.906376",
+                "read": false,
+                "notify_types": [
+                    "comment_reply",
+                    "post_reply",
+                    "vote",
+                    "resteem"
+                ],
+                "limit": 30, // defaults to 30
+                "test": false // if true, return data from test DB
+            }
+        }
+```
+
++ Response 200 (application/json)
+
+```js
+        {
+            "jsonrpc": "2.0",
+            "id": 1,
+            "result": [
+                {
+                    "notify_id": 39,
+                    "notify_type": "power_down",
+                    "created": "2017-10-27T01:31:29.382749",
+                    "updated": "2017-10-27T01:31:29.382749",
+                    "read": false,
+                    "shown": false,
+                    "username": "test_user",
+                    "data": {
+                        "author": "roadscape",
+                        "amount": 10000.2
+                    }
+                },
+                {
+                    "notify_id": 55,
+                    "notify_type": "power_down",
+                    "created": "2017-10-27T01:15:29.383842",
+                    "updated": "2017-10-27T01:15:29.383842",
+                    "read": false,
+                    "shown": false,
+                    "username": "test_user",
+                    "data": {
+                        "author": "roadscape",
+                        "amount": 10000.2
+                    }
+                }
+            ]
+        }
+```
+
+### Mark notifications as read [POST]
+
+```js
++ Request (application/json)
+
+        {
+            "jsonrpc": "2.0",
+            "id": 1,
+            "method": "yo.mark_read",
+            "params": {
+                "test": true, // optional, uses test db
+                "ids": [39, 10]
+            }
+        }
+```
+
++ Response 200 (application/json)
+
+```js
+        {
+            "jsonrpc": "2.0",
+            "result": [
+                {
+                    "notify_id": 39,
+                    "notify_type": "power_down",
+                    "created": "2017-10-27T01:31:29.382749",
+                    "updated": "2017-10-27T15:16:06.178975",
+                    "read": true,
+                    "shown": false,
+                    "username": "test_user",
+                    "data": {
+                        "author": "roadscape",
+                        "amount": 10000.2
+                    }
+                },
+                {
+                    "notify_id": 10,
+                    "notify_type": "power_down",
+                    "created": "2017-10-27T02:00:29.380775",
+                    "updated": "2017-10-27T15:16:06.178997",
+                    "read": true,
+                    "shown": false,
+                    "username": "test_user",
+                    "data": {
+                        "author": "roadscape",
+                        "amount": 10000.2
+                    }
+                }
+            ],
+            "id": 1
+        }
+```
+
+### Mark notifications as unread [POST]
+
++ Request (application/json)
+
+```js
+        {
+            "jsonrpc": "2.0",
+            "id": 1,
+            "method": "yo.mark_unread",
+            "params": {
+                "test": true, // optional, uses test db
+                "ids": [39, 10]
+            }
+        }
+```
+
++ Response 200 (application/json)
+
+```js
+        {
+            "jsonrpc": "2.0",
+            "result": [
+                {
+                    "notify_id": 39,
+                    "notify_type": "power_down",
+                    "created": "2017-10-27T01:31:29.382749",
+                    "updated": "2017-10-27T15:16:06.178975",
+                    "read": false,
+                    "shown": false,
+                    "username": "test_user",
+                    "data": {
+                        "author": "roadscape",
+                        "amount": 10000.2
+                    }
+                },
+                {
+                    "notify_id": 10,
+                    "notify_type": "power_down",
+                    "created": "2017-10-27T02:00:29.380775",
+                    "updated": "2017-10-27T15:16:06.178997",
+                    "read": false,
+                    "shown": false,
+                    "username": "test_user",
+                    "data": {
+                        "author": "roadscape",
+                        "amount": 10000.2
+                    }
+                }
+            ],
+            "id": 1
+        }
+```
+
+### Mark notifications as seen [POST]
+
++ Request (application/json)
+
+```js
+        {
+            "jsonrpc": "2.0",
+            "id": 1,
+            "method": "yo.mark_seen",
+            "params": {
+                "test": true, // optional, uses test db
+                "ids": [39, 10]
+            }
+        }
+```
+
++ Response 200 (application/json)
+
+```js
+        {
+            "jsonrpc": "2.0",
+            "result": [
+                {
+                    "notify_id": 39,
+                    "notify_type": "power_down",
+                    "created": "2017-10-27T01:31:29.382749",
+                    "updated": "2017-10-27T15:16:06.178975",
+                    "read": true,
+                    "seen": true,
+                    "username": "test_user",
+                    "data": {
+                        "author": "roadscape",
+                        "amount": 10000.2
+                    }
+                },
+                {
+                    "notify_id": 10,
+                    "notify_type": "power_down",
+                    "created": "2017-10-27T02:00:29.380775",
+                    "updated": "2017-10-27T15:16:06.178997",
+                    "read": true,
+                    "seen": true,
+                    "username": "test_user",
+                    "data": {
+                        "author": "roadscape",
+                        "amount": 10000.2
+                    }
+                }
+            ],
+            "id": 1
+        }
+```
+
+### Mark notifications as unseen [POST]
+
++ Request (application/json)
+
+```js
+        {
+            "jsonrpc": "2.0",
+            "id": 1,
+            "method": "yo.mark_unseen",
+            "params": {
+                "test": true, // optional, uses test db
+                "ids": [39, 10]
+            }
+        }
+```
+
++ Response 200 (application/json)
+
+```js
+        {
+            "jsonrpc": "2.0",
+            "result": [
+                {
+                    "notify_id": 39,
+                    "notify_type": "power_down",
+                    "created": "2017-10-27T01:31:29.382749",
+                    "updated": "2017-10-27T15:16:06.178975",
+                    "read": true,
+                    "seen": false,
+                    "username": "test_user",
+                    "data": {
+                        "author": "roadscape",
+                        "amount": 10000.2
+                    }
+                },
+                {
+                    "notify_id": 10,
+                    "notify_type": "power_down",
+                    "created": "2017-10-27T02:00:29.380775",
+                    "updated": "2017-10-27T15:16:06.178997",
+                    "read": true,
+                    "seen": false,
+                    "username": "test_user",
+                    "data": {
+                        "author": "roadscape",
+                        "amount": 10000.2
+                    }
+                }
+            ],
+            "id": 1
+        }
+```
+
+### Get transport configuration [POST]
+
++ Request (application/json)
+
+```js
+        {
+            "jsonrpc": "2.0",
+            "id": 1,
+            "method": "yo.get_transports",
+            "params": {
+                "test": true,
+                "username": "money"
+            }
+        }
+```
+
++ Response 200 (application/json)
+
+```js
+        {
+            "jsonrpc": "2.0",
+            "id": 1,
+            "result": {
+                "email": {
+                    "notification_types": [
+                        "power_down",
+                        "power_up",
+                        "resteem",
+                        "feed",
+                        "reward",
+                        "send",
+                        "mention",
+                        "follow",
+                        "vote",
+                        "comment_reply",
+                        "post_reply",
+                        "account_update",
+                        "message",
+                        "receive"
+                    ],
+                    "sub_data": "test@example.com"
+                },
+                "wwwpoll": {
+                    "notification_types": [
+                        "power_down",
+                        "power_up",
+                        "resteem",
+                        "feed",
+                        "reward",
+                        "send",
+                        "mention",
+                        "follow",
+                        "vote",
+                        "comment_reply",
+                        "post_reply",
+                        "account_update",
+                        "message",
+                        "receive"
+                    ],
+                    "sub_data": {}
+                }
+            }
+        }
+```
+
+### Set transport configuration [POST]
+
++ Request (application/json)
+
+```js
+        {
+            "jsonrpc": "2.0",
+            "id": 1,
+            "method": "yo.set_transports",
+            "params": {
+                "test": true,
+                "username": "money",
+                "transports": {
+                    "email": {
+                        "notification_types": [
+                            "account_update",
+                            "power_down",
+                            "security_new_mobile_device",
+                            "security_withdrawal",
+                            "security_password_changed",
+                            "receive",
+                            "reward",
+                            "send",
+                            "post_reply",
+                            "comment_reply",
+                            "mention",
+                            "resteem",
+                            "feed"
+                        ],
+                        "sub_data": "test@example.com"
+                    },
+                    "wwwpoll": {
+                        "notification_types": [
+                            "account_update",
+                            "power_down",
+                            "security_new_mobile_device",
+                            "security_withdrawal",
+                            "security_password_changed",
+                            "receive",
+                            "reward",
+                            "send",
+                            "comment_reply",
+                            "mention",
+                            "resteem",
+                            "feed"
+                        ],
+                        "sub_data": {}
+                    }
+                }
+            }
+        }
+```
+
++ Response 200 (application/json)
+
+```js
+        {
+            "jsonrpc": "2.0",
+            "id": 1,
+            "result": {
+                "email": {
+                    "notification_types": [
+                        "account_update",
+                        "power_down",
+                        "security_new_mobile_device",
+                        "security_withdrawal",
+                        "security_password_changed",
+                        "receive",
+                        "reward",
+                        "send",
+                        "post_reply",
+                        "comment_reply",
+                        "mention",
+                        "resteem",
+                        "feed"
+                    ],
+                    "sub_data": "test@example.com"
+                },
+                "wwwpoll": {
+                    "notification_types": [
+                        "account_update",
+                        "power_down",
+                        "security_new_mobile_device",
+                        "security_withdrawal",
+                        "security_password_changed",
+                        "receive",
+                        "reward",
+                        "send",
+                        "comment_reply",
+                        "mention",
+                        "resteem",
+                        "feed"
+                    ],
+                    "sub_data": {}
+                }
+            }
+        }
+```
+
+### Reset test data [POST]
+Mark all test data notifications as unseen, unread, and unhidden.
+
++ Request (application/json)
+
+```js
+        {
+
+        }
+```
+
++ Response 200 (application/json)
+
+```js
+        {
+
+        }
+```
+
+### Generic error response [POST]
+How do errors look, in general? TODO
+
++ Request (application/json)
+
+```js
+        {
+        }
+```
+
++ Response 400 (application/json)
+
+```js
+        {
+            "jsonrpc": "2.0",
+            "id": 1,
+            "error": {
+                "code": "???",
+                "message": "errors here?",
+                "data" {
+                    "more": "info"
+                }
+            }
+        }
+```
