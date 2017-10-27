@@ -15,7 +15,7 @@ services:
     image: steemit/yo
     build: .
     environment:
-      DATABASE_URL: mysql://root:root_password@mysql:3306/yo
+      YO_DB_URL: mysql://root:root_password@mysql:3306/yo
       LOG_LEVEL: DEBUG
     env_file:
       - .env
