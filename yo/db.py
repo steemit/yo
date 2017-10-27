@@ -73,27 +73,17 @@ notifications_table = sa.Table('yo_notifications', metadata,
      mysql_engine='InnoDB',
 )
 
-# We basically just store one entry for each configured transport, and delete them with API calls if required
-user_transports_table = sa.Table('yo_user_transports', metadata,
+# TODO: at some point turn this back into a normalised SQL table and/or add logging so users can see when their settings were changed etc
+user_settings_table = sa.Table('yo_user_settings', metadata,
      sa.Column('tid', sa.Integer, primary_key=True),
-
      sa.Column('username', sa.String(20), index=True),
-
-     sa.Column('notify_type', sa.String(10), nullable=False, index=True),
-     sa.Column('transport_type', sa.String(10), nullable=False, index=True),
-
-     sa.Column('sub_data', sa.String(1024), index=False),
-
-     sa.Column('created_at', sa.DateTime, default=sa.func.now(), index=True,
-               doc='Datetime when we first created this user preferences entry'),
-     sa.Column('updated_at', sa.DateTime, default=sa.func.now(), index=True,
-               doc='Datetime when preferences were updated'),
+     sa.Column('transports', sa.UnicodeText, index=False,
+               doc='This is a JSON object used to store the transports, because denormalisation is more efficient right now'),
+     sa.Column('created_at', sa.DateTime, default=sa.func.now(), index=False,
+               doc='Datetime when this user first used the service and thus first got settings configured'),
+     sa.Column('updated_at', sa.DateTime, default=sa.func.now(), index=False,
+               doc='Datetime when settings were last changed'),
      mysql_engine='InnoDB',
-)
-
-# bad practice i know, single row
-block_status_table = sa.Table('yo_block_status', metadata,
-     sa.Column('last_processed_block', sa.Integer),
 )
 
 class YoDatabase:
@@ -211,15 +201,15 @@ class YoDatabase:
        Returns:
           SQLAlchemy result proxy from the select query
        """
-       # TODO - make this return a more general-purpose iterator or something
-       with self.acquire_conn() as conn:
-            query = user_transports_table.select().where(user_transports_table.c.username == username)
-            if not (notify_type is None):
-               query = query.where(user_transports_table.c.notify_type==notify_type)
-            if not (transport_type is None):
-               query = query.where(user_transports_table.c.transport_type==transport_type)
-            select_response = conn.execute(query)
-       return select_response
+       pass
+#       with self.acquire_conn() as conn:
+#            query = user_transports_table.select().where(user_transports_table.c.username == username)
+#            if not (notify_type is None):
+#               query = query.where(user_transports_table.c.notify_type==notify_type)
+#            if not (transport_type is None):
+#               query = query.where(user_transports_table.c.transport_type==transport_type)
+#            select_response = conn.execute(query)
+#       return select_response
 
    def update_subdata(self, username, transport_type=None, notify_type=None, sub_data=None):
        """Updates sub_data field for selected transport
@@ -234,20 +224,20 @@ class YoDatabase:
           notify_type(str):    the notification type to update
           sub_data(str):       the sub_data (subscription data)
        """
-       # first check if the transport already exists or not
-       existing_transports = self.get_user_transports(username,notify_type=notify_type,transport_type=transport_type).fetchall()
-       if len(existing_transports)>0: # transport exists, we need to update it
-          update_query = user_transports_table.update().values(sub_data=sub_data)
-          update_query = update_query.where(user_transports_table.c.username==username)
-          update_query = update_query.where(user_transports_table.c.notify_type==notify_type)
-          update_query = update_query.where(user_transports_table.c.transport_type==transport_type)
-       else: # doesn't exist, we need to create it
-          update_query = user_transports_table.insert().values(username=username,
-                                                               notify_type=notify_type,
-                                                               transport_type=transport_type,
-                                                               sub_data=sub_data)
-       with self.acquire_conn() as conn:
-            conn.execute(update_query)
+       pass
+#       existing_transports = self.get_user_transports(username,notify_type=notify_type,transport_type=transport_type).fetchall()
+#       if len(existing_transports)>0: # transport exists, we need to update it
+#          update_query = user_transports_table.update().values(sub_data=sub_data)
+#          update_query = update_query.where(user_transports_table.c.username==username)
+#          update_query = update_query.where(user_transports_table.c.notify_type==notify_type)
+#          update_query = update_query.where(user_transports_table.c.transport_type==transport_type)
+#       else: # doesn't exist, we need to create it
+#          update_query = user_transports_table.insert().values(username=username,
+#                                                               notify_type=notify_type,
+#                                                               transport_type=transport_type,
+#                                                               sub_data=sub_data)
+#       with self.acquire_conn() as conn:
+#            conn.execute(update_query)
 
    def get_priority_count(self, to_username, priority, timeframe, start_time=None):
        """Returns count of notifications to a user of a set priority or higher
