@@ -1,5 +1,4 @@
 from .base_service import YoBaseService 
-from .db import user_transports_table
 from .mock_notifications import YoMockData
 from .mock_settings import YoMockSettings
 from .utils import needs_auth

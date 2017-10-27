@@ -27,13 +27,6 @@ def get_mockdata_db(use_mysql=False,mysql_params={}):
     return yo_db
 
 @pytest.mark.asyncio
-async def test_api_test_method():
-      """Test the test method"""
-      API = api_server.YoAPIServer()
-      retval = await API.api_test_method()
-      assert retval['status']=='OK'
-
-@pytest.mark.asyncio
 async def test_api_get_notifications():
       """Basic test of get_notifications with mocked_notifications.py stuff"""
       API = api_server.YoAPIServer()
