@@ -60,13 +60,16 @@ class YoNotificationSender(YoBaseService):
 
    def init_api(self,yo_app):
        self.private_api_methods['trigger_notification'] = self.api_trigger_notification
-       self.configured_transports={
-           'email': sendgrid.SendGridTransport(yo_app.config.config_data['sendgrid']['priv_key']),
-           'sms': twilio.TwilioTransport(
+       self.configured_transports={}
+       if int(yo_app.config.config_data['sendgrid'].get('enabled', 0)) == 1:
+           logger.info('Enabling sendgrid (email) transport')
+           self.configured_transports['email'] = sendgrid.SendGridTransport(yo_app.config.config_data['sendgrid']['priv_key'])
+       if int(yo_app.config.config_data['twilio'].get('enabled', 0)) == 1:
+           logger.info('Enabling twilio (sms) transport')
+           self.configured_transports['sms'] = twilio.TwilioTransport(
               yo_app.config.config_data['twilio']['account_sid'],
               yo_app.config.config_data['twilio']['auth_token'],
               yo_app.config.config_data['twilio']['from_number'],
-            ),
-       }
+           )
    async def async_task(self,yo_app):
        logger.info('Notification sender started')
