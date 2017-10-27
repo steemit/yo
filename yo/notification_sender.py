@@ -1,5 +1,5 @@
 from .base_service import YoBaseService 
-from .db import notifications_table,user_transports_table
+from .db import notifications_table
 import asyncio
 import json
 
@@ -23,22 +23,19 @@ logger = logging.getLogger(__name__)
 class YoNotificationSender(YoBaseService):
    service_name='notification_sender'
 
-   def get_user_transports(self,db_conn,username,notify_type):
-       """ Returns a list of tuples of (transport,sub_data)
-       """
-       retval = []
-       query = user_transports_table.select().where(user_transports_table.c.username==username).where(user_transports_table.c.notify_type==notify_type)
-    
-       for row in db_conn.execute(query):
-           if row['transport_type'] in self.configured_transports.keys():
-              retval.append((self.configured_transports[row['transport_type']],row['sub_data']))
-       return retval
    async def api_trigger_notification(self,username=None):
          logger.info('api_trigger_notification invoked for %s' % username)
          await self.run_send_notify({'to_username':username})
          return {'result':'Succeeded'} # dummy for now
    async def run_send_notify(self,notification_job):
          logger.debug('run_send_notify executing! %s' % notification_job)
+         user_transports = self.db.get_user_transports(notification_job['to_username'])
+         user_notify_types_transports = {} # map notification types to the transports enabled for them
+         for transport_name,transport_data in user_transports.items():
+             for notify_type in transport_data['notification_types']:
+                 if not (notify_type in user_notify_types_transports.keys()):
+                    user_notify_types_transports[notify_type] = []
+                 user_notify_types_transports[notify_types].append((transport_name,transport_data['sub_data']))
          with self.db.acquire_conn() as conn:
               query = notifications_table.select().where(notifications_table.c.to_username == notification_job['to_username'])
               # TODO - add check for already sent
@@ -49,9 +46,9 @@ class YoNotificationSender(YoBaseService):
                      logger.debug('Skipping sending of notification for failing rate limit check: %s' % str(row))
                      continue
                   logger.debug('>>>>>> Sending new notification: %s' % str(row))
-                  transports = self.get_user_transports(conn,notification_job['to_username'],row['type'])
-                  for t in transports:
-                      logger.debug('Sending notification to transport %s' % str(t))
+                  #transports = self.get_user_transports(conn,notification_job['to_username'],row['type'])
+                  for t in user_notify_types_transports[row_dict['type']]:
+                      logger.debug('Sending notification to transport %s' % str(t[0]))
                       t[0].send_notification(to_subdata=t[1],notify_type=row['type'],data=json.loads(row['json_data']))
                   row_dict['sent']    = True
                   row_dict['sent_at'] = datetime.datetime.now()
