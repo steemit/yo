@@ -58,8 +58,10 @@ class YoNotificationSender(YoBaseService):
                         'Sending notification to transport %s' % str(t[0]))
                     t[0].send_notification(
                         to_subdata=t[1],
+                        to_username=notification_job['to_username'],
                         notify_type=row['type'],
                         data=json.loads(row['json_data']))
+                # TODO - check actually sent here, and check per transport - if failing only on a single transport, retry only single transport
                 row_dict['sent'] = True
                 row_dict['sent_at'] = datetime.datetime.now()
                 update_query = notifications_table.update().where(
@@ -71,6 +73,10 @@ class YoNotificationSender(YoBaseService):
         self.private_api_methods[
             'trigger_notification'] = self.api_trigger_notification
         self.configured_transports = {}
+        if int(yo_app.config.config_data['wwwpoll'].get('enabled', 1)) == 1:
+            logger.info('Enabling wwwpoll transport')
+            self.configured_transports['wwwpoll'] = wwwpoll.WWWPollTransport(
+                self.db)
         if int(yo_app.config.config_data['sendgrid'].get('enabled', 0)) == 1:
             logger.info('Enabling sendgrid (email) transport')
             self.configured_transports['email'] = sendgrid.SendGridTransport(

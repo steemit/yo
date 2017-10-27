@@ -21,7 +21,7 @@ class TwilioTransport(BaseTransport):
         self.client = Client(account_sid, auth_token)
         self.from_number = from_number
 
-    def send_notification(self, to_subdata=None, notify_type=None, data={}):
+    def send_notification(self, to_subdata=None, to_username=None, notify_type=None, data={}):
         logger.debug('Twilio sending notification %s to %s',
                      notify_type, to_subdata)
 
