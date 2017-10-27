@@ -100,10 +100,15 @@ class YoAPIServer(YoBaseService):
            list: list of notifications updated
        """
        retval = []
-       if test and self.testing_allowed:
-          for notify_id in ids:
-              self.test_notifications.mark_notification_unseen(notify_id)
-              retval.append(self.test_notifications.get_notification(notify_id))
+       if test:
+          if self.testing_allowed:
+             for notify_id in ids:
+                 self.test_notifications.mark_notification_unseen(notify_id)
+                 retval.append(self.test_notifications.get_notification(notify_id))
+          else:
+             return None # TODO - error here
+       else:
+          pass # TODO - real implementation here
        return retval
 
    async def api_reset_test_data(self,**kwargs):
@@ -126,7 +131,12 @@ class YoAPIServer(YoBaseService):
    async def api_get_transports(self,username=None,orig_req=None,test=False,yo_db=None,**kwargs):
        retval = {}
        if test:
-          retval = self.test_settings.get_transports(username)
+          if self.testing_allowed:
+             retval = self.test_settings.get_transports(username)
+          else:
+             return None # TODO - return appropriate error here
+       else:
+          retval = yo_db.get_user_transports(username)
        return retval
    async def async_task(self,yo_app): # pragma: no cover
        self.testing_allowed = (int(yo_app.config.config_data['api_server'].get('allow_testing',0))==1)

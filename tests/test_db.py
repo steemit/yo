@@ -13,10 +13,14 @@ import pytest
 from .conftest import MySQLServer
 import socket
 import time
+import json
 
 no_docker = pytest.mark.skipif(os.getenv('INDOCKER','0')=='1',reason='Does not work inside docker')
 mysql_test = pytest.mark.skipif(os.getenv('SKIPMYSQL','0')=='1',reason='Skipping MySQL tests')
 source_code_path = os.path.dirname(os.path.realpath(__file__))
+
+TESTUSER_TRANSPORTS = {'username':'testuser1337',
+                       'transports':json.dumps(mock_settings.YoMockSettings().create_defaults())}
 
 def gen_initdata():
     """Utility function that generates some initdata using mock_notifications and mock_settings
@@ -32,9 +36,11 @@ def gen_initdata():
         retval.append(('wwwpoll',notification))
         usernames.add(notification['username'])
     mock_data = mock_settings.YoMockSettings()
+    retval.append(('user_settings',{'username':'testuser1337',
+                                    'transports':json.dumps(TESTUSER_TRANSPORTS)}))
     for user in usernames:
         user_transports_data = mock_data.get_transports(user)
-        user_transports_data['emails']['sub_data'] = '%s@example.com' % user
+        user_transports_data['email']['sub_data'] = '%s@example.com' % user
         user_transports_data = mock_data.set_transports(user,user_transports_data)
         retval.append(('user_settings',{'username':user,
                                         'transports':json.dumps(mock_data.get_transports(user))}))
@@ -104,12 +110,9 @@ def test_initdata_mysql():
                                                          'mysql':{'username':'yo_test','password':'1234','database':'yo_test'}})
     test_initdata = gen_initdata()
     yo_db = db.YoDatabase(yo_config,initdata=test_initdata)
-    results = yo_db.get_user_transports('testuser')
-    row_dict = dict(results.fetchone().items())
-    for k,v in test_initdata[0][1].items():
-        assert row_dict[k]==v
-    assert results.fetchone() == None
+    results = yo_db.get_user_transports('testuser1337')
     server.stop()
+    assert results == TESTUSER_TRANSPORTS
 
 
 def test_initdata_param():
@@ -119,11 +122,8 @@ def test_initdata_param():
                                                       'sqlite':{'filename':':memory:'}})
     test_initdata = gen_initdata()
     yo_db = db.YoDatabase(yo_config,initdata=test_initdata)
-    results = yo_db.get_user_transports('testuser')
-    row_dict = dict(results.fetchone().items())
-    for k,v in test_initdata[0][1].items():
-        assert row_dict[k]==v
-    assert results.fetchone() == None
+    results = yo_db.get_user_transports('testuser1337')
+    assert results == TESTUSER_TRANSPORTS
 
 def test_initdata_file():
     """Basic sanity check for init.json"""
@@ -133,8 +133,6 @@ def test_initdata_file():
                                                       'sqlite':{'filename':':memory:'}})
     yo_db = db.YoDatabase(yo_config)
     # this is just a "no exceptions were thrown" sanity check
-
-
 
 
 

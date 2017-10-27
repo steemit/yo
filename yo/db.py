@@ -201,39 +201,13 @@ class YoDatabase:
        """
        retval = None # TODO - as soon as we have a proper error specification, use it here
        with self.acquire_conn() as conn:
-            query = user_settings_table.select().columns([user_settings_table.c.transports]).where(user_settings_table.c.username == username)
+            query = user_settings_table.select().where(user_settings_table.c.username == username)
             select_response = conn.execute(query)
-            json_settings = select_response.fetchone()[0]
+            json_settings = select_response.fetchone()['transports']
+            print('JSON dump: %s' % str(json_settings))
             retval = json.loads(json_settings)
-            
+       return retval
 
-   def update_subdata(self, username, transport_type=None, notify_type=None, sub_data=None):
-       """Updates sub_data field for selected transport
-
-       If the transport record does not exist, it is created
-
-       Args:
-          username(str): the user to update
-
-       Keyword args:
-          transport_type(str): the transport type to update
-          notify_type(str):    the notification type to update
-          sub_data(str):       the sub_data (subscription data)
-       """
-       pass
-#       existing_transports = self.get_user_transports(username,notify_type=notify_type,transport_type=transport_type).fetchall()
-#       if len(existing_transports)>0: # transport exists, we need to update it
-#          update_query = user_transports_table.update().values(sub_data=sub_data)
-#          update_query = update_query.where(user_transports_table.c.username==username)
-#          update_query = update_query.where(user_transports_table.c.notify_type==notify_type)
-#          update_query = update_query.where(user_transports_table.c.transport_type==transport_type)
-#       else: # doesn't exist, we need to create it
-#          update_query = user_transports_table.insert().values(username=username,
-#                                                               notify_type=notify_type,
-#                                                               transport_type=transport_type,
-#                                                               sub_data=sub_data)
-#       with self.acquire_conn() as conn:
-#            conn.execute(update_query)
 
    def get_priority_count(self, to_username, priority, timeframe, start_time=None):
        """Returns count of notifications to a user of a set priority or higher
