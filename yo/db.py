@@ -197,14 +197,13 @@ class YoDatabase:
           username(str): the username to lookup
 
        Returns:
-          str: the transports configured for the user
+          dict: the transports configured for the user
        """
        retval = None # TODO - as soon as we have a proper error specification, use it here
        with self.acquire_conn() as conn:
             query = user_settings_table.select().where(user_settings_table.c.username == username)
             select_response = conn.execute(query)
             json_settings = select_response.fetchone()['transports']
-            print('JSON dump: %s' % str(json_settings))
             retval = json.loads(json_settings)
        return retval
 
