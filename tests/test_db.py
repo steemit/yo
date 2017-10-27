@@ -200,43 +200,53 @@ def test_initdata_file():
     yo_db = db.YoDatabase(yo_config)
     # this is just a "no exceptions were thrown" sanity check
 
+
 def test_wwwpoll_notification():
     """Test making a wwwpoll notification and retrieving it"""
     yo_config = config.YoConfigManager(
-       None,
-       defaults={
-           'database': {
-               'provider': 'sqlite',
-               'init_schema': '1'
-           },
-           'sqlite': {
-               'filename': ':memory:'
-           }})
-    vote_data = {'author':'testuser1336',
-                 'weight':100,
-                 'item'  :{'author'  :'testuser1337',
-                           'permlink':'test-post-1',
-                           'summary' :'A test post',
-                           'category':'test',
-                           'depth'   :0}}
-    test_initdata = [('notifications',{'trx_id'        :1337,
-                                       'json_data'     :json.dumps(vote_data),
-                                       'to_username'   :'testuser1337',
-                                       'from_username' :'testuser1336',
-                                       'type'          :'vote',
-                                       'priority_level':db.PRIORITY_LEVELS['low']})]
+        None,
+        defaults={
+            'database': {
+                'provider': 'sqlite',
+                'init_schema': '1'
+            },
+            'sqlite': {
+                'filename': ':memory:'
+            }
+        })
+    vote_data = {
+        'author': 'testuser1336',
+        'weight': 100,
+        'item': {
+            'author': 'testuser1337',
+            'permlink': 'test-post-1',
+            'summary': 'A test post',
+            'category': 'test',
+            'depth': 0
+        }
+    }
+    test_initdata = [('notifications', {
+        'trx_id': 1337,
+        'json_data': json.dumps(vote_data),
+        'to_username': 'testuser1337',
+        'from_username': 'testuser1336',
+        'type': 'vote',
+        'priority_level': db.PRIORITY_LEVELS['low']
+    })]
     yo_db = db.YoDatabase(yo_config, initdata=test_initdata)
-    retval = yo_db.create_wwwpoll_notification(notify_type='vote',to_user='testuser1337',raw_data=vote_data)
+    retval = yo_db.create_wwwpoll_notification(
+        notify_type='vote', to_user='testuser1337', raw_data=vote_data)
     assert not (retval is None)
     assert 'notify_id' in retval.keys()
     assert retval['notify_type'] == 'vote'
-    assert retval['username']    == 'testuser1337'
+    assert retval['username'] == 'testuser1337'
 
     new_notify_id = retval['notify_id']
-    get_resp = yo_db.get_wwwpoll_notifications(username='testuser1337',limit=2).fetchall()
-    assert len(get_resp)==1
+    get_resp = yo_db.get_wwwpoll_notifications(
+        username='testuser1337', limit=2).fetchall()
+    assert len(get_resp) == 1
     assert get_resp[0]['notify_id'] == new_notify_id
-    assert get_resp[0]['read']      == False
-    assert get_resp[0]['seen']      == False
-    assert get_resp[0]['username']  == 'testuser1337'
+    assert get_resp[0]['read'] == False
+    assert get_resp[0]['seen'] == False
+    assert get_resp[0]['username'] == 'testuser1337'
     assert json.loads(get_resp[0]['data']) == vote_data
