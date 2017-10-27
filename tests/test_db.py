@@ -1,5 +1,7 @@
 from yo import config
 from yo import db
+from yo import mock_notifications
+from yo import mock_settings
 from unittest import mock
 from sqlalchemy import select
 from sqlalchemy import MetaData
@@ -11,10 +13,38 @@ import pytest
 from .conftest import MySQLServer
 import socket
 import time
+import json
 
 no_docker = pytest.mark.skipif(os.getenv('INDOCKER','0')=='1',reason='Does not work inside docker')
 mysql_test = pytest.mark.skipif(os.getenv('SKIPMYSQL','0')=='1',reason='Skipping MySQL tests')
 source_code_path = os.path.dirname(os.path.realpath(__file__))
+
+TESTUSER_TRANSPORTS = {'username':'testuser1337',
+                       'transports':json.dumps(mock_settings.YoMockSettings().create_defaults())}
+
+def gen_initdata():
+    """Utility function that generates some initdata using mock_notifications and mock_settings
+       The returned initdata will fill the wwwpoll and user_settings table, but not the notifications table
+       Default settings are used, with username@example.com as the email address
+       This is sufficient for most testing purposes and also doubles as a partial test of the mock API
+    """
+    retval    = []
+    usernames = set()
+    mock_data = mock_notifications.YoMockData()
+    for notification in mock_data.get_notifications(limit=9999):
+        notification['data'] = json.dumps(notification['data'])
+        retval.append(('wwwpoll',notification))
+        usernames.add(notification['username'])
+    mock_data = mock_settings.YoMockSettings()
+    retval.append(('user_settings',{'username':'testuser1337',
+                                    'transports':json.dumps(TESTUSER_TRANSPORTS)}))
+    for user in usernames:
+        user_transports_data = mock_data.get_transports(user)
+        user_transports_data['email']['sub_data'] = '%s@example.com' % user
+        user_transports_data = mock_data.set_transports(user,user_transports_data)
+        retval.append(('user_settings',{'username':user,
+                                        'transports':json.dumps(mock_data.get_transports(user))}))
+    return retval
 
 
 @mysql_test
@@ -68,7 +98,6 @@ def test_schema_mysql():
     server.stop()
 
 
-@pytest.mark.skip(reason="this needs to be rewritten after the transports table is redefined")
 @mysql_test
 @no_docker
 def test_initdata_mysql():
@@ -79,97 +108,32 @@ def test_initdata_mysql():
     yo_config = config.YoConfigManager(None,defaults={'database':{'provider'   :'mysql',
                                                                   'init_schema':'1'},
                                                          'mysql':{'username':'yo_test','password':'1234','database':'yo_test'}})
-    test_initdata = [["user_transports", {"username": "testuser", "transport_type": "email", "notify_type": "vote", "sub_data": "test@example.com"}]]
+    test_initdata = gen_initdata()
     yo_db = db.YoDatabase(yo_config,initdata=test_initdata)
-    results = yo_db.get_user_transports('testuser')
-    row_dict = dict(results.fetchone().items())
-    for k,v in test_initdata[0][1].items():
-        assert row_dict[k]==v
-    assert results.fetchone() == None
+    results = yo_db.get_user_transports('testuser1337')
     server.stop()
+    assert results == TESTUSER_TRANSPORTS
 
 
-@pytest.mark.skip(reason="this needs to be rewritten after the transports table is redefined")
 def test_initdata_param():
     """Test we can pass initdata in from the kwarg"""
     yo_config = config.YoConfigManager(None,defaults={'database':{'provider'   :'sqlite',
                                                                   'init_schema':'1'},
                                                       'sqlite':{'filename':':memory:'}})
-    test_initdata = [["user_transports", {"username": "testuser", "transport_type": "email", "notify_type": "vote", "sub_data": "test@example.com"}]]
+    test_initdata = gen_initdata()
     yo_db = db.YoDatabase(yo_config,initdata=test_initdata)
-    results = yo_db.get_user_transports('testuser')
-    row_dict = dict(results.fetchone().items())
-    for k,v in test_initdata[0][1].items():
-        assert row_dict[k]==v
-    assert results.fetchone() == None
+    results = yo_db.get_user_transports('testuser1337')
+    assert results == TESTUSER_TRANSPORTS
 
 def test_initdata_file():
     """Basic sanity check for init.json"""
     yo_config = config.YoConfigManager(None,defaults={'database':{'provider'   :'sqlite',
                                                                   'init_schema':'1',
-                                                                  'init_data'  :'%s/../data/init.json' % source_code_path},
+                                                                  'init_data'  :'%s/../data/mockdata.json' % source_code_path},
                                                       'sqlite':{'filename':':memory:'}})
     yo_db = db.YoDatabase(yo_config)
     # this is just a "no exceptions were thrown" sanity check
 
 
-@pytest.mark.skip(reason="schema for transports is in flux right now")
-def test_update_subdata():
-    """Test updating subdata on a user transport"""
-    yo_config = config.YoConfigManager(None,defaults={'database':{'provider'   :'sqlite',
-                                                                  'init_schema':'1'},
-                                                      'sqlite':{'filename':':memory:'}})
-    test_initdata = [["user_transports", {"username": "testuser", "transport_type": "email", "notify_type": "vote", "sub_data": "test@example.com"}]]
-    yo_db = db.YoDatabase(yo_config,initdata=test_initdata)
-    yo_db.update_subdata('testuser',transport_type='email',notify_type='vote',sub_data='test2@example.com')
-    updated_transport = dict(yo_db.get_user_transports('testuser',transport_type='email',notify_type='vote').fetchone().items())
-    assert updated_transport['sub_data']=='test2@example.com'
 
 
-@pytest.mark.skip(reason="schema for transports is in flux right now")
-def test_insert_subdata():
-    """Test creating new subdata for user transport"""
-    yo_config = config.YoConfigManager(None,defaults={'database':{'provider'   :'sqlite',
-                                                                  'init_schema':'1'},
-                                                      'sqlite':{'filename':':memory:'}})
-    yo_db = db.YoDatabase(yo_config)
-    yo_db.update_subdata('testuser',transport_type='email',notify_type='vote',sub_data='test2@example.com')
-    updated_transport = dict(yo_db.get_user_transports('testuser',transport_type='email',notify_type='vote').fetchone().items())
-    assert updated_transport['sub_data']=='test2@example.com'
-
-
-@pytest.mark.skip(reason="schema for transports is in flux right now")
-@mysql_test
-@no_docker
-def test_update_subdata_mysql():
-    """Test updating subdata on a user transport"""
-
-    server = MySQLServer(db_name='yo_test',db_user='yo_test',db_pass='1234')
-    server.wait()
-    yo_config = config.YoConfigManager(None,defaults={'database':{'provider'   :'mysql',
-                                                                  'init_schema':'1'},
-                                                         'mysql':{'username':'yo_test','password':'1234','database':'yo_test'}})
-    test_initdata = [["user_transports", {"username": "testuser", "transport_type": "email", "notify_type": "vote", "sub_data": "test@example.com"}]]
-    yo_db = db.YoDatabase(yo_config,initdata=test_initdata)
-    yo_db.update_subdata('testuser',transport_type='email',notify_type='vote',sub_data='test2@example.com')
-    updated_transport = dict(yo_db.get_user_transports('testuser',transport_type='email',notify_type='vote').fetchone().items())
-    assert updated_transport['sub_data']=='test2@example.com'
-    server.stop()
-
-
-@pytest.mark.skip(reason="schema for transports is in flux right now")
-@mysql_test
-@no_docker
-def test_insert_subdata_mysql():
-    """Test creating new subdata for user transport"""
-
-    server = MySQLServer(db_name='yo_test',db_user='yo_test',db_pass='1234')
-    server.wait()
-    yo_config = config.YoConfigManager(None,defaults={'database':{'provider'   :'mysql',
-                                                                  'init_schema':'1'},
-                                                         'mysql':{'username':'yo_test','password':'1234','database':'yo_test'}})
-    yo_db = db.YoDatabase(yo_config)
-    yo_db.update_subdata('testuser',transport_type='email',notify_type='vote',sub_data='test2@example.com')
-    updated_transport = dict(yo_db.get_user_transports('testuser',transport_type='email',notify_type='vote').fetchone().items())
-    assert updated_transport['sub_data']=='test2@example.com'
-    server.stop()

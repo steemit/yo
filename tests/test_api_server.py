@@ -27,13 +27,6 @@ def get_mockdata_db(use_mysql=False,mysql_params={}):
     return yo_db
 
 @pytest.mark.asyncio
-async def test_api_test_method():
-      """Test the test method"""
-      API = api_server.YoAPIServer()
-      retval = await API.api_test_method()
-      assert retval['status']=='OK'
-
-@pytest.mark.asyncio
 async def test_api_get_notifications():
       """Basic test of get_notifications with mocked_notifications.py stuff"""
       API = api_server.YoAPIServer()
@@ -65,3 +58,26 @@ async def test_api_get_notifications_mysql():
       some_notifications = await API.api_get_notifications(username='test_user',limit=5,yo_db=db)
       server.stop()
       assert len(some_notifications)==5
+
+@no_docker
+@mysql_test
+@pytest.mark.asyncio
+async def test_api_get_set_transports_mysql():
+      """Test get and set transports backed by MySQL with simple non-default transports"""
+      API = api_server.YoAPIServer()
+      API.testing_allowed = False # we only want real DB data
+
+      server = MySQLServer(db_name='yo_test',db_user='yo_test',db_pass='1234')
+      server.wait()
+      db = get_mockdata_db(use_mysql=True,mysql_params={'username':'yo_test','password':'1234','database':'yo_test'})
+
+      simple_transports_obj = {'email':{'notification_types':['vote','comment'],
+                                        'sub_data':'testuser1337@example.com'},
+                               'wwwpoll':{'notification_types':['mention','post_reply'],
+                                          'sub_data':{'stuff':'not here by default'}}}
+
+      resp = await API.api_set_transports(username='testuser1337',transports=simple_transports_obj,test=False,yo_db=db)
+      assert resp == simple_transports_obj
+
+      resp = await API.api_get_transports(username='testuser1337',test=False,yo_db=db)
+      assert resp == simple_transports_obj
