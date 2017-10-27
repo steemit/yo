@@ -11,6 +11,7 @@ import dateutil.parser
 import aiomysql.sa
 import json
 
+import uuid
 import enum
 
 from contextlib import contextmanager
@@ -42,7 +43,9 @@ PRIORITY_MARKETING = 1
 wwwpoll_table = sa.Table(
     'yo_wwwpoll',
     metadata,
-    sa.Column('notify_id', sa.String(36), primary_key=True), # TODO - look into whether this really does cause performance issues
+    sa.Column(
+        'notify_id', sa.String(36), primary_key=True
+    ),  # TODO - look into whether this really does cause performance issues
     sa.Column('notify_type', sa.String(20), nullable=False, index=True),
     sa.Column('created', sa.DateTime, index=True),
     sa.Column('updated', sa.DateTime, index=True),
@@ -300,7 +303,12 @@ class YoDatabase:
                 logger.exception('Exception occurred!')
         return retval
 
-    def create_wwwpoll_notification(self, notify_id=None, notify_type=None, created_time=None, to_user=None, raw_data={}):
+    def create_wwwpoll_notification(self,
+                                    notify_id=None,
+                                    notify_type=None,
+                                    created_time=None,
+                                    to_user=None,
+                                    raw_data={}):
         """ Creates a new notification in the wwwpoll table
 
         Keyword Args:
@@ -314,39 +322,42 @@ class YoDatabase:
            dict: the notification as stored in wwwpoll, None on error
         """
         if notify_id is None:
-           notify_id = str(uuid.uuid1())
+            notify_id = str(uuid.uuid1())
         if notify_type is None:
-           return None # TODO - errors, standard errors, glorious errors
+            return None  # TODO - errors, standard errors, glorious errors
         if created_time is None:
-           created_time = datetime.datetime.now().isoformat()
+            created_time = datetime.datetime.now()
+        else:
+            created_time = dateutil.parser.parse(created_time)
         if to_user is None:
-           return None # TODO - for the glory of errors!
+            return None  # TODO - for the glory of errors!
         notify_data = {
-             'notify_id'  : notify_id,
-             'notify_type': notify_type,
-             'created'    : created_time,
-             'updated'    : created_time,
-             'read'       : False,
-             'seen'       : False,
-             'username'   : to_user,
-             'data'       : json.dumps(raw_data)
-           }
+            'notify_id': notify_id,
+            'notify_type': notify_type,
+            'created': created_time,
+            'updated': created_time,
+            'read': False,
+            'seen': False,
+            'username': to_user,
+            'data': json.dumps(raw_data)
+        }
         with self.acquire_conn() as conn:
-             success = False
-             try:
-                 tx = conn.begin()
-                 insert_response = conn.execute(wwwpoll_table.insert(),
-                                                **notify_data)
-                 tx.commit()
-                 success = True
-                 logger.debug('Created new wwwpoll notification object: %s' % 
-                              str(notify_data))
-             except:
-                 tx.rollback()
-                 logger.error('Failed to create new wwwpoll notification object: %s' %
-                              str(notify_data))
+            success = False
+            try:
+                tx = conn.begin()
+                insert_response = conn.execute(wwwpoll_table.insert(),
+                                               **notify_data)
+                tx.commit()
+                success = True
+                logger.debug('Created new wwwpoll notification object: %s' %
+                             str(notify_data))
+            except:
+                tx.rollback()
+                logger.exception(
+                    'Failed to create new wwwpoll notification object: %s' %
+                    str(notify_data))
         if success:
-           return notify_data
+            return notify_data
 
     def create_notification(self, **notification_object):
         """ Creates an unsent notification in the DB
