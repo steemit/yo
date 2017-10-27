@@ -108,11 +108,10 @@ class YoAPIServer(YoBaseService):
        return retval
 
    async def api_reset_test_data(self,**kwargs):
+       # this is required for testing of external apps without messing with real data
        if self.testing_allowed:
           self.test_notifications.reset()
           self.test_settings.reset()
-   async def api_test_method(self,**kwargs):
-       return {'status':'OK'}
    async def api_set_transports(self,username=None,transports={},orig_req=None,test=False,yo_db=None,**kwargs):
        # do some quick sanity checks first
        if len(transports.items())==0: return None # this should be an error of course
