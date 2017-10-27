@@ -22,6 +22,10 @@ test-without-lint:
 test-pylint:
 	pipenv run pytest -v --pylint
 
+.PHONY: format
+format:
+	pipenv run yapf -i **/*.py
+
 .PHONY: run-local
 run-local:
 	pipenv run python -m yo.cli
