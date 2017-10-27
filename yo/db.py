@@ -18,9 +18,9 @@ logger = logging.getLogger(__name__)
 
 metadata = sa.MetaData()
 
-NOTIFICATION_TYPES = ('vote')
+NOTIFY_TYPES = ('power_down', 'power_up', 'resteem', 'feed', 'reward', 'send', 'mention', 'follow', 'vote', 'comment_reply', 'post_reply', 'account_update', 'message', 'receive')
 
-TRANSPORT_TYPES = ('email','sms','polled')
+TRANSPORT_TYPES = ('email','sms','wwwpoll')
 
 PRIORITY_LEVELS   ={'always'   :5,
                     'priority' :4,
@@ -40,7 +40,7 @@ PRIORITY_MARKETING = 1
 wwwpoll_table = sa.Table('yo_wwwpoll', metadata,
 
      sa.Column('notify_id', sa.Integer, primary_key=True),
-     sa.Column('notify_type', sa.String(10), nullable=False, index=True),
+     sa.Column('notify_type', sa.String(20), nullable=False, index=True),
      sa.Column('created', sa.DateTime, index=True),
      sa.Column('updated', sa.DateTime, index=True),
      sa.Column('read',sa.Boolean(), nullable=True, default=False),
@@ -188,28 +188,24 @@ class YoDatabase:
             resp = conn.execute(query)
        return resp     
 
-   def get_user_transports(self, username, notify_type=None, transport_type=None):
-       """Returns an SQLAlchemy result proxy with all the user transports enabled for specified username
+   def get_user_transports(self, username):
+       """Returns the JSON object representing user's configured transports
+
+       This method does no validation on the object, it is assumed that the object was validated in set_user_transports
 
        Args:
           username(str): the username to lookup
-       
-       Keyword args:
-          notify_type(str):    if set, returns only the configured transports for the specified notify_type
-          transport_type(str): if set, returns the configured transports of that type only
 
        Returns:
-          SQLAlchemy result proxy from the select query
+          str: the transports configured for the user
        """
-       pass
-#       with self.acquire_conn() as conn:
-#            query = user_transports_table.select().where(user_transports_table.c.username == username)
-#            if not (notify_type is None):
-#               query = query.where(user_transports_table.c.notify_type==notify_type)
-#            if not (transport_type is None):
-#               query = query.where(user_transports_table.c.transport_type==transport_type)
-#            select_response = conn.execute(query)
-#       return select_response
+       retval = None # TODO - as soon as we have a proper error specification, use it here
+       with self.acquire_conn() as conn:
+            query = user_settings_table.select().columns([user_settings_table.c.transports]).where(user_settings_table.c.username == username)
+            select_response = conn.execute(query)
+            json_settings = select_response.fetchone()[0]
+            retval = json.loads(json_settings)
+            
 
    def update_subdata(self, username, transport_type=None, notify_type=None, sub_data=None):
        """Updates sub_data field for selected transport
