@@ -62,7 +62,7 @@ class YoAPIServer(YoBaseService):
            ids(list): List of notifications to mark read
        
        Returns:
-           list: list of notifications updated
+           dict: single key 'success' with boolean value
        """
         return None # TODO - replace with real DB lookup
 
@@ -77,9 +77,10 @@ class YoAPIServer(YoBaseService):
            ids(list): List of notifications to mark seen
 
        Returns:
-           list: list of notifications updated
+           dict: single key 'success' with boolean value
        """
         return None
+
     async def api_mark_unread(self,
                               ids=[],
                               orig_req=None,
@@ -91,7 +92,7 @@ class YoAPIServer(YoBaseService):
            ids(list): List of notifications to mark unread
        
        Returns:
-           list: list of notifications updated
+           dict: single key 'success' with boolean value
        """
         return None
 
@@ -104,9 +105,9 @@ class YoAPIServer(YoBaseService):
 
        Keyword args:
            ids(list): List of notifications to mark unseen
-
+       
        Returns:
-           list: list of notifications updated
+           dict: single key 'success' with boolean value
        """
         return None
 
