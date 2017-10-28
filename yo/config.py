@@ -1,3 +1,4 @@
+# coding=utf-8
 import os
 import configparser
 import py_vapid
@@ -11,9 +12,13 @@ class YoConfigManager:
    Also handles generation of missing keys where this is appropriate to do so
    """
 
-    def __init__(self, filename, defaults={}):
+    def __init__(self, filename, defaults=None):
         self.config_data = configparser.ConfigParser(
-            inline_comment_prefixes=';')
+                inline_comment_prefixes=';')
+
+        if defaults is None:
+            defaults = {}
+
         # a couple of defaults to enable stuff to work-ish if the config file is missing
         # TODO - add a general get method with defaults so we don't have to define it all in multiple places
         self.config_data['yo_general'] = {'log_level': 'INFO', 'yo_db_url': ''}
@@ -21,6 +26,9 @@ class YoConfigManager:
         self.config_data['blockchain_follower'] = {}
         self.config_data['notification_sender'] = {}
         self.config_data['api_server'] = {}
+        self.enabled_services = []
+        self.vapid_priv_key = self.config_data['vapid'].get('priv_key', None)
+        self.vapid = None
         for k, v in defaults.items():  # load defaults passed as param
             self.config_data[k] = v
 
@@ -50,18 +58,16 @@ class YoConfigManager:
                                                 8080))  # pragma: no cover
 
     def update_enabled(self):
-        self.enabled_services = []
-        if int(self.config_data['blockchain_follower'].get('enabled', 0)) == 1:
+        if self.config_data['blockchain_follower'].getboolean('enabled', False) is True:
             self.enabled_services.append('blockchain_follower')
-        if int(self.config_data['notification_sender'].get('enabled', 0)) == 1:
+        if self.config_data['notification_sender'].getboolean('enabled', False) is True:
             self.enabled_services.append('notification_sender')
-        if int(self.config_data['api_server'].get('enabled', 0)) == 1:
+        if self.config_data['api_server'].getboolean('enabled', False) is True:
             self.enabled_services.append('api_server')
 
     def generate_needed(self):
         """If needed, regenerates VAPID keys and similar
        """
-        self.vapid_priv_key = self.config_data['vapid'].get('priv_key', None)
         if self.vapid_priv_key is None:
             self.vapid = py_vapid.Vapid()
             self.vapid.generate_keys()

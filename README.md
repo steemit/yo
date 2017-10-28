@@ -8,7 +8,7 @@ Yo consists of the following components:
  
  1. ***Database layer***
  
-    By default, Yo makes use of sqlite for development work and provides a simple way to implement standard test data at startup. MySQL support is the intended final use in production. This tracks user preferences and actual notifications (which are flagged as processed, sent, seen and read). Each layer above the DB layer may be run distributed for reliability purposes, so long as the database supports transactions.
+    By default, Yo makes use of sqlite for development work and provides a simple way to implement standard test data at startup. MySQL support is the intended final use in production. This tracks user preferences and actual notifications (which are flagged as processed, sent, shown and read). Each layer above the DB layer may be run distributed for reliability purposes, so long as the database supports transactions.
  
  2. ***Blockchain follower***
     
@@ -255,7 +255,7 @@ Get a user's notifications, with filters & limit.
         }
 ```
 
-### Mark notifications as seen [POST]
+### Mark notifications as shown [POST]
 
 + Request (application/json)
 
@@ -263,7 +263,7 @@ Get a user's notifications, with filters & limit.
         {
             "jsonrpc": "2.0",
             "id": 1,
-            "method": "yo.mark_seen",
+            "method": "yo.mark_shown",
             "params": {
                 "test": true, // optional, uses test db
                 "ids": [39, 10]
@@ -283,7 +283,7 @@ Get a user's notifications, with filters & limit.
                     "created": "2017-10-27T01:31:29.382749",
                     "updated": "2017-10-27T15:16:06.178975",
                     "read": true,
-                    "seen": true,
+                    "shown": true,
                     "username": "test_user",
                     "data": {
                         "author": "roadscape",
@@ -296,7 +296,7 @@ Get a user's notifications, with filters & limit.
                     "created": "2017-10-27T02:00:29.380775",
                     "updated": "2017-10-27T15:16:06.178997",
                     "read": true,
-                    "seen": true,
+                    "shown": true,
                     "username": "test_user",
                     "data": {
                         "author": "roadscape",
@@ -308,7 +308,7 @@ Get a user's notifications, with filters & limit.
         }
 ```
 
-### Mark notifications as unseen [POST]
+### Mark notifications as unshown [POST]
 
 + Request (application/json)
 
@@ -316,7 +316,7 @@ Get a user's notifications, with filters & limit.
         {
             "jsonrpc": "2.0",
             "id": 1,
-            "method": "yo.mark_unseen",
+            "method": "yo.mark_unshown",
             "params": {
                 "test": true, // optional, uses test db
                 "ids": [39, 10]
@@ -336,7 +336,7 @@ Get a user's notifications, with filters & limit.
                     "created": "2017-10-27T01:31:29.382749",
                     "updated": "2017-10-27T15:16:06.178975",
                     "read": true,
-                    "seen": false,
+                    "shown": false,
                     "username": "test_user",
                     "data": {
                         "author": "roadscape",
@@ -349,7 +349,7 @@ Get a user's notifications, with filters & limit.
                     "created": "2017-10-27T02:00:29.380775",
                     "updated": "2017-10-27T15:16:06.178997",
                     "read": true,
-                    "seen": false,
+                    "shown": false,
                     "username": "test_user",
                     "data": {
                         "author": "roadscape",
@@ -526,7 +526,7 @@ Get a user's notifications, with filters & limit.
 ```
 
 ### Reset test data [POST]
-Mark all test data notifications as unseen, unread, and unhidden.
+Mark all test data notifications as unshown, unread, and unhidden.
 
 + Request (application/json)
 

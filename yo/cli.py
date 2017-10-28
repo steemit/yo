@@ -1,13 +1,13 @@
-import yo
-import sys
+# coding=utf-8
 import argparse
+import sys
 
+from yo.api_server import YoAPIServer
 from yo.app import YoApp
+from yo.blockchain_follower import YoBlockchainFollower
 from yo.config import YoConfigManager
 from yo.db import YoDatabase
-from yo.blockchain_follower import YoBlockchainFollower
 from yo.notification_sender import YoNotificationSender
-from yo.api_server import YoAPIServer
 
 
 def main():
@@ -27,15 +27,13 @@ def main():
 
     print('Enabled services: %s' % str(yo_config.enabled_services))
     if 'notification_sender' in yo_config.enabled_services:
-        sender = YoNotificationSender(config=yo_config, db=yo_database)
-        yo_app.add_service(sender)
+        yo_app.add_service(YoNotificationSender)
     if 'api_server' in yo_config.enabled_services:
-        api_server = YoAPIServer()
-        yo_app.add_service(api_server)
+        yo_app.add_service(YoAPIServer)
 
     if 'blockchain_follower' in yo_config.enabled_services:
-        follower = YoBlockchainFollower(config=yo_config, db=yo_database)
-        yo_app.add_service(follower)
+
+        yo_app.add_service(YoBlockchainFollower)
     yo_app.run()
 
 

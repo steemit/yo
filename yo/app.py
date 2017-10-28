@@ -1,18 +1,13 @@
-import os
+# coding=utf-8
+import asyncio
 import datetime
+import logging
+import os
 
 import uvloop
 from aiohttp import web
 
-import datetime
-import aiohttp
-import asyncio
-
-import logging
-
 logger = logging.getLogger(__name__)
-
-from jsonrpcserver.aio import methods
 
 asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
@@ -32,8 +27,8 @@ class YoApp:
         self.web_app = web.Application(loop=self.loop)
         self.web_app['config'] = {
             'yo_config': self.config,
-            'yo_db': self.db,
-            'yo_app': self
+            'yo_db':     self.db,
+            'yo_app':    self
         }
         self.api_methods = AsyncMethods()
         self.running = False
@@ -42,36 +37,36 @@ class YoApp:
         req_app = request.app
         request = await request.json()
         orig_request = json.dumps(request)  # silly hack
-        logger.debug('Incoming request: %s' % request)
-        if not 'params' in request.keys():
+        logger.debug('Incoming request: %s',  request)
+        if 'params' not in request.keys():
             request['params'] = {}  # fix for API methods that have no params
         request['params']['yo_app'] = req_app['config']['yo_app']
         request['params']['yo_db'] = req_app['config']['yo_db']
         request['params']['yo_config'] = req_app['config']['yo_config']
         request['params']['orig_req'] = json.loads(
-            orig_request)  # needed for authentication
+                orig_request)  # needed for authentication
         request['params'][
             'skip_auth'] = False  # without this, user can pass skip_auth, which is obviously bad
         response = await self.api_methods.dispatch(request)
         return web.json_response(response)
 
     def add_api_method(self, func, func_name):
-        logger.debug('Adding API method %s' % func_name)
+        logger.debug('Adding API method %s',  func_name)
         self.api_methods.add(func, name='yo.%s' % func_name)
 
     async def start_background_tasks(self, app):
         logger.info('Starting tasks...')
         for k, v in self.service_tasks.items():
-            logger.info('Starting %s' % k)
+            logger.info('Starting %s',  k)
             self.web_app['service_task:%s' %
                          k] = self.web_app.loop.create_task(v(self))
 
-    async def api_healthcheck(self, **kwargs):
+    async def api_healthcheck(self):
         return {
-            'status': 'OK',
+            'status':        'OK',
             'source_commit': os.environ.get('SOURCE_COMMIT'),
-            'docker_tag': os.environ.get('DOCKER_TAG'),
-            'datetime': datetime.datetime.utcnow().isoformat()
+            'docker_tag':    os.environ.get('DOCKER_TAG'),
+            'datetime':      datetime.datetime.utcnow().isoformat()
         }
 
     async def healthcheck_handler(self, request):
@@ -81,12 +76,12 @@ class YoApp:
         origin = request.headers['Origin']
         if origin in ALLOWED_ORIGINS:
             response = web.Response(
-                status=204,
-                headers={
-                    'Access-Control-Allow-Methods': 'POST',
-                    'Access-Control-Allow-Origin': origin,
-                    'Access-Control-Allow-Headers': '*'
-                })
+                    status=204,
+                    headers={
+                        'Access-Control-Allow-Methods': 'POST',
+                        'Access-Control-Allow-Origin':  origin,
+                        'Access-Control-Allow-Headers': '*'
+                    })
         else:
             response = web.Response(status=403)
         return response
@@ -102,23 +97,23 @@ class YoApp:
         self.web_app.on_startup.append(self.start_background_tasks)
         self.web_app.on_startup.append(self.setup_standard_api)
         web.run_app(
-            self.web_app,
-            host=self.config.get_listen_host(),
-            port=self.config.get_listen_port())
+                self.web_app,
+                host=self.config.get_listen_host(),
+                port=self.config.get_listen_port())
 
-    def add_service(self, service):
-        logger.debug('Adding service %s' % service.get_name())
+    def add_service(self, service_kls):
+        logger.debug('Adding service %s',  service_kls)
+        service = service_kls(yo_app=self, config=self.config, db=self.db)
         name = service.get_name()
         self.service_tasks[name] = service.async_task
         service.yo_app = self
         self.services[name] = service
         service.init_api(self)
 
-    async def invoke_private_api(self, service, api_method, *args, **kwargs):
+    async def invoke_private_api(self, service=None, api_method=None, **kwargs):
         # TODO - add support for URLs other than :local:
-        if not service in self.services.keys():
+        if service not in self.services.keys():
             return {'error': 'No such service found!'}
-        if not api_method in self.services[service].private_api_methods.keys():
+        if api_method not in self.services[service].private_api_methods.keys():
             return {'error': 'No such method in service'}
-        return await self.services[service].private_api_methods[api_method](
-            *args, **kwargs)
+        return await self.services[service].private_api_methods[api_method](**kwargs)
