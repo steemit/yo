@@ -80,15 +80,18 @@ class YoAPIServer(YoBaseService):
            ids(list): List of notifications to mark read
        
        Returns:
-           list: list of notifications updated
+           dict: single key 'success' with boolean value
        """
-        retval = []
-        if test and self.testing_allowed:
-            for notify_id in ids:
-                self.test_notifications.mark_notification_read(notify_id)
-                retval.append(
-                    self.test_notifications.get_notification(notify_id))
-        return retval
+        success = False
+        if test:
+           if self.testing_allowed:
+              for notify_id in ids:
+                  try:
+                     self.test_notifications.mark_notification_read(notify_id)
+                  except:
+                     logger.exception('Failed mark_notification_read(\'%s\')' % notify_id)
+              success = True
+        return {'success':success}
 
     async def api_mark_seen(self,
                             ids=[],
@@ -102,15 +105,19 @@ class YoAPIServer(YoBaseService):
            ids(list): List of notifications to mark seen
 
        Returns:
-           list: list of notifications updated
+           dict: single key 'success' with boolean value
        """
-        retval = []
-        if test and self.testing_allowed:
-            for notify_id in ids:
-                self.test_notifications.mark_notification_seen(notify_id)
-                retval.append(
-                    self.test_notifications.get_notification(notify_id))
-        return retval
+
+        success = False
+        if test:
+           if self.testing_allowed:
+              for notify_id in ids:
+                  try:
+                     self.test_notifications.mark_notification_seen(notify_id)
+                  except:
+                     logger.exception('Failed mark_notification_seen(\'%s\')' % notify_id)
+              success = True
+        return {'success':success}
 
     async def api_mark_unread(self,
                               ids=[],
@@ -124,15 +131,20 @@ class YoAPIServer(YoBaseService):
            ids(list): List of notifications to mark unread
        
        Returns:
-           list: list of notifications updated
+           dict: single key 'success' with boolean value
        """
-        retval = []
-        if test and self.testing_allowed:
-            for notify_id in ids:
-                self.test_notifications.mark_notification_unread(notify_id)
-                retval.append(
-                    self.test_notifications.get_notification(notify_id))
-        return retval
+
+        success = False
+        if test:
+           if self.testing_allowed:
+              for notify_id in ids:
+                  try:
+                     self.test_notifications.mark_notification_unread(notify_id)
+                  except:
+                     logger.exception('Failed mark_notification_unread(\'%s\')' % notify_id)
+              success = True
+        return {'success':success}
+
 
     async def api_mark_unseen(self,
                               ids=[],
@@ -144,22 +156,21 @@ class YoAPIServer(YoBaseService):
 
        Keyword args:
            ids(list): List of notifications to mark unseen
-
+       
        Returns:
-           list: list of notifications updated
+           dict: single key 'success' with boolean value
        """
-        retval = []
+
+        success = False
         if test:
-            if self.testing_allowed:
-                for notify_id in ids:
-                    self.test_notifications.mark_notification_unseen(notify_id)
-                    retval.append(
-                        self.test_notifications.get_notification(notify_id))
-            else:
-                return None  # TODO - error here
-        else:
-            pass  # TODO - real implementation here
-        return retval
+           if self.testing_allowed:
+              for notify_id in ids:
+                  try:
+                     self.test_notifications.mark_notification_unseen(notify_id)
+                  except:
+                     logger.exception('Failed mark_notification_unseen(\'%s\')' % notify_id)
+              success = True
+        return {'success':success}
 
     async def api_reset_test_data(self, **kwargs):
         # this is required for testing of external apps without messing with real data
