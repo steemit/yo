@@ -1,12 +1,14 @@
-from .base_service import YoBaseService
-from .db import notifications_table, PRIORITY_LEVELS
+# coding=utf-8
 import asyncio
-import steem
-from steem.blockchain import Blockchain
 import json
+import logging
 import re
 
-import logging
+import steem
+from steem.blockchain import Blockchain
+
+from .base_service import YoBaseService
+from .db import PRIORITY_LEVELS
 
 logger = logging.getLogger(__name__)
 
@@ -35,6 +37,13 @@ MENTION_PATTERN = re.compile(r'@([a-z][a-z0-9\-]{2,15})\s')
 
 class YoBlockchainFollower(YoBaseService):
     service_name = 'blockchain_follower'
+
+    def __init__(self,**kwargs):
+        super().__init__(**kwargs)
+
+        steemd_url = self.yo_app.config.config_data['blockchain_follower'].get(
+                'steemd_url', 'https://api.steemit.com')
+        self.steemd_rpc = steem.steemd.Steemd(nodes=[steemd_url])
 
     async def store_notification(self, **data):
         data['sent'] = False
@@ -289,9 +298,7 @@ class YoBlockchainFollower(YoBaseService):
             if not (next_val is None): yield next_val
 
     async def async_task(self, yo_app):
-        steemd_url = yo_app.config.config_data['blockchain_follower'].get(
-            'steemd_url', 'https://api.steemit.com')
-        self.steemd_rpc = steem.steemd.Steemd(nodes=[steemd_url])
+
         queue = asyncio.Queue()
         logger.info('Blockchain follower started')
         while True:

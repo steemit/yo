@@ -269,7 +269,6 @@ class YoDatabase:
        This is used to implement the rate limits
 
        Args:
-           db:               SQLAlchemy database engine
            to_username(str): The username to lookup
            priority(int):    The priority level to lookup
            timeframe(int):   The timeframe in seconds to check
@@ -279,6 +278,10 @@ class YoDatabase:
 
        Returns:
            An integer count of the number of notifications sent to the specified user within the specified timeframe of that priority level or higher
+           :param timeframe:
+           :param priority:
+           :param to_username:
+           :param start_time:
        """
         if start_time is None:
             start_time = datetime.datetime.now() - datetime.timedelta(

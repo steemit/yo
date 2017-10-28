@@ -1,14 +1,15 @@
+# coding=utf-8
 """ Sendgrid transport class
 """
-import sendgrid
+import logging
+
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import *
 
 from .base_transport import BaseTransport
-import logging
 
 logger = logging.getLogger(__name__)
-import json
+
 
 class SendGridTransport(BaseTransport):
    def __init__(self,sendgrid_privkey):
@@ -19,7 +20,7 @@ class SendGridTransport(BaseTransport):
        """
        self.privkey = sendgrid_privkey
        self.sg = SendGridAPIClient(apikey=sendgrid_privkey)
-   def send_notification(self,to_subdata=None,to_username=None,notify_type=None,data={}):
+   def send_notification(self,to_subdata=None,to_username=None,notify_type=None,data=None):
        """ Sends a notification to a specific user
 
        Keyword args:
@@ -39,7 +40,7 @@ class SendGridTransport(BaseTransport):
           subject      = "%s has upvoted your post or comment" % vote_info['voter']
           text_content = 'Your comment or post %s has been upvoted by %s' % (vote_info['permlink'],vote_info['voter'])
        else:
-          logger.error('SendGrid transport doesn\'t know about notification type %s' % notification_type)
+          logger.error('SendGrid transport doesn\'t know about notification type %s' % notify_type)
           return
        content = Content("text/plain", text_content)
        mail = Mail(from_email, subject, to_email, content)

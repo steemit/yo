@@ -1,15 +1,15 @@
+# coding=utf-8
+import datetime
+import json
+import logging
+
 from .base_service import YoBaseService
 from .db import notifications_table
-import asyncio
-import json
-
 from .ratelimits import check_ratelimit
-from .transports import base_transport
 from .transports import sendgrid
 from .transports import twilio
 from .transports import wwwpoll
-import datetime
-import logging
+
 logger = logging.getLogger(__name__)
 """ Basic design:
 
@@ -21,6 +21,8 @@ logger = logging.getLogger(__name__)
 
 class YoNotificationSender(YoBaseService):
     service_name = 'notification_sender'
+
+
 
     async def api_trigger_notification(self, username=None):
         logger.info('api_trigger_notification invoked for %s' % username)

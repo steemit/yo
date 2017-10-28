@@ -35,7 +35,7 @@ init-db:
 	pipenv run python -m yo.db_utils sqlite:///yo.db init
 
 .PHONY: reset-db
-init-db:
+reset-db:
 	pipenv run python -m yo.db_utils sqlite:///yo.db reset
 
 clean: clean-build clean-pyc

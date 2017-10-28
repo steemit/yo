@@ -1,14 +1,14 @@
-import yo
+# coding=utf-8
+import argparse
 import os
 import sys
-import argparse
 
+from yo.api_server import YoAPIServer
 from yo.app import YoApp
+from yo.blockchain_follower import YoBlockchainFollower
 from yo.config import YoConfigManager
 from yo.db import YoDatabase
-from yo.blockchain_follower import YoBlockchainFollower
 from yo.notification_sender import YoNotificationSender
-from yo.api_server import YoAPIServer
 
 
 def main():
@@ -27,15 +27,9 @@ def main():
     yo_app = YoApp(config=yo_config, db=yo_database)
 
 
-    sender = YoNotificationSender(config=yo_config, db=yo_database)
-    yo_app.add_service(sender)
-
-    api_server = YoAPIServer()
-    yo_app.add_service(api_server)
-
-
-    follower = YoBlockchainFollower(config=yo_config, db=yo_database)
-    yo_app.add_service(follower)
+    yo_app.add_service(YoNotificationSender)
+    yo_app.add_service(YoAPIServer)
+    yo_app.add_service(YoBlockchainFollower)
     yo_app.run()
 
 

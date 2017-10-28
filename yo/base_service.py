@@ -1,3 +1,4 @@
+# coding=utf-8
 """ Base class for other services
 """
 
@@ -7,7 +8,8 @@ class YoBaseService:
     private_api_methods = {}
     service_name = 'base'
 
-    def __init__(self, config=None, db=None):
+    def __init__(self, yo_app=None, config=None, db=None):
+        self.yo_app = yo_app
         self.config = config
         self.db = db
 

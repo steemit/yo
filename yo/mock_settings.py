@@ -1,3 +1,4 @@
+# coding=utf-8
 """ Maintains in-memory mock per-user settings
 """
 
@@ -11,6 +12,7 @@ class YoMockSettings:
    """
 
     def __init__(self):
+        self.transports_by_user = {}
         self.reset()
 
     def reset(self):
@@ -19,7 +21,6 @@ class YoMockSettings:
 
            TODO: take care of the case where the user does not exist on the blockchain and don't create default settings
        """
-        self.transports_by_user = {}
 
     def create_defaults(self):
         """ Creates sane defaults
@@ -29,13 +30,13 @@ class YoMockSettings:
        """
 
         return {
-            'email': {
+            'email':   {
                 'notification_types': NOTIFY_TYPES,
-                'sub_data': 'test@example.com'
+                'sub_data':           'test@example.com'
             },
             'wwwpoll': {
                 'notification_types': NOTIFY_TYPES,
-                'sub_data': {}
+                'sub_data':           {}
             }
         }
 
