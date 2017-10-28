@@ -83,7 +83,8 @@ class YoNotificationSender(YoBaseService):
         if yo_app.config.config_data['sendgrid'].getint('enabled', 0):
             logger.info('Enabling sendgrid (email) transport')
             self.configured_transports['email'] = sendgrid.SendGridTransport(
-                yo_app.config.config_data['sendgrid']['priv_key'])
+                yo_app.config.config_data['sendgrid']['priv_key'],
+                yo_app.config.config_data['sendgrid']['templates_dir'])
         if yo_app.config.config_data['twilio'].getint('enabled', 0):
             logger.info('Enabling twilio (sms) transport')
             self.configured_transports['sms'] = twilio.TwilioTransport(
