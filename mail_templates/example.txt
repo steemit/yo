@@ -1,0 +1,18 @@
+{% extends "_layout.txt" %}
+
+{# Message subject, should never contain newlines #}
+{% block subject -%}
+    Hello {{ username }}!
+{%- endblock %}
+
+{# Message body #}
+{% block body %}
+    Hi there {{ username }}, your friend {{ friend }} says {{ message }}.
+    Why don't you send him a response?
+    https://example.com/messages?respond-to={{ friend }}
+{% endblock %}
+
+{# Optional footer override #}
+{% block footer %}
+    Yarr matey! - {{ super() }}
+{% endblock %}
