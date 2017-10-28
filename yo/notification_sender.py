@@ -7,6 +7,7 @@ from .ratelimits import check_ratelimit
 from .transports import base_transport
 from .transports import sendgrid
 from .transports import twilio
+from .transports import wwwpoll
 import datetime
 import logging
 logger = logging.getLogger(__name__)
@@ -36,7 +37,7 @@ class YoNotificationSender(YoBaseService):
             for notify_type in transport_data['notification_types']:
                 if not (notify_type in user_notify_types_transports.keys()):
                     user_notify_types_transports[notify_type] = []
-                user_notify_types_transports[notify_types].append(
+                user_notify_types_transports[notify_type].append(
                     (transport_name, transport_data['sub_data']))
         with self.db.acquire_conn() as conn:
             query = notifications_table.select().where(
@@ -58,8 +59,10 @@ class YoNotificationSender(YoBaseService):
                         'Sending notification to transport %s' % str(t[0]))
                     t[0].send_notification(
                         to_subdata=t[1],
+                        to_username=notification_job['to_username'],
                         notify_type=row['type'],
                         data=json.loads(row['json_data']))
+                # TODO - check actually sent here, and check per transport - if failing only on a single transport, retry only single transport
                 row_dict['sent'] = True
                 row_dict['sent_at'] = datetime.datetime.now()
                 update_query = notifications_table.update().where(
@@ -71,11 +74,15 @@ class YoNotificationSender(YoBaseService):
         self.private_api_methods[
             'trigger_notification'] = self.api_trigger_notification
         self.configured_transports = {}
-        if int(yo_app.config.config_data['sendgrid'].get('enabled', 0)) == 1:
+        if yo_app.config.config_data['wwwpoll'].getint('enabled', 1):
+            logger.info('Enabling wwwpoll transport')
+            self.configured_transports['wwwpoll'] = wwwpoll.WWWPollTransport(
+                self.db)
+        if yo_app.config.config_data['sendgrid'].getint('enabled', 0):
             logger.info('Enabling sendgrid (email) transport')
             self.configured_transports['email'] = sendgrid.SendGridTransport(
                 yo_app.config.config_data['sendgrid']['priv_key'])
-        if int(yo_app.config.config_data['twilio'].get('enabled', 0)) == 1:
+        if yo_app.config.config_data['twilio'].getint('enabled', 0):
             logger.info('Enabling twilio (sms) transport')
             self.configured_transports['sms'] = twilio.TwilioTransport(
                 yo_app.config.config_data['twilio']['account_sid'],

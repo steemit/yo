@@ -11,7 +11,8 @@ class YoConfigManager:
    Also handles generation of missing keys where this is appropriate to do so
    """
 
-    def __init__(self, filename, defaults={}):
+    def __init__(self, filename, defaults=None):
+        defaults = defaults or {}
         self.config_data = configparser.ConfigParser(
             inline_comment_prefixes=';')
         # a couple of defaults to enable stuff to work-ish if the config file is missing
@@ -21,6 +22,8 @@ class YoConfigManager:
         self.config_data['blockchain_follower'] = {}
         self.config_data['notification_sender'] = {}
         self.config_data['api_server'] = {}
+
+
         for k, v in defaults.items():  # load defaults passed as param
             self.config_data[k] = v
 
@@ -39,7 +42,7 @@ class YoConfigManager:
         log_level = self.config_data['yo_general'].get('log_level', 'INFO')
         logging.basicConfig(level=log_level)
         self.generate_needed()
-        self.update_enabled()
+
 
     def get_listen_host(self):
         return self.config_data['http'].get('listen_host',
@@ -49,14 +52,6 @@ class YoConfigManager:
         return int(self.config_data['http'].get('listen_port',
                                                 8080))  # pragma: no cover
 
-    def update_enabled(self):
-        self.enabled_services = []
-        if int(self.config_data['blockchain_follower'].get('enabled', 0)) == 1:
-            self.enabled_services.append('blockchain_follower')
-        if int(self.config_data['notification_sender'].get('enabled', 0)) == 1:
-            self.enabled_services.append('notification_sender')
-        if int(self.config_data['api_server'].get('enabled', 0)) == 1:
-            self.enabled_services.append('api_server')
 
     def generate_needed(self):
         """If needed, regenerates VAPID keys and similar

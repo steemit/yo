@@ -28,12 +28,20 @@ format:
 
 .PHONY: run-local
 run-local:
-	pipenv run python -m yo.cli
+	env YO_DATABASE_URL=sqlite:///yo.db pipenv run python -m yo.cli
+
+.PHONY: init-db
+init-db:
+	pipenv run python -m yo.db_utils sqlite:///yo.db init
+
+.PHONY: reset-db
+init-db:
+	pipenv run python -m yo.db_utils sqlite:///yo.db reset
 
 clean: clean-build clean-pyc
 
 clean-build:
-	rm -fr build/ dist/ *.egg-info .eggs/ .tox/ __pycache__/ .cache/ .coverage htmlcov src
+	rm -fr build/ dist/ *.egg-info .eggs/ .tox/ __pycache__/ .cache/ .coverage htmlcov src yo.db
 
 clean-pyc:
 	find . -name '*.pyc' -exec rm -f {} +

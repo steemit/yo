@@ -41,7 +41,6 @@ Session.vim
 blocks.json
 
 # sqlite db for testing
-local.db
 /tests/fastest-test.sh
 /tests/sbds-install.sh
 /tests/test.sh
