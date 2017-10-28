@@ -36,14 +36,11 @@ MENTION_PATTERN = re.compile(r'@([a-z][a-z0-9\-]{2,15})\s')
 class YoBlockchainFollower(YoBaseService):
     service_name = 'blockchain_follower'
 
-    async def send_notification(self, **data):
+    async def store_notification(self, **data):
         data['sent'] = False
         self.db.create_notification(**data)
-        sender_response = await self.yo_app.invoke_private_api(
-            'notification_sender',
-            'trigger_notification',
-            username=data['to_username'])
-        logger.debug('Got %s from notification sender' % str(sender_response))
+        
+      
 
     async def handle_vote(self, op):
         logger.debug('handle_vote received %s op' % ['op'][0])
@@ -51,7 +48,7 @@ class YoBlockchainFollower(YoBaseService):
         logger.debug('Vote on %s (written by %s) by %s with weight %s' %
                      (vote_info['permlink'], vote_info['author'],
                       vote_info['voter'], vote_info['weight']))
-        await self.send_notification(
+        await self.store_notification(
             trx_id=op['trx_id'],
             from_username=vote_info['voter'],
             to_username=vote_info['author'],
@@ -75,7 +72,7 @@ class YoBlockchainFollower(YoBaseService):
             logger.error('invalid follow op, follower must be signer')
             return False
         logger.debug('Follow: %s started following %s', follower, following)
-        await self.send_notification(
+        await self.store_notification(
             trx_id=op['trx_id'],
             from_username=follower,
             to_username=following,
@@ -88,7 +85,7 @@ class YoBlockchainFollower(YoBaseService):
         op_data = op['op'][1]
         logger.debug('Account: %s updated their account info',
                      op_data['account'])
-        await self.send_notification(
+        await self.store_notification(
             trx_id=op['trx_id'],
             to_username=op_data['account'],
             json_data=json.dumps(op_data),
@@ -106,7 +103,7 @@ class YoBlockchainFollower(YoBaseService):
         }
         logger.debug('Send: %s sent %s to %s', send_data['from'],
                      send_data['amount'], send_data['to'])
-        await self.send_notification(
+        await self.store_notification(
             trx_id=op['trx_id'],
             to_username=send_data['from'],
             json_data=json.dumps(send_data),
@@ -124,7 +121,7 @@ class YoBlockchainFollower(YoBaseService):
         }
         logger.debug('Receive: %s got %s from %s', receive_data['to'],
                      receive_data['amount'], receive_data['from'])
-        await self.send_notification(
+        await self.store_notification(
             trx_id=op['trx_id'],
             to_username=receive_data['to'],
             from_username=receive_data['from'],
@@ -137,7 +134,7 @@ class YoBlockchainFollower(YoBaseService):
         op_data = op['op'][1]
         logger.debug('Powerdown: %s powered down %s', op_data['account'],
                      op_data['vesting_shares'])
-        await self.send_notification(
+        await self.store_notification(
             trx_id=op['trx_id'],
             to_username=op_data['account'],
             json_data=json.dumps(op_data),
@@ -156,7 +153,7 @@ class YoBlockchainFollower(YoBaseService):
             # TODO: only allow N mentions per operation?
             # TODO: validate mentioned user exists on chain?
             logger.debug('Mention: %s mentioned %s', data['author'], match)
-            await self.send_notification(
+            await self.store_notification(
                 trx_id=op['trx_id'],
                 to_username=match,
                 from_username=data['author'],
@@ -176,7 +173,7 @@ class YoBlockchainFollower(YoBaseService):
         note_type = COMMENT_REPLY if parent.is_comment() else POST_REPLY
         logger.debug('Comment(%s): %s replied to %s', note_type,
                      op_data['author'], parent_id)
-        await self.send_notification(
+        await self.store_notification(
             trx_id=op['trx_id'],
             to_username=op_data['parent_author'],
             from_username=op_data['author'],
@@ -202,7 +199,7 @@ class YoBlockchainFollower(YoBaseService):
             return True
         logger.debug('Resteem: %s reblogged @%s/%s' % (account, author,
                                                        permlink))
-        await self.send_notification(
+        await self.store_notification(
             trx_id=op['trx_id'],
             from_username=account,
             to_username=author,
