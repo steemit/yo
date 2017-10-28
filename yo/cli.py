@@ -1,5 +1,6 @@
 # coding=utf-8
 import argparse
+import os
 import sys
 
 from yo.api_server import YoAPIServer
@@ -22,18 +23,13 @@ def main():
     args = parser.parse_args(sys.argv[1:])
 
     yo_config = YoConfigManager(args.config)
-    yo_database = YoDatabase(yo_config)
+    yo_database = YoDatabase(db_url=os.environ.get('YO_DATABASE_URL'))
     yo_app = YoApp(config=yo_config, db=yo_database)
 
-    print('Enabled services: %s' % str(yo_config.enabled_services))
-    if 'notification_sender' in yo_config.enabled_services:
-        yo_app.add_service(YoNotificationSender)
-    if 'api_server' in yo_config.enabled_services:
-        yo_app.add_service(YoAPIServer)
 
-    if 'blockchain_follower' in yo_config.enabled_services:
-
-        yo_app.add_service(YoBlockchainFollower)
+    yo_app.add_service(YoNotificationSender)
+    yo_app.add_service(YoAPIServer)
+    yo_app.add_service(YoBlockchainFollower)
     yo_app.run()
 
 

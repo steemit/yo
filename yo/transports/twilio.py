@@ -36,7 +36,7 @@ class TwilioTransport(BaseTransport):
             logger.error('Twilio - unknown notification type: %s', notify_type)
             return
 
-        response = client.messages.create(
+        response = self.client.messages.create(
             to=to_subdata,
             from_=self.from_number,
             body=message)

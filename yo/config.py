@@ -13,12 +13,9 @@ class YoConfigManager:
    """
 
     def __init__(self, filename, defaults=None):
+        defaults = defaults or {}
         self.config_data = configparser.ConfigParser(
-                inline_comment_prefixes=';')
-
-        if defaults is None:
-            defaults = {}
-
+            inline_comment_prefixes=';')
         # a couple of defaults to enable stuff to work-ish if the config file is missing
         # TODO - add a general get method with defaults so we don't have to define it all in multiple places
         self.config_data['yo_general'] = {'log_level': 'INFO', 'yo_db_url': ''}
@@ -26,9 +23,8 @@ class YoConfigManager:
         self.config_data['blockchain_follower'] = {}
         self.config_data['notification_sender'] = {}
         self.config_data['api_server'] = {}
-        self.enabled_services = []
-        self.vapid_priv_key = self.config_data['vapid'].get('priv_key', None)
-        self.vapid = None
+
+
         for k, v in defaults.items():  # load defaults passed as param
             self.config_data[k] = v
 
@@ -47,7 +43,7 @@ class YoConfigManager:
         log_level = self.config_data['yo_general'].get('log_level', 'INFO')
         logging.basicConfig(level=log_level)
         self.generate_needed()
-        self.update_enabled()
+
 
     def get_listen_host(self):
         return self.config_data['http'].get('listen_host',
@@ -57,17 +53,11 @@ class YoConfigManager:
         return int(self.config_data['http'].get('listen_port',
                                                 8080))  # pragma: no cover
 
-    def update_enabled(self):
-        if self.config_data['blockchain_follower'].getboolean('enabled', False) is True:
-            self.enabled_services.append('blockchain_follower')
-        if self.config_data['notification_sender'].getboolean('enabled', False) is True:
-            self.enabled_services.append('notification_sender')
-        if self.config_data['api_server'].getboolean('enabled', False) is True:
-            self.enabled_services.append('api_server')
 
     def generate_needed(self):
         """If needed, regenerates VAPID keys and similar
        """
+        self.vapid_priv_key = self.config_data['vapid'].get('priv_key', None)
         if self.vapid_priv_key is None:
             self.vapid = py_vapid.Vapid()
             self.vapid.generate_keys()
