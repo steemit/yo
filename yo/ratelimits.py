@@ -1,4 +1,6 @@
+# coding=utf-8
 import logging
+
 logger = logging.getLogger(__name__)
 
 from .db import *
@@ -14,6 +16,9 @@ def check_ratelimit(db, notification_object, override=False):
 
     Returns:
         True if allowed, False if not
+        :param notification_object:
+        :param override:
+        :param db:
     """
     notification_priority = notification_object['priority_level']
     to_username = notification_object['to_username']
@@ -50,7 +55,7 @@ def check_ratelimit(db, notification_object, override=False):
                                           3600) == 0)
     else:
         logger.error(
-            'Invalid notification priority level! Assuming corrupted data for notification: %s'
-            % notification_object)
+                'Invalid notification priority level! Assuming corrupted data for notification: %s'
+                % notification_object)
 
     return False  # for invalid stuff, assume it's bad

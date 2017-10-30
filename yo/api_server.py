@@ -1,23 +1,15 @@
-from .base_service import YoBaseService
-from .mock_notifications import YoMockData
-from .mock_settings import YoMockSettings
-from .utils import needs_auth
+# coding=utf-8
 import asyncio
-import json
-import steem
-import hashlib
-from steem.account import Account
-import json
-import datetime
-
 import logging
+
+from .base_service import YoBaseService
+
 logger = logging.getLogger(__name__)
 
 
 class YoAPIServer(YoBaseService):
     service_name = 'api_server'
     q = asyncio.Queue()
-
 
     async def api_get_notifications(self,
                                     username=None,
@@ -52,7 +44,7 @@ class YoAPIServer(YoBaseService):
         return retval
 
     async def api_mark_read(self,
-                            ids=[],
+                            ids=None,
                             orig_req=None,
                             yo_db=None,
                             **kwargs):
@@ -67,7 +59,7 @@ class YoAPIServer(YoBaseService):
         return None # TODO - replace with real DB lookup
 
     async def api_mark_seen(self,
-                            ids=[],
+                            ids=None,
                             orig_req=None,
                             yo_db=None,
                             **kwargs):
@@ -79,10 +71,11 @@ class YoAPIServer(YoBaseService):
        Returns:
            dict: single key 'success' with boolean value
        """
+
         return None
 
     async def api_mark_unread(self,
-                              ids=[],
+                              ids=None,
                               orig_req=None,
                               yo_db=None,
                               **kwargs):
@@ -94,10 +87,11 @@ class YoAPIServer(YoBaseService):
        Returns:
            dict: single key 'success' with boolean value
        """
+
         return None
 
     async def api_mark_unseen(self,
-                              ids=[],
+                              ids=None,
                               orig_req=None,
                               yo_db=None,
                               **kwargs):
@@ -109,15 +103,16 @@ class YoAPIServer(YoBaseService):
        Returns:
            dict: single key 'success' with boolean value
        """
-        return None
 
+        return None
 
     async def api_set_transports(self,
                                  username=None,
-                                 transports={},
+                                 transports=None,
                                  orig_req=None,
                                  yo_db=None,
                                  **kwargs):
+        transports = transports or {}
         # do some quick sanity checks first
         if len(transports.items()) == 0:
             return None  # this should be an error of course
@@ -126,6 +121,7 @@ class YoAPIServer(YoBaseService):
                 return None  # each transport should only have 2 fields
             if not 'notification_types' in v.keys(): return None # TODO - update all these return None bits with proper errors
             if not 'sub_data' in v.keys(): return None
+
         return yo_db.set_user_transports(username,transports)
 
     async def api_get_transports(self,
@@ -133,6 +129,7 @@ class YoAPIServer(YoBaseService):
                                  orig_req=None,
                                  yo_db=None,
                                  **kwargs):
+
         retval = yo_db.get_user_transports(username)
         return retval
 

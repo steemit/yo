@@ -1,3 +1,4 @@
+# coding=utf-8
 """ Maintains in-memory mock notifications
 """
 
@@ -12,6 +13,7 @@ class YoMockData:
    """
 
     def __init__(self):
+        self.notifications_by_id = {}
         self.reset()
 
     def reset(self):
@@ -22,70 +24,72 @@ class YoMockData:
             'razu', 'the-alien', 'dreemit', 'timcliff', 'abh12345', 'richq11',
             'larkenrose '
         ]
-        self.notifications_by_id = {}
         self.add_new_notification(
-            notify_type='power_down',
-            username='test_user',
-            data=dict(amount=6.66),
-            id=161)
+                notify_type='power_down',
+                username='test_user',
+                data=dict(amount=6.66),
+                id=161)
         self.add_new_notification(
-            notify_type='power_up',
-            username='test_user',
-            data=dict(amount=13.37),
-            id=162)
+                notify_type='power_up',
+                username='test_user',
+                data=dict(amount=13.37),
+                id=162)
         self.add_new_notification(
-            notify_type='resteem',
-            username='test_user',
-            data=dict(resteemed_item=dict(
-                author='test_user',
-                category='test',
-                permlink='test-post',
-                summary='A test post',
-                resteemed_by='some_user')),
-            id=163)
+                notify_type='resteem',
+                username='test_user',
+                data=dict(resteemed_item=dict(
+                        author='test_user',
+                        category='test',
+                        permlink='test-post',
+                        summary='A test post',
+                        resteemed_by='some_user')),
+                id=163)
         self.add_new_notification(
-            notify_type='feed',
-            username='test_user',
-            data=dict(item=dict(
-                author='some_user',
-                category='test',
-                permlink='another-test',
-                summary='Stuff etc')),
-            id=164)
+                notify_type='feed',
+                username='test_user',
+                data=dict(item=dict(
+                        author='some_user',
+                        category='test',
+                        permlink='another-test',
+                        summary='Stuff etc')),
+                id=164)
         self.add_new_notification(
-            notify_type='reward',
-            username='test_user',
-            data=dict(
-                reward_type='curation',
-                item=dict(
-                    author='test_user',
-                    category='test',
-                    permlink='test-post',
-                    summary='A test post'),
-                amount=dict(SBD=6.66, SP=13.37)),
-            id=165)
+                notify_type='reward',
+                username='test_user',
+                data=dict(
+                        reward_type='curation',
+                        item=dict(
+                                author='test_user',
+                                category='test',
+                                permlink='test-post',
+                                summary='A test post'),
+                        amount=dict(SBD=6.66, SP=13.37)),
+                id=165)
 
         for x in range(60):
             self.add_new_notification(
-                notify_type='vote',
-                username='test_user',
-                data=dict(
-                    author=authors[random.randint(0, (len(authors) - 1))],
-                    weight=100,
-                    item=dict(
-                        author='test_user',
-                        permlink='test-post-%s' % x,
-                        summary='A test post',
-                        category='test',
-                        depth=0)),
-                id=x)
+                    notify_type='vote',
+                    username='test_user',
+                    data=dict(
+                            author=authors[
+                                random.randint(0, (len(authors) - 1))],
+                            weight=100,
+                            item=dict(
+                                    author='test_user',
+                                    permlink='test-post-%s' % x,
+                                    summary='A test post',
+                                    category='test',
+                                    depth=0)),
+                    id=x)
 
     def add_new_notification(self,
                              notify_type=None,
                              created=None,
                              username=None,
-                             data={},
+                             data=None,
                              id=None):
+        if data is None:
+            data = {}
         notify_id = id
 
         if id is None:
@@ -94,14 +98,14 @@ class YoMockData:
         if created is None:
             created = datetime.datetime.now().isoformat()
         self.notifications_by_id[notify_id] = {
-            'notify_id': int(notify_id),
+            'notify_id':   int(notify_id),
             'notify_type': notify_type,
-            'created': created,
-            'updated': created,
-            'read': False,
-            'seen': False,
-            'username': username,
-            'data': data
+            'created':     created,
+            'updated':     created,
+            'read':        False,
+            'shown':       False,
+            'username':    username,
+            'data':        data
         }
 
     def mark_notification_read(self, notify_id=None):
@@ -109,8 +113,8 @@ class YoMockData:
         self.notifications_by_id[notify_id][
             'updated'] = datetime.datetime.now().isoformat()
 
-    def mark_notification_seen(self, notify_id=None):
-        self.notifications_by_id[notify_id]['seen'] = True
+    def mark_notification_shown(self, notify_id=None):
+        self.notifications_by_id[notify_id]['shown'] = True
         self.notifications_by_id[notify_id][
             'updated'] = datetime.datetime.now().isoformat()
 
@@ -119,8 +123,8 @@ class YoMockData:
         self.notifications_by_id[notify_id][
             'updated'] = datetime.datetime.now().isoformat()
 
-    def mark_notification_unseen(self, notify_id=None):
-        self.notifications_by_id[notify_id]['seen'] = False
+    def mark_notification_unshown(self, notify_id=None):
+        self.notifications_by_id[notify_id]['shown'] = False
         self.notifications_by_id[notify_id][
             'updated'] = datetime.datetime.now().isoformat()
 
