@@ -59,11 +59,14 @@ class YoNotificationSender(YoBaseService):
                 for t in user_notify_types_transports[row_dict['type']]:
                     logger.debug(
                         'Sending notification to transport %s' % str(t[0]))
-                    t[0].send_notification(
-                        to_subdata=t[1],
-                        to_username=notification_job['to_username'],
-                        notify_type=row['type'],
-                        data=json.loads(row['json_data']))
+                    try:
+                        t[0].send_notification(
+                            to_subdata=t[1],
+                            to_username=notification_job['to_username'],
+                            notify_type=row['type'],
+                            data=json.loads(row['json_data']))
+                    except Exception as e:
+                        logger.exception('Transport failed')
                 # TODO - check actually sent here, and check per transport - if failing only on a single transport, retry only single transport
                 row_dict['sent'] = True
                 row_dict['sent_at'] = datetime.datetime.now()
