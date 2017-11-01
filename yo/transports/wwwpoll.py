@@ -1,6 +1,6 @@
 # coding=utf-8
 """ wwwpoll transport class
-    
+
     This handles the notifications accessible via the API with polling (as used by condenser).
     "delivery" basically means storing the notification into the wwwpoll table where it can be polled using the API.
 """
@@ -33,4 +33,4 @@ class WWWPollTransport(BaseTransport):
           the subscription data for wwwpoll is ignored at present and not used
        """
        logger.debug('wwwpoll sending notification to %s' % to_username)
-
+       db.create_wwwpoll_notification(to_user=to_username, raw_data=data)
