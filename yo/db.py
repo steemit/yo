@@ -230,8 +230,7 @@ class YoDatabase:
             try:
                 query = wwwpoll_table.update() \
                     .where(wwwpoll_table.c.username == username) \
-                    .values(shown=False, read=False, ) \
-                    .updated()
+                    .values(shown=False, read=False, )
                 conn.execute(query)
                 rv = True
             except:
@@ -244,9 +243,8 @@ class YoDatabase:
         with self.acquire_conn() as conn:
             try:
                 query = wwwpoll_table.update()\
-                    .where(wwwpoll_table.c.notify_id == uuid)\
-                    .values(shown=True)\
-                    .updated()
+                    .where(wwwpoll_table.c.nid == uuid)\
+                    .values(shown=True)
                 conn.execute(query)
                 rv = True
             except:
@@ -259,9 +257,8 @@ class YoDatabase:
         with self.acquire_conn() as conn:
             try:
                 query = wwwpoll_table.update()\
-                    .where(wwwpoll_table.c.notify_id == uuid)\
-                    .values(shown=False)\
-                    .updated()
+                    .where(wwwpoll_table.c.nid == uuid)\
+                    .values(shown=False)
                 conn.execute(query)
                 rv = True
             except:
@@ -274,9 +271,8 @@ class YoDatabase:
         with self.acquire_conn() as conn:
             try:
                 query = wwwpoll_table.update()\
-                    .where(wwwpoll_table.c.notify_id == uuid)\
-                    .values(read=True)\
-                    .updated()
+                    .where(wwwpoll_table.c.nid == uuid)\
+                    .values(read=True)
                 conn.execute(query)
                 rv = True
             except:
@@ -289,9 +285,8 @@ class YoDatabase:
         with self.acquire_conn() as conn:
             try:
                 query = wwwpoll_table.update()\
-                    .where(wwwpoll_table.c.notify_id == uuid)\
-                    .values(read=False)\
-                    .updated()
+                    .where(wwwpoll_table.c.nid == uuid)\
+                    .values(read=False)
                 conn.execute(query)
                 rv = True
             except:
