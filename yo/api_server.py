@@ -18,7 +18,6 @@ class YoAPIServer(YoBaseService):
                                     read=None,
                                     notify_types=None,
                                     limit=30,
-                                    test=False,
                                     orig_req=None,
                                     context=None,
                                     **kwargs):
@@ -49,7 +48,6 @@ class YoAPIServer(YoBaseService):
     async def api_mark_read(self,
                             ids=None,
                             orig_req=None,
-                            test=False,
                             context=None,
                             **kwargs):
         """ Mark a list of notifications as read
@@ -90,7 +88,6 @@ class YoAPIServer(YoBaseService):
     async def api_mark_unread(self,
                               ids=None,
                               orig_req=None,
-                              test=False,
                               context=None,
                               **kwargs):
         """ Mark a list of notifications as unread
@@ -112,7 +109,6 @@ class YoAPIServer(YoBaseService):
     async def api_mark_unseen(self,
                               ids=None,
                               orig_req=None,
-                              test=False,
                               context=None,
                               **kwargs):
         """ Mark a list of notifications as unseen
@@ -140,6 +136,7 @@ class YoAPIServer(YoBaseService):
         # do some quick sanity checks first
         if len(transports.items()) == 0:
             return None  # this should be an error of course
+
         for k, v in transports.items():
             if len(v.items()) != 2:
                 return None  # each transport should only have 2 fields
@@ -151,7 +148,6 @@ class YoAPIServer(YoBaseService):
     async def api_get_transports(self,
                                  username=None,
                                  orig_req=None,
-                                 test=False,
                                  context=None,
                                  **kwargs):
         yo_db = context['yo_db']

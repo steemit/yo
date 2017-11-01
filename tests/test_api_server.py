@@ -106,10 +106,10 @@ async def test_api_get_notifications_sqlite(sqlite_db):
 
     for notification in notifications:
         sqlite_db.create_notification(**notification)
-    some_notifications = await API.api_get_notifications(
-        to_username='test_user1337', yo_db=sqlite_db)
-    assert len(some_notifications) == 5
 
+    some_notifications = await API.api_get_notifications(
+        to_username='test_user1337',context=dict(yo_db=sqlite_db))
+    assert len(some_notifications) == 5
 
 
 
@@ -117,7 +117,6 @@ async def test_api_get_notifications_sqlite(sqlite_db):
 async def test_api_get_set_transports_sqlite(sqlite_db):
     """Test get and set transports backed by sqlite with simple non-default transports"""
     API = api_server.YoAPIServer()
-    API.testing_allowed = False  # we only want real DB data
     simple_transports_obj = {
         'email': {
             'notification_types': ['vote', 'comment'],
@@ -134,9 +133,9 @@ async def test_api_get_set_transports_sqlite(sqlite_db):
     resp = await API.api_set_transports(
         username='testuser1337',
         transports=simple_transports_obj,
-        yo_db=sqlite_db)
+        context=dict(yo_db=sqlite_db))
     assert resp == simple_transports_obj
 
     resp = await API.api_get_transports(
-        username='testuser1337', test=False, yo_db=sqlite_db)
+        username='testuser1337', context=dict(yo_db=sqlite_db))
     assert resp == simple_transports_obj

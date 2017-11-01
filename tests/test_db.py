@@ -1,16 +1,6 @@
-from yo import db
 import json
-import os
 
-import pytest
 from sqlalchemy import MetaData
-
-from yo import db
-from yo import mock_notifications
-from yo import mock_settings
-from yo.db_utils import init_db
-
-
 
 def test_schema_sqlite(sqlite_db):
     """Test init_schema creates empty tables"""
