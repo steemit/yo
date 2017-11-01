@@ -71,51 +71,58 @@ DEFAULT_USER_TRANSPORT_SETTINGS_STRING = json.dumps(DEFAULT_USER_TRANSPORT_SETTI
 wwwpoll_table = sa.Table(
     'yo_wwwpoll',
     metadata,
-    sa.Column(
-        'notify_id', sa.String(36), primary_key=True
-    ),  # TODO - look into whether this really does cause performance issues
+    sa.Column('nid', sa.String(36), primary_key=True),
     sa.Column('notify_type', sa.String(20), nullable=False, index=True),
-    sa.Column('created', sa.DateTime, index=True),
-    sa.Column('updated', sa.DateTime, index=True),
+    sa.Column('to_username', sa.String(20), nullable=False, index=True),
+    sa.Column('from_username', sa.String(20), index=True, nullable=True),
+    sa.Column('json_data', sa.UnicodeText),
+
+    # wwwpoll specific columns
+    sa.Column('created', sa.DateTime,default=sa.func.now(),nullable=False,index=True),
+    sa.Column('updated', sa.DateTime, nullable=True, index=True),
     sa.Column('read', sa.Boolean(), default=False),
     sa.Column('seen', sa.Boolean(), default=False),
-    sa.Column('username', sa.String(20), index=True),
-    sa.Column('data', sa.UnicodeText),
-    sa.UniqueConstraint('username','notify_type','data',name='yo_wwwpoll_idx'),
+
+
+    sa.UniqueConstraint('to_username','notify_type','json_data',name='yo_wwwpoll_idx'),
     mysql_engine='InnoDB',
 )
+
+
 
 # This is where ALL notifications go, not to be confused with the wwwpoll transport specific table above
 notifications_table = sa.Table(
     'yo_notifications',
     metadata,
     sa.Column('nid', sa.Integer, primary_key=True),
-    sa.Column(
-        'trx_id',
-        sa.String(40),
-        index=True,
-        nullable=True,
-        doc='The trx_id from the blockchain'),
-    sa.Column('json_data', sa.UnicodeText),
+    sa.Column('notify_type', sa.String(20), nullable=False, index=True),
     sa.Column('to_username', sa.String(20), nullable=False, index=True),
     sa.Column('from_username', sa.String(20), index=True, nullable=True),
-    sa.Column('type', sa.String(10), nullable=False, index=True),
-    sa.Column('sent', sa.Boolean(), nullable=False, default=False, index=True),
+    sa.Column('json_data', sa.UnicodeText),
+
+    # non-wwwpoll columns
     sa.Column('priority_level', sa.Integer, index=True, default=3),
-    sa.Column(
-        'created_at',
-        sa.DateTime,
-        default=sa.func.now(),
-        index=True,
-        doc='Datetime when notification was created and stored in db'),
-    sa.Column(
-        'sent_at',
-        sa.DateTime,
-        index=True,
-        doc='Datetime when notification was sent'),
-    sa.UniqueConstraint('to_username','type','trx_id','from_username','json_data', name='yo_notification_idx'),
+    sa.Column('created_at',sa.DateTime,default=sa.func.now(),index=True),
+    sa.Column('trx_id',sa.String(40),index=True,nullable=True),
+    sa.UniqueConstraint('to_username','notify_type','trx_id','from_username','json_data', name='yo_notification_idx'),
     mysql_engine='InnoDB',
 )
+
+actions_table = sa.Table(
+    'yo_actions',
+    metadata,
+    sa.Column('aid', sa.Integer, primary_key=True),
+    sa.Column('nid', sa.String(20), nullable=False, index=True),
+    sa.Column('transport', sa.String(20), nullable=False, index=True),
+    sa.Column('status', sa.String(20), nullable=False, index=True),
+    sa.Column('created_at', sa.DateTime,default=sa.func.now(),index=True),
+    sa.UniqueConstraint('aid','nid','transport',name='yo_wwwpoll_idx'),
+    mysql_engine='InnoDB',
+)
+
+
+
+
 
 # TODO: at some point turn this back into a normalised SQL table and/or add logging so users can see when their settings were changed etc
 user_settings_table = sa.Table(
@@ -173,7 +180,7 @@ class YoDatabase:
 
 
     def get_wwwpoll_notifications(self,
-                                  username=None,
+                                  to_username=None,
                                   created_before=None,
                                   updated_after=None,
                                   read=None,
@@ -195,8 +202,8 @@ class YoDatabase:
         with self.acquire_conn() as conn:
             try:
                 query = wwwpoll_table.select()
-                if not (username is None):
-                    query = query.where(wwwpoll_table.c.username == username)
+                if not (to_username is None):
+                    query = query.where(wwwpoll_table.c.to_username == to_username)
                 if not (created_before is None):
                     created_before_val = dateutil.parser.parse(created_before)
                     query = query.where(
@@ -364,11 +371,7 @@ class YoDatabase:
         return retval
 
     def create_wwwpoll_notification(self,
-                                    notify_id=None,
-                                    notify_type=None,
-                                    created_time=None,
-                                    to_user=None,
-                                    raw_data=None):
+                                    **notification):
         """ Creates a new notification in the wwwpoll table
 
         Keyword Args:
@@ -381,46 +384,31 @@ class YoDatabase:
         Returns:
            dict: the notification as stored in wwwpoll, None on error
         """
-        if notify_id is None:
-            notify_id = str(uuid.uuid1())
-        if created_time is None:
-            created_time = datetime.datetime.now()
-        else:
-            created_time = dateutil.parser.parse(created_time)
 
-        notify_data = {
-            'notify_id': notify_id,
-            'notify_type': notify_type,
-            'created': created_time,
-            'updated': created_time,
-            'read': False,
-            'seen': False,
-            'username': to_user,
-            'data': json.dumps(raw_data)
-        }
+
+        notification['nid'] = str(uuid.uuid4)
         with self.acquire_conn() as conn:
             success = False
             tx = conn.begin()
             try:
                 insert_response = conn.execute(wwwpoll_table.insert(),
-                                               **notify_data)
+                                               **notification)
                 tx.commit()
-                success = True
-                logger.debug('Created new wwwpoll notification object: %s' %
-                             notify_data)
+                return True
             except (IntegrityError, SQLiteIntegrityError) as e:
                 if is_duplicate_entry_error(e):
                     logger.debug('Ignoring duplicate entry error')
+                    return True
                 else:
                     logger.exception('failed to add notification')
                     tx.rollback()
+                    return False
             except:
                 tx.rollback()
                 logger.exception(
                     'Failed to create new wwwpoll notification object: %s' %
-                    notify_data)
-        if success:
-            return notify_data
+                    notification)
+                return False
 
     def create_notification(self, **notification_object):
         """ Creates an unsent notification in the DB

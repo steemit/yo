@@ -1,6 +1,3 @@
-import time
-import hashlib
-import docker
 import json
 import os
 
@@ -22,36 +19,11 @@ TESTUSER_TRANSPORTS = {
 }
 
 
-def gen_initdata():
-    """Utility function that generates some initdata using mock_notifications and mock_settings
-       The returned initdata will fill the wwwpoll and user_settings table, but not the notifications table
-       Default settings are used, with username@example.com as the email address
-       This is sufficient for most testing purposes and also doubles as a partial test of the mock API
-    """
-    retval = []
-    usernames = set()
-    mock_data = yo.mock_notifications.YoMockData()
-    for notification in mock_data.get_notifications(limit=9999):
-        notification['data'] = json.dumps(notification['data'])
-        retval.append(('wwwpoll', notification))
-        usernames.add(notification['username'])
-    mock_data = yo.mock_settings.YoMockSettings()
-    retval.append(('user_settings', {
-        'username': 'testuser1337',
-        'transports': json.dumps(TESTUSER_TRANSPORTS)
-    }))
-    for user in usernames:
-        user_transports_data = mock_data.get_transports(user)
-        user_transports_data['email']['sub_data'] = '%s@example.com' % user
-        user_transports_data = mock_data.set_transports(
-            user, user_transports_data)
-        retval.append(('user_settings', {
-            'username': user,
-            'transports': json.dumps(mock_data.get_transports(user))
-        }))
-    return retval
 
-
+def add_test_users(sqlite_db):
+    sqlite_db.create_user('test_user1')
+    sqlite_db.create_user('test_user2')
+    sqlite_db.create_user('testuser_3')
 
 @pytest.fixture(scope='function')
 def sqlite_db():
@@ -61,5 +33,23 @@ def sqlite_db():
 
 @pytest.fixture(scope='function')
 def sqlite_db_with_data():
-    yo_db = init_db(db_url='sqlite://', init_data=gen_initdata(), reset=True)
-    return yo_db
+    yield init_db(db_url='sqlite://', reset=True)
+
+
+@pytest.fixture
+def fake_notifications():
+    return [
+        {
+            'notify_type': 'reward',
+            'to_username': 'test_user',
+            'json_data': {
+                'reward_type':'curation',
+                'item': dict(
+                    author='test_user',
+                    category='test',
+                    permlink='test-post',
+                    summary='A test post'),
+                'amount': dict(SBD=6.66, SP=13.37)
+            },
+        }
+    ]

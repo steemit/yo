@@ -3,6 +3,7 @@
 """
 
 import random
+import string
 import datetime
 import dateutil
 import dateutil.parser
@@ -12,7 +13,8 @@ class YoMockData:
     """ A set of in-memory mock notifications
    """
 
-    def __init__(self):
+    def __init__(self, datetime_as_string=False):
+        self.datetime_as_string = datetime_as_string
         self.notifications_by_id = {}
         self.reset()
 
@@ -27,13 +29,11 @@ class YoMockData:
         self.add_new_notification(
                 notify_type='power_down',
                 username='test_user',
-                data=dict(amount=6.66),
-                id=161)
+                data=dict(amount=6.66))
         self.add_new_notification(
                 notify_type='power_up',
                 username='test_user',
-                data=dict(amount=13.37),
-                id=162)
+                data=dict(amount=13.37))
         self.add_new_notification(
                 notify_type='resteem',
                 username='test_user',
@@ -96,10 +96,14 @@ class YoMockData:
             notify_id = random.randint(1, 9999999)
 
         if created is None:
-            created = datetime.datetime.now().isoformat()
+            if self.datetime_as_string is True:
+                created = datetime.datetime.utcnow().isoformat()
+            else:
+                created = datetime.datetime.utcnow()
         self.notifications_by_id[notify_id] = {
             'notify_id':   int(notify_id),
             'notify_type': notify_type,
+            'trx_id:':     ''.join(random.choices(string.ascii_uppercase + string.digits, k=15)),
             'created':     created,
             'updated':     created,
             'read':        False,
