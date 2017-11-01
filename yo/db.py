@@ -224,13 +224,13 @@ class YoDatabase:
         return []
 
     def wwwpoll_reset_statuses(self, username):
-        logger.debug('wwwpoll: resetting %s as unseen', username)
+        logger.debug('wwwpoll: resetting %s as unshown', username)
         rv = False
         with self.acquire_conn() as conn:
             try:
                 query = wwwpoll_table.update() \
                     .where(wwwpoll_table.c.username == username) \
-                    .values(seen=False, read=False, ) \
+                    .values(shown=False, read=False, ) \
                     .updated()
                 conn.execute(query)
                 rv = True
