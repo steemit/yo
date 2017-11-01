@@ -26,6 +26,8 @@ steem = "*"
 sendgrid = "*"
 SQLAlchemy = "*"
 twilio = "*"
+jinja2 = "*"
+premailer = "*"
 
 
 [dev-packages]

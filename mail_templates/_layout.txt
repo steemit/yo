@@ -1,0 +1,7 @@
+subject={% block subject -%}{%- endblock %}
+{% block body %}{% endblock %}
+{% block footer %}
+---
+
+Your friends at steemit.com
+{% endblock %}

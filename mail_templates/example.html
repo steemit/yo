@@ -1,0 +1,19 @@
+{% extends "_layout.html" %}
+{% import '_utils.html' as utils %}
+
+{# Preheader, only shown in some email clients as a preview.
+   Never displyed in email body. #}
+{% block preheader %}
+    {{ friend }} says {{ message }}
+{% endblock %}
+
+{% block body %}
+    <p>Hi there {{ username }}, your friend {{ friend }} says: <i>{{ message }}</i></p>
+    {% set respond_url %}https://example.com/messages?respond-to={{ friend }}{% endset %}
+    {{ utils.button('Send a response', respond_url)}}
+{% endblock %}
+
+{# Optional footer override #}
+{% block footer %}
+    Yarr matey! - {{ super() }}
+{% endblock %}
