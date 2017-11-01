@@ -216,6 +216,67 @@ class YoDatabase:
                 logger.exception('get_wwwpoll_notifications failed')
         return None
 
+    def wwwpoll_mark_seen(self, uuid):
+        logger.debug('wwwpoll: marking %s as seen', uuid)
+        rv = False
+        with self.acquire_conn() as conn:
+            try:
+                query = wwwpoll_table.update()\
+                    .where(wwwpoll_table.c.notify_id == uuid)\
+                    .values(seen=True)\
+                    .updated()
+                conn.execute(query)
+                rv = True
+            except:
+                logger.exception('wwwpoll_mark_seen failed')
+        return rv
+
+    def wwwpoll_mark_unseen(self, uuid):
+        logger.debug('wwwpoll: marking %s as unseen', uuid)
+        rv = False
+        with self.acquire_conn() as conn:
+            try:
+                query = wwwpoll_table.update()\
+                    .where(wwwpoll_table.c.notify_id == uuid)\
+                    .values(seen=False)\
+                    .updated()
+                conn.execute(query)
+                rv = True
+            except:
+                logger.exception('wwwpoll_mark_unseen failed')
+        return rv
+
+    def wwwpoll_mark_read(self, uuid):
+        logger.debug('wwwpoll: marking %s as read', uuid)
+        rv = False
+        with self.acquire_conn() as conn:
+            try:
+                query = wwwpoll_table.update()\
+                    .where(wwwpoll_table.c.notify_id == uuid)\
+                    .values(read=True)\
+                    .updated()
+                conn.execute(query)
+                rv = True
+            except:
+                logger.exception('wwwpoll_mark_read failed')
+        return rv
+
+    def wwwpoll_mark_unread(self, uuid):
+        logger.debug('wwwpoll: marking %s as unread', uuid)
+        rv = False
+        with self.acquire_conn() as conn:
+            try:
+                query = wwwpoll_table.update()\
+                    .where(wwwpoll_table.c.notify_id == uuid)\
+                    .values(read=False)\
+                    .updated()
+                conn.execute(query)
+                rv = True
+            except:
+                logger.exception('wwwpoll_mark_unread failed')
+        return rv
+
+
     def create_user(self, username):
         with self.acquire_conn() as conn:
             try:
@@ -363,7 +424,7 @@ class YoDatabase:
 
     def create_notification(self, **notification_object):
         """ Creates an unsent notification in the DB
-       
+
         Keyword Args:
            notification_object(dict): the actual notification to create+store
 

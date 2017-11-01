@@ -57,12 +57,15 @@ class YoAPIServer(YoBaseService):
 
        Keyword args:
            ids(list): List of notifications to mark read
-       
+
        Returns:
            list: list of notifications updated
        """
         ids = ids or []
-
+        rv = []
+        for id in ids:
+            rv.append(yo_db.wwwpoll_mark_read(id))
+        return rv
 
     async def api_mark_seen(self,
                             ids=None,
@@ -79,7 +82,10 @@ class YoAPIServer(YoBaseService):
            list: list of notifications updated
        """
         ids = ids or []
-
+        rv = []
+        for id in ids:
+            rv.append(yo_db.wwwpoll_mark_seen(id))
+        return rv
 
     async def api_mark_unread(self,
                               ids=None,
@@ -91,11 +97,15 @@ class YoAPIServer(YoBaseService):
 
        Keyword args:
            ids(list): List of notifications to mark unread
-       
+
        Returns:
            list: list of notifications updated
        """
         ids = ids or []
+        rv = []
+        for id in ids:
+            rv.append(yo_db.wwwpoll_mark_unread(id))
+        return rv
 
 
     async def api_mark_unseen(self,
@@ -113,8 +123,10 @@ class YoAPIServer(YoBaseService):
            list: list of notifications updated
        """
         ids = ids or []
-
-
+        rv = []
+        for id in ids:
+            rv.append(yo_db.wwwpoll_mark_unseen(id))
+        return rv
 
     async def api_set_transports(self,
                                  username=None,
