@@ -40,14 +40,8 @@ class YoApp:
         logger.debug('Incoming request: %s',  request)
         if 'params' not in request.keys():
             request['params'] = {}  # fix for API methods that have no params
-        request['params']['yo_app'] = req_app['config']['yo_app']
-        request['params']['yo_db'] = req_app['config']['yo_db']
-        request['params']['yo_config'] = req_app['config']['yo_config']
-        request['params']['orig_req'] = json.loads(
-                orig_request)  # needed for authentication
-        request['params'][
-            'skip_auth'] = False  # without this, user can pass skip_auth, which is obviously bad
-        response = await self.api_methods.dispatch(request)
+        context = {'yo_db': req_app['config']['yo_db']}
+        response = await self.api_methods.dispatch(request, context=context)
         return web.json_response(response)
 
     def add_api_method(self, func, func_name):
