@@ -20,7 +20,7 @@ class YoAPIServer(YoBaseService):
                                     limit=30,
                                     test=False,
                                     orig_req=None,
-                                    yo_db=None,
+                                    context=None,
                                     **kwargs):
         """ Get all notifications since the specified time
 
@@ -36,19 +36,21 @@ class YoAPIServer(YoBaseService):
        Returns:
           list: list of notifications represented in dictionary format
        """
+        yo_db = context['yo_db']
         retval = yo_db.get_wwwpoll_notifications(
             to_username=username,
             created_before=created_before,
             updated_after=updated_after,
             notify_types=notify_types,
             read=read,
-            limit=limit).fetchall()
+            limit=limit)
         return retval
 
     async def api_mark_read(self,
                             ids=None,
                             orig_req=None,
-                            yo_db=None,
+                            test=False,
+                            context=None,
                             **kwargs):
         """ Mark a list of notifications as read
 
@@ -58,6 +60,7 @@ class YoAPIServer(YoBaseService):
        Returns:
            list: list of notifications updated
        """
+        yo_db = context['yo_db']
         ids = ids or []
         rv = []
         for id in ids:
@@ -67,7 +70,7 @@ class YoAPIServer(YoBaseService):
     async def api_mark_seen(self,
                             ids=None,
                             orig_req=None,
-                            yo_db=None,
+                            context=None,
                             **kwargs):
         """ Mark a list of notifications as seen
 
@@ -77,6 +80,7 @@ class YoAPIServer(YoBaseService):
        Returns:
            list: list of notifications updated
        """
+        yo_db = context['yo_db']
         ids = ids or []
         rv = []
         for id in ids:
@@ -87,7 +91,7 @@ class YoAPIServer(YoBaseService):
                               ids=None,
                               orig_req=None,
                               test=False,
-                              yo_db=None,
+                              context=None,
                               **kwargs):
         """ Mark a list of notifications as unread
 
@@ -97,6 +101,7 @@ class YoAPIServer(YoBaseService):
        Returns:
            list: list of notifications updated
        """
+        yo_db = context['yo_db']
         ids = ids or []
         rv = []
         for id in ids:
@@ -108,7 +113,7 @@ class YoAPIServer(YoBaseService):
                               ids=None,
                               orig_req=None,
                               test=False,
-                              yo_db=None,
+                              context=None,
                               **kwargs):
         """ Mark a list of notifications as unseen
 
@@ -118,6 +123,7 @@ class YoAPIServer(YoBaseService):
        Returns:
            list: list of notifications updated
        """
+        yo_db = context['yo_db']
         ids = ids or []
         rv = []
         for id in ids:
@@ -128,7 +134,7 @@ class YoAPIServer(YoBaseService):
                                  username=None,
                                  transports=None,
                                  orig_req=None,
-                                 yo_db=None,
+                                 context=None,
                                  **kwargs):
         transports = transports or {}
         # do some quick sanity checks first
@@ -146,8 +152,9 @@ class YoAPIServer(YoBaseService):
                                  username=None,
                                  orig_req=None,
                                  test=False,
-                                 yo_db=None,
+                                 context=None,
                                  **kwargs):
+        yo_db = context['yo_db']
         return yo_db.get_user_transports(username)
 
 
