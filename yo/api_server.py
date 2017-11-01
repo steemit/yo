@@ -38,7 +38,14 @@ class YoAPIServer(YoBaseService):
        Returns:
           list: list of notifications represented in dictionary format
        """
-        return None
+        retval = yo_db.get_wwwpoll_notifications(
+            username=username,
+            created_before=created_before,
+            updated_after=updated_after,
+            notify_types=notify_types,
+            read=read,
+            limit=limit).fetchall()
+        return retval
 
     async def api_mark_read(self,
                             ids=None,
