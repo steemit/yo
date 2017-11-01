@@ -221,7 +221,7 @@ class YoDatabase:
                 return conn.execute(query)
             except:
                 logger.exception('get_wwwpoll_notifications failed')
-        return None
+        return []
 
     def wwwpoll_mark_seen(self, uuid):
         logger.debug('wwwpoll: marking %s as seen', uuid)
