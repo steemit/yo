@@ -11,8 +11,6 @@ class YoAPIServer(YoBaseService):
     service_name = 'api_server'
     q = asyncio.Queue()
 
-
-
     async def api_get_notifications(self,
                                     username=None,
                                     created_before=None,
@@ -39,7 +37,7 @@ class YoAPIServer(YoBaseService):
           list: list of notifications represented in dictionary format
        """
         retval = yo_db.get_wwwpoll_notifications(
-            username=username,
+            to_username=username,
             created_before=created_before,
             updated_after=updated_after,
             notify_types=notify_types,
@@ -50,7 +48,6 @@ class YoAPIServer(YoBaseService):
     async def api_mark_read(self,
                             ids=None,
                             orig_req=None,
-                            test=False,
                             yo_db=None,
                             **kwargs):
         """ Mark a list of notifications as read
@@ -70,7 +67,6 @@ class YoAPIServer(YoBaseService):
     async def api_mark_seen(self,
                             ids=None,
                             orig_req=None,
-                            test=False,
                             yo_db=None,
                             **kwargs):
         """ Mark a list of notifications as seen

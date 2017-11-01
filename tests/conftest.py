@@ -19,7 +19,6 @@ TESTUSER_TRANSPORTS = {
 }
 
 
-
 def add_test_users(sqlite_db):
     sqlite_db.create_user('test_user1')
     sqlite_db.create_user('test_user2')
@@ -34,7 +33,6 @@ def sqlite_db():
 @pytest.fixture(scope='function')
 def sqlite_db_with_data():
     yield init_db(db_url='sqlite://', reset=True)
-
 
 @pytest.fixture
 def fake_notifications():
