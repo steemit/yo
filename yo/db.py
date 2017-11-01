@@ -83,11 +83,9 @@ wwwpoll_table = sa.Table(
     sa.Column('read', sa.Boolean(), default=False),
     sa.Column('seen', sa.Boolean(), default=False),
 
-
     sa.UniqueConstraint('to_username','notify_type','json_data',name='yo_wwwpoll_idx'),
     mysql_engine='InnoDB',
 )
-
 
 
 # This is where ALL notifications go, not to be confused with the wwwpoll transport specific table above
@@ -119,7 +117,6 @@ actions_table = sa.Table(
     sa.UniqueConstraint('aid','nid','transport',name='yo_wwwpoll_idx'),
     mysql_engine='InnoDB',
 )
-
 
 
 
@@ -284,11 +281,14 @@ class YoDatabase:
         return rv
 
 
-    def create_user(self, username):
+    def create_user(self, username, transports=None):
+        transports = transports or DEFAULT_USER_TRANSPORT_SETTINGS_STRING
         with self.acquire_conn() as conn:
             try:
-                stmt = user_settings_table.insert(values={'username':username})
-                return conn.execute(stmt)
+                stmt = user_settings_table.insert(values={'username':username,'transports':transports})
+                if conn.execute(stmt):
+                    return transports
+                return None
             except:
                 logger.exception('create_user failed')
                 return None
@@ -319,13 +319,41 @@ class YoDatabase:
                     self.create_user(username)
                     select_response = conn.execute(query)
                     results = select_response.fetchone()
-                    print(results)
                     json_settings = results['transports']
                     return json.loads(json_settings)
 
             except:
                 logger.exception('get_user_transports failed')
                 return None
+
+    def set_user_transports(self, username, transports):
+        """ Sets the JSON object representing user's configured transports
+        This method does only basic sanity checks, it should only be invoked via the API server
+        Args:
+            username(str):    the user whose transports need to be set
+            transports(dict): maps transports to dicts containing 'notification_types' and 'sub_data' keys
+        """
+
+        success = False
+        with self.acquire_conn() as conn:
+            try:
+                stmt = user_settings_table.update().where(
+                user_settings_table.c.username == username).\
+                values(transports=json.dumps(transports))
+                result = conn.execute(stmt)
+                if result:
+                    return transports
+                return None
+            except Exception as e:
+                logger.exception(
+                        'Exception occurred trying to update transports for user %s to %s' % (
+                            username, str(transports)))
+                result = self.create_user(username, transports=json.dumps(transports))
+                if result:
+                    return  transports
+                return None
+
+
 
     def get_priority_count(self,
                            to_username,
