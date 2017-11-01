@@ -117,25 +117,30 @@ async def test_api_get_notifications_sqlite(sqlite_db):
 async def test_api_get_set_transports_sqlite(sqlite_db):
     """Test get and set transports backed by sqlite with simple non-default transports"""
     API = api_server.YoAPIServer()
+
     simple_transports_obj = {
-        'email': {
-            'notification_types': ['vote', 'comment'],
-            'sub_data': 'testuser1337@example.com'
-        },
-        'wwwpoll': {
-            'notification_types': ['mention', 'post_reply'],
-            'sub_data': {
-                'stuff': 'not here by default'
+        'username':'testuser1337',
+        'transports': {
+            'email': {
+                'notification_types': ['vote', 'comment'],
+                'sub_data': 'testuser1337@example.com'
+            },
+            'wwwpoll': {
+                'notification_types': ['mention', 'post_reply'],
+                'sub_data': {
+                    'stuff': 'not here by default'
+                }
             }
         }
     }
 
+    sqlite_db.create_user('testuser1337')
     resp = await API.api_set_transports(
         username='testuser1337',
-        transports=simple_transports_obj,
+        transports=simple_transports_obj['transports'],
         context=dict(yo_db=sqlite_db))
-    assert resp == simple_transports_obj
+    assert resp == simple_transports_obj['transports']
 
     resp = await API.api_get_transports(
         username='testuser1337', context=dict(yo_db=sqlite_db))
-    assert resp == simple_transports_obj
+    assert resp == simple_transports_obj['transports']

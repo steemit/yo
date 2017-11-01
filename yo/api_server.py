@@ -139,7 +139,6 @@ class YoAPIServer(YoBaseService):
     async def api_set_transports(self,
                                  username=None,
                                  transports=None,
-                                 orig_req=None,
                                  context=None,
                                  **kwargs):
         transports = transports or {}
@@ -153,11 +152,11 @@ class YoAPIServer(YoBaseService):
             if not 'notification_types' in v.keys(): return None
             if not 'sub_data' in v.keys(): return None
 
-        return transports
+        yo_db = context['yo_db']
+        return yo_db.set_user_transports(username, transports)
 
     async def api_get_transports(self,
                                  username=None,
-                                 orig_req=None,
                                  context=None,
                                  **kwargs):
         yo_db = context['yo_db']
