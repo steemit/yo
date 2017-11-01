@@ -49,6 +49,6 @@ def test_wwwpoll_notification(sqlite_db):
     get_resp = yo_db.get_wwwpoll_notifications(to_username='testuser1337', limit=2).fetchall()
     assert len(get_resp) == 1
     assert get_resp[0]['read'] == False
-    assert get_resp[0]['seen'] == False
+    assert get_resp[0]['shown'] == False
     assert get_resp[0]['to_username'] == 'testuser1337'
     assert json.loads(get_resp[0]['json_data']) == vote_data

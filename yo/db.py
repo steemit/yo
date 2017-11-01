@@ -81,7 +81,7 @@ wwwpoll_table = sa.Table(
     sa.Column('created', sa.DateTime,default=sa.func.now(),nullable=False,index=True),
     sa.Column('updated', sa.DateTime, nullable=True, index=True),
     sa.Column('read', sa.Boolean(), default=False),
-    sa.Column('seen', sa.Boolean(), default=False),
+    sa.Column('shown', sa.Boolean(), default=False),
 
 
     sa.UniqueConstraint('to_username','notify_type','json_data',name='yo_wwwpoll_idx'),
@@ -223,34 +223,49 @@ class YoDatabase:
                 logger.exception('get_wwwpoll_notifications failed')
         return []
 
-    def wwwpoll_mark_seen(self, uuid):
-        logger.debug('wwwpoll: marking %s as seen', uuid)
+    def wwwpoll_reset_statuses(self, username):
+        logger.debug('wwwpoll: resetting %s as unshown', username)
         rv = False
         with self.acquire_conn() as conn:
             try:
-                query = wwwpoll_table.update()\
-                    .where(wwwpoll_table.c.notify_id == uuid)\
-                    .values(seen=True)\
+                query = wwwpoll_table.update() \
+                    .where(wwwpoll_table.c.username == username) \
+                    .values(shown=False, read=False, ) \
                     .updated()
                 conn.execute(query)
                 rv = True
             except:
-                logger.exception('wwwpoll_mark_seen failed')
+                logger.exception('wwwpoll_reset_statuses failed')
         return rv
 
-    def wwwpoll_mark_unseen(self, uuid):
-        logger.debug('wwwpoll: marking %s as unseen', uuid)
+    def wwwpoll_mark_shown(self, uuid):
+        logger.debug('wwwpoll: marking %s as shown', uuid)
         rv = False
         with self.acquire_conn() as conn:
             try:
                 query = wwwpoll_table.update()\
                     .where(wwwpoll_table.c.notify_id == uuid)\
-                    .values(seen=False)\
+                    .values(shown=True)\
                     .updated()
                 conn.execute(query)
                 rv = True
             except:
-                logger.exception('wwwpoll_mark_unseen failed')
+                logger.exception('wwwpoll_mark_shown failed')
+        return rv
+
+    def wwwpoll_mark_unshown(self, uuid):
+        logger.debug('wwwpoll: marking %s as unshown', uuid)
+        rv = False
+        with self.acquire_conn() as conn:
+            try:
+                query = wwwpoll_table.update()\
+                    .where(wwwpoll_table.c.notify_id == uuid)\
+                    .values(shown=False)\
+                    .updated()
+                conn.execute(query)
+                rv = True
+            except:
+                logger.exception('wwwpoll_mark_unshown failed')
         return rv
 
     def wwwpoll_mark_read(self, uuid):
