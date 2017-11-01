@@ -11,6 +11,13 @@ class YoAPIServer(YoBaseService):
     service_name = 'api_server'
     q = asyncio.Queue()
 
+    async def api_reset_statuses(self,
+                                 username=None,
+                                 context=None):
+        yo_db = context['yo_db']
+        retval = yo_db.wwwpoll_reset_statuses(username)
+        return retval
+
     async def api_get_notifications(self,
                                     username=None,
                                     created_before=None,
@@ -36,13 +43,16 @@ class YoAPIServer(YoBaseService):
           list: list of notifications represented in dictionary format
        """
         yo_db = context['yo_db']
-        retval = yo_db.get_wwwpoll_notifications(
+        notifications = yo_db.get_wwwpoll_notifications(
             to_username=username,
             created_before=created_before,
             updated_after=updated_after,
             notify_types=notify_types,
             read=read,
             limit=limit)
+        retval = []
+        for notification in notifications:
+          retval.append(notification)
         return retval
 
     async def api_mark_read(self,
@@ -65,15 +75,15 @@ class YoAPIServer(YoBaseService):
             rv.append(yo_db.wwwpoll_mark_read(id))
         return rv
 
-    async def api_mark_seen(self,
+    async def api_mark_shown(self,
                             ids=None,
                             orig_req=None,
                             context=None,
                             **kwargs):
-        """ Mark a list of notifications as seen
+        """ Mark a list of notifications as shown
 
        Keyword args:
-           ids(list): List of notifications to mark seen
+           ids(list): List of notifications to mark shown
 
        Returns:
            list: list of notifications updated
@@ -82,7 +92,7 @@ class YoAPIServer(YoBaseService):
         ids = ids or []
         rv = []
         for id in ids:
-            rv.append(yo_db.wwwpoll_mark_seen(id))
+            rv.append(yo_db.wwwpoll_mark_shown(id))
         return rv
 
     async def api_mark_unread(self,
@@ -106,15 +116,15 @@ class YoAPIServer(YoBaseService):
         return rv
 
 
-    async def api_mark_unseen(self,
+    async def api_mark_unshown(self,
                               ids=None,
                               orig_req=None,
                               context=None,
                               **kwargs):
-        """ Mark a list of notifications as unseen
+        """ Mark a list of notifications as unshown
 
        Keyword args:
-           ids(list): List of notifications to mark unseen
+           ids(list): List of notifications to mark unshown
 
        Returns:
            list: list of notifications updated
@@ -123,7 +133,7 @@ class YoAPIServer(YoBaseService):
         ids = ids or []
         rv = []
         for id in ids:
-            rv.append(yo_db.wwwpoll_mark_unseen(id))
+            rv.append(yo_db.wwwpoll_mark_unshown(id))
         return rv
 
     async def api_set_transports(self,
@@ -159,7 +169,8 @@ class YoAPIServer(YoBaseService):
         yo_app.add_api_method(self.api_get_transports, 'get_transports')
         yo_app.add_api_method(self.api_get_notifications, 'get_notifications')
         yo_app.add_api_method(self.api_mark_read, 'mark_read')
-        yo_app.add_api_method(self.api_mark_seen, 'mark_seen')
+        yo_app.add_api_method(self.api_mark_shown, 'mark_shown')
         yo_app.add_api_method(self.api_mark_unread, 'mark_unread')
-        yo_app.add_api_method(self.api_mark_unseen, 'mark_unseen')
+        yo_app.add_api_method(self.api_mark_unshown, 'mark_unshown')
+        yo_app.add_api_method(self.api_reset_statuses, 'reset_statuses')
 

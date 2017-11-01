@@ -5,7 +5,7 @@
          "created" : "2017-10-25T13:03:41.839977",
          "username" : "test_user",
          "updated" : "2017-10-25T13:03:41.839977",
-         "seen" : false,
+         "shown" : false,
          "notify_id" : 161,
          "read" : false,
          "notify_type" : "power_down",
@@ -20,7 +20,7 @@
          "read" : false,
          "notify_id" : 162,
          "updated" : "2017-10-25T13:03:41.839984",
-         "seen" : false,
+         "shown" : false,
          "username" : "test_user",
          "created" : "2017-10-25T13:03:41.839984"
       }
@@ -31,7 +31,7 @@
          "notify_id" : 163,
          "username" : "test_user",
          "created" : "2017-10-25T13:03:41.839987",
-         "seen" : false,
+         "shown" : false,
          "updated" : "2017-10-25T13:03:41.839987",
          "data" : "{\"resteemed_item\": {\"author\": \"test_user\", \"category\": \"test\", \"permlink\": \"test-post\", \"summary\": \"A test post\", \"resteemed_by\": \"some_user\"}}",
          "read" : false,
@@ -42,7 +42,7 @@
       "wwwpoll",
       {
          "updated" : "2017-10-25T13:03:41.839990",
-         "seen" : false,
+         "shown" : false,
          "created" : "2017-10-25T13:03:41.839990",
          "username" : "test_user",
          "notify_id" : 164,
@@ -57,7 +57,7 @@
          "notify_id" : 165,
          "username" : "test_user",
          "created" : "2017-10-25T13:03:41.839993",
-         "seen" : false,
+         "shown" : false,
          "updated" : "2017-10-25T13:03:41.839993",
          "data" : "{\"reward_type\": \"curation\", \"item\": {\"author\": \"test_user\", \"category\": \"test\", \"permlink\": \"test-post\", \"summary\": \"A test post\"}, \"amount\": {\"SBD\": 6.66, \"SP\": 13.37}}",
          "read" : false,
@@ -73,7 +73,7 @@
          "username" : "test_user",
          "created" : "2017-10-25T13:03:41.840004",
          "updated" : "2017-10-25T13:03:41.840004",
-         "seen" : false,
+         "shown" : false,
          "notify_id" : 0
       }
    ],
@@ -83,7 +83,7 @@
          "username" : "test_user",
          "created" : "2017-10-25T13:03:41.840010",
          "updated" : "2017-10-25T13:03:41.840010",
-         "seen" : false,
+         "shown" : false,
          "notify_id" : 1,
          "read" : false,
          "notify_type" : "vote",
@@ -97,7 +97,7 @@
          "notify_type" : "vote",
          "data" : "{\"author\": \"abh12345\", \"weight\": 100, \"item\": {\"author\": \"test_user\", \"permlink\": \"test-post-2\", \"summary\": \"A test post\", \"category\": \"test\", \"depth\": 0}}",
          "updated" : "2017-10-25T13:03:41.840014",
-         "seen" : false,
+         "shown" : false,
          "username" : "test_user",
          "created" : "2017-10-25T13:03:41.840014",
          "notify_id" : 2
@@ -107,7 +107,7 @@
       "wwwpoll",
       {
          "notify_id" : 3,
-         "seen" : false,
+         "shown" : false,
          "updated" : "2017-10-25T13:03:41.840018",
          "username" : "test_user",
          "created" : "2017-10-25T13:03:41.840018",
@@ -124,7 +124,7 @@
          "notify_type" : "vote",
          "notify_id" : 4,
          "updated" : "2017-10-25T13:03:41.840022",
-         "seen" : false,
+         "shown" : false,
          "username" : "test_user",
          "created" : "2017-10-25T13:03:41.840022"
       }
@@ -136,7 +136,7 @@
          "read" : false,
          "notify_type" : "vote",
          "notify_id" : 5,
-         "seen" : false,
+         "shown" : false,
          "updated" : "2017-10-25T13:03:41.840027",
          "created" : "2017-10-25T13:03:41.840027",
          "username" : "test_user"
@@ -151,7 +151,7 @@
          "created" : "2017-10-25T13:03:41.840033",
          "username" : "test_user",
          "updated" : "2017-10-25T13:03:41.840033",
-         "seen" : false,
+         "shown" : false,
          "notify_id" : 6
       }
    ],
@@ -163,7 +163,7 @@
          "data" : "{\"author\": \"razu\", \"weight\": 100, \"item\": {\"author\": \"test_user\", \"permlink\": \"test-post-7\", \"summary\": \"A test post\", \"category\": \"test\", \"depth\": 0}}",
          "created" : "2017-10-25T13:03:41.840037",
          "username" : "test_user",
-         "seen" : false,
+         "shown" : false,
          "updated" : "2017-10-25T13:03:41.840037",
          "notify_id" : 7
       }
@@ -172,7 +172,7 @@
       "wwwpoll",
       {
          "updated" : "2017-10-25T13:03:41.840041",
-         "seen" : false,
+         "shown" : false,
          "created" : "2017-10-25T13:03:41.840041",
          "username" : "test_user",
          "notify_id" : 8,
@@ -184,7 +184,7 @@
    [
       "wwwpoll",
       {
-         "seen" : false,
+         "shown" : false,
          "updated" : "2017-10-25T13:03:41.840045",
          "created" : "2017-10-25T13:03:41.840045",
          "username" : "test_user",
@@ -198,7 +198,7 @@
       "wwwpoll",
       {
          "updated" : "2017-10-25T13:03:41.840049",
-         "seen" : false,
+         "shown" : false,
          "username" : "test_user",
          "created" : "2017-10-25T13:03:41.840049",
          "notify_id" : 10,
@@ -214,7 +214,7 @@
          "read" : false,
          "data" : "{\"author\": \"richq11\", \"weight\": 100, \"item\": {\"author\": \"test_user\", \"permlink\": \"test-post-11\", \"summary\": \"A test post\", \"category\": \"test\", \"depth\": 0}}",
          "updated" : "2017-10-25T13:03:41.840053",
-         "seen" : false,
+         "shown" : false,
          "created" : "2017-10-25T13:03:41.840053",
          "username" : "test_user",
          "notify_id" : 11
@@ -225,7 +225,7 @@
       {
          "username" : "test_user",
          "created" : "2017-10-25T13:03:41.840057",
-         "seen" : false,
+         "shown" : false,
          "updated" : "2017-10-25T13:03:41.840057",
          "notify_id" : 12,
          "read" : false,
@@ -243,7 +243,7 @@
          "username" : "test_user",
          "created" : "2017-10-25T13:03:41.840060",
          "updated" : "2017-10-25T13:03:41.840060",
-         "seen" : false
+         "shown" : false
       }
    ],
    [
@@ -253,7 +253,7 @@
          "created" : "2017-10-25T13:03:41.840064",
          "username" : "test_user",
          "updated" : "2017-10-25T13:03:41.840064",
-         "seen" : false,
+         "shown" : false,
          "data" : "{\"author\": \"richq11\", \"weight\": 100, \"item\": {\"author\": \"test_user\", \"permlink\": \"test-post-14\", \"summary\": \"A test post\", \"category\": \"test\", \"depth\": 0}}",
          "read" : false,
          "notify_type" : "vote"
@@ -267,7 +267,7 @@
          "read" : false,
          "notify_id" : 15,
          "updated" : "2017-10-25T13:03:41.840068",
-         "seen" : false,
+         "shown" : false,
          "username" : "test_user",
          "created" : "2017-10-25T13:03:41.840068"
       }
@@ -279,7 +279,7 @@
          "notify_type" : "vote",
          "data" : "{\"author\": \"the-alien\", \"weight\": 100, \"item\": {\"author\": \"test_user\", \"permlink\": \"test-post-16\", \"summary\": \"A test post\", \"category\": \"test\", \"depth\": 0}}",
          "updated" : "2017-10-25T13:03:41.840071",
-         "seen" : false,
+         "shown" : false,
          "created" : "2017-10-25T13:03:41.840071",
          "username" : "test_user",
          "notify_id" : 16
@@ -294,7 +294,7 @@
          "created" : "2017-10-25T13:03:41.840076",
          "username" : "test_user",
          "updated" : "2017-10-25T13:03:41.840076",
-         "seen" : false,
+         "shown" : false,
          "notify_id" : 17
       }
    ],
@@ -307,7 +307,7 @@
          "username" : "test_user",
          "created" : "2017-10-25T13:03:41.840081",
          "updated" : "2017-10-25T13:03:41.840081",
-         "seen" : false,
+         "shown" : false,
          "notify_id" : 18
       }
    ],
@@ -318,7 +318,7 @@
          "username" : "test_user",
          "created" : "2017-10-25T13:03:41.840089",
          "updated" : "2017-10-25T13:03:41.840089",
-         "seen" : false,
+         "shown" : false,
          "data" : "{\"author\": \"abh12345\", \"weight\": 100, \"item\": {\"author\": \"test_user\", \"permlink\": \"test-post-19\", \"summary\": \"A test post\", \"category\": \"test\", \"depth\": 0}}",
          "notify_type" : "vote",
          "read" : false
@@ -330,7 +330,7 @@
          "notify_type" : "vote",
          "read" : false,
          "data" : "{\"author\": \"larkenrose \", \"weight\": 100, \"item\": {\"author\": \"test_user\", \"permlink\": \"test-post-20\", \"summary\": \"A test post\", \"category\": \"test\", \"depth\": 0}}",
-         "seen" : false,
+         "shown" : false,
          "updated" : "2017-10-25T13:03:41.840093",
          "created" : "2017-10-25T13:03:41.840093",
          "username" : "test_user",
@@ -342,7 +342,7 @@
       {
          "username" : "test_user",
          "created" : "2017-10-25T13:03:41.840097",
-         "seen" : false,
+         "shown" : false,
          "updated" : "2017-10-25T13:03:41.840097",
          "notify_id" : 21,
          "notify_type" : "vote",
@@ -353,7 +353,7 @@
    [
       "wwwpoll",
       {
-         "seen" : false,
+         "shown" : false,
          "updated" : "2017-10-25T13:03:41.840100",
          "username" : "test_user",
          "created" : "2017-10-25T13:03:41.840100",
@@ -373,7 +373,7 @@
          "username" : "test_user",
          "created" : "2017-10-25T13:03:41.840104",
          "updated" : "2017-10-25T13:03:41.840104",
-         "seen" : false
+         "shown" : false
       }
    ],
    [
@@ -384,7 +384,7 @@
          "data" : "{\"author\": \"razu\", \"weight\": 100, \"item\": {\"author\": \"test_user\", \"permlink\": \"test-post-24\", \"summary\": \"A test post\", \"category\": \"test\", \"depth\": 0}}",
          "created" : "2017-10-25T13:03:41.840108",
          "username" : "test_user",
-         "seen" : false,
+         "shown" : false,
          "updated" : "2017-10-25T13:03:41.840108",
          "notify_id" : 24
       }
@@ -398,14 +398,14 @@
          "username" : "test_user",
          "created" : "2017-10-25T13:03:41.840111",
          "updated" : "2017-10-25T13:03:41.840111",
-         "seen" : false,
+         "shown" : false,
          "notify_id" : 25
       }
    ],
    [
       "wwwpoll",
       {
-         "seen" : false,
+         "shown" : false,
          "updated" : "2017-10-25T13:03:41.840115",
          "created" : "2017-10-25T13:03:41.840115",
          "username" : "test_user",
@@ -423,7 +423,7 @@
          "data" : "{\"author\": \"larkenrose \", \"weight\": 100, \"item\": {\"author\": \"test_user\", \"permlink\": \"test-post-27\", \"summary\": \"A test post\", \"category\": \"test\", \"depth\": 0}}",
          "username" : "test_user",
          "created" : "2017-10-25T13:03:41.840120",
-         "seen" : false,
+         "shown" : false,
          "updated" : "2017-10-25T13:03:41.840120",
          "notify_id" : 27
       }
@@ -435,7 +435,7 @@
          "notify_type" : "vote",
          "data" : "{\"author\": \"larkenrose \", \"weight\": 100, \"item\": {\"author\": \"test_user\", \"permlink\": \"test-post-28\", \"summary\": \"A test post\", \"category\": \"test\", \"depth\": 0}}",
          "updated" : "2017-10-25T13:03:41.840124",
-         "seen" : false,
+         "shown" : false,
          "username" : "test_user",
          "created" : "2017-10-25T13:03:41.840124",
          "notify_id" : 28
@@ -450,14 +450,14 @@
          "username" : "test_user",
          "created" : "2017-10-25T13:03:41.840127",
          "updated" : "2017-10-25T13:03:41.840127",
-         "seen" : false,
+         "shown" : false,
          "notify_id" : 29
       }
    ],
    [
       "wwwpoll",
       {
-         "seen" : false,
+         "shown" : false,
          "updated" : "2017-10-25T13:03:41.840133",
          "created" : "2017-10-25T13:03:41.840133",
          "username" : "test_user",
@@ -472,7 +472,7 @@
       {
          "notify_id" : 31,
          "updated" : "2017-10-25T13:03:41.840137",
-         "seen" : false,
+         "shown" : false,
          "username" : "test_user",
          "created" : "2017-10-25T13:03:41.840137",
          "data" : "{\"author\": \"abh12345\", \"weight\": 100, \"item\": {\"author\": \"test_user\", \"permlink\": \"test-post-31\", \"summary\": \"A test post\", \"category\": \"test\", \"depth\": 0}}",
@@ -486,7 +486,7 @@
          "created" : "2017-10-25T13:03:41.840141",
          "username" : "test_user",
          "updated" : "2017-10-25T13:03:41.840141",
-         "seen" : false,
+         "shown" : false,
          "notify_id" : 32,
          "notify_type" : "vote",
          "read" : false,
@@ -502,7 +502,7 @@
          "notify_id" : 33,
          "created" : "2017-10-25T13:03:41.840145",
          "username" : "test_user",
-         "seen" : false,
+         "shown" : false,
          "updated" : "2017-10-25T13:03:41.840145"
       }
    ],
@@ -514,7 +514,7 @@
          "data" : "{\"author\": \"timcliff\", \"weight\": 100, \"item\": {\"author\": \"test_user\", \"permlink\": \"test-post-34\", \"summary\": \"A test post\", \"category\": \"test\", \"depth\": 0}}",
          "username" : "test_user",
          "created" : "2017-10-25T13:03:41.840149",
-         "seen" : false,
+         "shown" : false,
          "updated" : "2017-10-25T13:03:41.840149",
          "notify_id" : 34
       }
@@ -526,7 +526,7 @@
          "read" : false,
          "notify_type" : "vote",
          "notify_id" : 35,
-         "seen" : false,
+         "shown" : false,
          "updated" : "2017-10-25T13:03:41.840152",
          "username" : "test_user",
          "created" : "2017-10-25T13:03:41.840152"
@@ -539,7 +539,7 @@
          "created" : "2017-10-25T13:03:41.840156",
          "username" : "test_user",
          "updated" : "2017-10-25T13:03:41.840156",
-         "seen" : false,
+         "shown" : false,
          "data" : "{\"author\": \"the-alien\", \"weight\": 100, \"item\": {\"author\": \"test_user\", \"permlink\": \"test-post-36\", \"summary\": \"A test post\", \"category\": \"test\", \"depth\": 0}}",
          "notify_type" : "vote",
          "read" : false
@@ -552,7 +552,7 @@
          "read" : false,
          "notify_type" : "vote",
          "notify_id" : 37,
-         "seen" : false,
+         "shown" : false,
          "updated" : "2017-10-25T13:03:41.840161",
          "created" : "2017-10-25T13:03:41.840161",
          "username" : "test_user"
@@ -565,7 +565,7 @@
          "username" : "test_user",
          "created" : "2017-10-25T13:03:41.840166",
          "updated" : "2017-10-25T13:03:41.840166",
-         "seen" : false,
+         "shown" : false,
          "data" : "{\"author\": \"abh12345\", \"weight\": 100, \"item\": {\"author\": \"test_user\", \"permlink\": \"test-post-38\", \"summary\": \"A test post\", \"category\": \"test\", \"depth\": 0}}",
          "read" : false,
          "notify_type" : "vote"
@@ -578,7 +578,7 @@
          "read" : false,
          "data" : "{\"author\": \"dreemit\", \"weight\": 100, \"item\": {\"author\": \"test_user\", \"permlink\": \"test-post-39\", \"summary\": \"A test post\", \"category\": \"test\", \"depth\": 0}}",
          "updated" : "2017-10-25T13:03:41.840170",
-         "seen" : false,
+         "shown" : false,
          "username" : "test_user",
          "created" : "2017-10-25T13:03:41.840170",
          "notify_id" : 39
@@ -592,7 +592,7 @@
          "data" : "{\"author\": \"timcliff\", \"weight\": 100, \"item\": {\"author\": \"test_user\", \"permlink\": \"test-post-40\", \"summary\": \"A test post\", \"category\": \"test\", \"depth\": 0}}",
          "created" : "2017-10-25T13:03:41.840173",
          "username" : "test_user",
-         "seen" : false,
+         "shown" : false,
          "updated" : "2017-10-25T13:03:41.840173",
          "notify_id" : 40
       }
@@ -604,7 +604,7 @@
          "notify_type" : "vote",
          "read" : false,
          "notify_id" : 41,
-         "seen" : false,
+         "shown" : false,
          "updated" : "2017-10-25T13:03:41.840177",
          "username" : "test_user",
          "created" : "2017-10-25T13:03:41.840177"
@@ -615,7 +615,7 @@
       {
          "notify_id" : 42,
          "updated" : "2017-10-25T13:03:41.840182",
-         "seen" : false,
+         "shown" : false,
          "username" : "test_user",
          "created" : "2017-10-25T13:03:41.840182",
          "data" : "{\"author\": \"razu\", \"weight\": 100, \"item\": {\"author\": \"test_user\", \"permlink\": \"test-post-42\", \"summary\": \"A test post\", \"category\": \"test\", \"depth\": 0}}",
@@ -626,7 +626,7 @@
    [
       "wwwpoll",
       {
-         "seen" : false,
+         "shown" : false,
          "updated" : "2017-10-25T13:03:41.840186",
          "username" : "test_user",
          "created" : "2017-10-25T13:03:41.840186",
@@ -641,7 +641,7 @@
       {
          "created" : "2017-10-25T13:03:41.840189",
          "username" : "test_user",
-         "seen" : false,
+         "shown" : false,
          "updated" : "2017-10-25T13:03:41.840189",
          "notify_id" : 44,
          "notify_type" : "vote",
@@ -657,7 +657,7 @@
          "data" : "{\"author\": \"abh12345\", \"weight\": 100, \"item\": {\"author\": \"test_user\", \"permlink\": \"test-post-45\", \"summary\": \"A test post\", \"category\": \"test\", \"depth\": 0}}",
          "username" : "test_user",
          "created" : "2017-10-25T13:03:41.840194",
-         "seen" : false,
+         "shown" : false,
          "updated" : "2017-10-25T13:03:41.840194",
          "notify_id" : 45
       }
@@ -665,7 +665,7 @@
    [
       "wwwpoll",
       {
-         "seen" : false,
+         "shown" : false,
          "updated" : "2017-10-25T13:03:41.840199",
          "created" : "2017-10-25T13:03:41.840199",
          "username" : "test_user",
@@ -681,7 +681,7 @@
          "notify_id" : 47,
          "created" : "2017-10-25T13:03:41.840203",
          "username" : "test_user",
-         "seen" : false,
+         "shown" : false,
          "updated" : "2017-10-25T13:03:41.840203",
          "data" : "{\"author\": \"razu\", \"weight\": 100, \"item\": {\"author\": \"test_user\", \"permlink\": \"test-post-47\", \"summary\": \"A test post\", \"category\": \"test\", \"depth\": 0}}",
          "read" : false,
@@ -697,7 +697,7 @@
          "username" : "test_user",
          "created" : "2017-10-25T13:03:41.840207",
          "updated" : "2017-10-25T13:03:41.840207",
-         "seen" : false,
+         "shown" : false,
          "notify_id" : 48
       }
    ],
@@ -709,7 +709,7 @@
          "data" : "{\"author\": \"the-alien\", \"weight\": 100, \"item\": {\"author\": \"test_user\", \"permlink\": \"test-post-49\", \"summary\": \"A test post\", \"category\": \"test\", \"depth\": 0}}",
          "created" : "2017-10-25T13:03:41.840210",
          "username" : "test_user",
-         "seen" : false,
+         "shown" : false,
          "updated" : "2017-10-25T13:03:41.840210",
          "notify_id" : 49
       }
@@ -718,7 +718,7 @@
       "wwwpoll",
       {
          "notify_id" : 50,
-         "seen" : false,
+         "shown" : false,
          "updated" : "2017-10-25T13:03:41.840214",
          "username" : "test_user",
          "created" : "2017-10-25T13:03:41.840214",
@@ -730,7 +730,7 @@
    [
       "wwwpoll",
       {
-         "seen" : false,
+         "shown" : false,
          "updated" : "2017-10-25T13:03:41.840218",
          "created" : "2017-10-25T13:03:41.840218",
          "username" : "test_user",
@@ -743,7 +743,7 @@
    [
       "wwwpoll",
       {
-         "seen" : false,
+         "shown" : false,
          "updated" : "2017-10-25T13:03:41.840221",
          "username" : "test_user",
          "created" : "2017-10-25T13:03:41.840221",
@@ -756,7 +756,7 @@
    [
       "wwwpoll",
       {
-         "seen" : false,
+         "shown" : false,
          "updated" : "2017-10-25T13:03:41.840225",
          "username" : "test_user",
          "created" : "2017-10-25T13:03:41.840225",
@@ -773,7 +773,7 @@
          "username" : "test_user",
          "created" : "2017-10-25T13:03:41.840230",
          "updated" : "2017-10-25T13:03:41.840230",
-         "seen" : false,
+         "shown" : false,
          "data" : "{\"author\": \"abh12345\", \"weight\": 100, \"item\": {\"author\": \"test_user\", \"permlink\": \"test-post-54\", \"summary\": \"A test post\", \"category\": \"test\", \"depth\": 0}}",
          "notify_type" : "vote",
          "read" : false
@@ -788,7 +788,7 @@
          "created" : "2017-10-25T13:03:41.840234",
          "username" : "test_user",
          "updated" : "2017-10-25T13:03:41.840234",
-         "seen" : false,
+         "shown" : false,
          "notify_id" : 55
       }
    ],
@@ -799,7 +799,7 @@
          "read" : false,
          "notify_type" : "vote",
          "notify_id" : 56,
-         "seen" : false,
+         "shown" : false,
          "updated" : "2017-10-25T13:03:41.840238",
          "username" : "test_user",
          "created" : "2017-10-25T13:03:41.840238"
@@ -809,7 +809,7 @@
       "wwwpoll",
       {
          "notify_id" : 57,
-         "seen" : false,
+         "shown" : false,
          "updated" : "2017-10-25T13:03:41.840241",
          "created" : "2017-10-25T13:03:41.840241",
          "username" : "test_user",
@@ -826,7 +826,7 @@
          "notify_type" : "vote",
          "notify_id" : 58,
          "updated" : "2017-10-25T13:03:41.840296",
-         "seen" : false,
+         "shown" : false,
          "username" : "test_user",
          "created" : "2017-10-25T13:03:41.840296"
       }
@@ -835,7 +835,7 @@
       "wwwpoll",
       {
          "notify_id" : 59,
-         "seen" : false,
+         "shown" : false,
          "updated" : "2017-10-25T13:03:41.840301",
          "username" : "test_user",
          "created" : "2017-10-25T13:03:41.840301",
