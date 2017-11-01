@@ -62,7 +62,7 @@ class YoBlockchainFollower(YoBaseService):
             from_username=vote_info['voter'],
             to_username=vote_info['author'],
             json_data=json.dumps(vote_info),
-            type=VOTE,
+            notify_type=VOTE,
             priority_level=PRIORITY_LEVELS['low'])
         return True
 
@@ -86,7 +86,7 @@ class YoBlockchainFollower(YoBaseService):
             from_username=follower,
             to_username=following,
             json_data=json.dumps(follow_data[1]),
-            type=FOLLOW,
+            notify_type=FOLLOW,
             priority_level=PRIORITY_LEVELS['low'])
         return True
 
@@ -98,7 +98,7 @@ class YoBlockchainFollower(YoBaseService):
             trx_id=op['trx_id'],
             to_username=op_data['account'],
             json_data=json.dumps(op_data),
-            type=ACCOUNT_UPDATE,
+            notify_type=ACCOUNT_UPDATE,
             priority_level=PRIORITY_LEVELS['low'])
         return True
 
@@ -116,7 +116,7 @@ class YoBlockchainFollower(YoBaseService):
             trx_id=op['trx_id'],
             to_username=send_data['from'],
             json_data=json.dumps(send_data),
-            type=SEND_STEEM,
+            notify_type=SEND_STEEM,
             priority_level=PRIORITY_LEVELS['low'])
         return True
 
@@ -135,7 +135,7 @@ class YoBlockchainFollower(YoBaseService):
             to_username=receive_data['to'],
             from_username=receive_data['from'],
             json_data=json.dumps(receive_data),
-            type=RECEIVE_STEEM,
+            notify_type=RECEIVE_STEEM,
             priority_level=PRIORITY_LEVELS['low'])
         return True
 
@@ -147,7 +147,7 @@ class YoBlockchainFollower(YoBaseService):
             trx_id=op['trx_id'],
             to_username=op_data['account'],
             json_data=json.dumps(op_data),
-            type=POWER_DOWN,
+            notify_type=POWER_DOWN,
             priority_level=PRIORITY_LEVELS['low'])
         return True
 
@@ -167,7 +167,7 @@ class YoBlockchainFollower(YoBaseService):
                 to_username=match,
                 from_username=data['author'],
                 json_data=json.dumps(data),
-                type=MENTION,
+                notify_type=MENTION,
                 priority_level=PRIORITY_LEVELS['low'])
         return True
 
@@ -187,7 +187,7 @@ class YoBlockchainFollower(YoBaseService):
             to_username=op_data['parent_author'],
             from_username=op_data['author'],
             json_data=json.dumps(op_data),
-            type=note_type,
+            notify_type=note_type,
             priority_level=PRIORITY_LEVELS['low'])
         return True
 
@@ -213,7 +213,7 @@ class YoBlockchainFollower(YoBaseService):
             from_username=account,
             to_username=author,
             json_data=json.dumps(resteem_data[1]),
-            type=RESTEEM,
+            notify_type=RESTEEM,
             priority_level=PRIORITY_LEVELS['low'])
         return True
 

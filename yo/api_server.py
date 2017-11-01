@@ -11,8 +11,6 @@ class YoAPIServer(YoBaseService):
     service_name = 'api_server'
     q = asyncio.Queue()
 
-
-
     async def api_get_notifications(self,
                                     username=None,
                                     created_before=None,
@@ -72,7 +70,6 @@ class YoAPIServer(YoBaseService):
     async def api_mark_seen(self,
                             ids=None,
                             orig_req=None,
-                            test=False,
                             context=None,
                             **kwargs):
         """ Mark a list of notifications as seen

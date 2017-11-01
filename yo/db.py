@@ -167,7 +167,7 @@ class YoDatabase:
     def __init__(self, db_url=None):
 
         self.engine = sa.create_engine(db_url)
-
+        metadata.create_all(bind=self.engine)
         logger.info('DB Layer ready')
 
     @contextmanager
