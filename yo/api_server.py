@@ -77,7 +77,6 @@ class YoAPIServer(YoBaseService):
     async def api_mark_seen(self,
                             ids=None,
                             orig_req=None,
-                            test=False,
                             context=None,
                             **kwargs):
         """ Mark a list of notifications as seen

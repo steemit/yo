@@ -24,7 +24,7 @@ async def test_api_get_notifications_sqlite(sqlite_db):
         }),
         'to_username':                      'testuser1337',
         'from_username':                    'testuser1336',
-        'type':                             'vote',
+        'notify_type':                             'vote',
         'priority_level': 1
         },
         {
@@ -42,7 +42,7 @@ async def test_api_get_notifications_sqlite(sqlite_db):
             }),
             'to_username':    'testuser1337',
             'from_username':  'testuser1336',
-            'type':           'vote',
+            'notify_type':           'vote',
             'priority_level': 1
         },
         {
@@ -60,7 +60,7 @@ async def test_api_get_notifications_sqlite(sqlite_db):
             }),
             'to_username':    'testuser1337',
             'from_username':  'testuser1336',
-            'type':           'vote',
+            'notify_type':           'vote',
             'priority_level': 1
         },
         {
@@ -78,7 +78,7 @@ async def test_api_get_notifications_sqlite(sqlite_db):
             }),
             'to_username':    'testuser1337',
             'from_username':  'testuser1336',
-            'type':           'vote',
+            'notify_type':           'vote',
             'priority_level': 1
         },
         {
@@ -96,7 +96,7 @@ async def test_api_get_notifications_sqlite(sqlite_db):
             }),
             'to_username':    'testuser1337',
             'from_username':  'testuser1336',
-            'type':           'vote',
+            'notify_type':           'vote',
             'priority_level': 1
         },
 
@@ -104,13 +104,11 @@ async def test_api_get_notifications_sqlite(sqlite_db):
 
     API = api_server.YoAPIServer()
 
-
     for notification in notifications:
         sqlite_db.create_notification(**notification)
     some_notifications = await API.api_get_notifications(
-        username='test_user', limit=5, yo_db=sqlite_db)
+        to_username='test_user1337', yo_db=sqlite_db)
     assert len(some_notifications) == 5
-
 
 
 
