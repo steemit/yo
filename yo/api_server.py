@@ -113,7 +113,6 @@ class YoAPIServer(YoBaseService):
                                  username=None,
                                  transports=None,
                                  orig_req=None,
-                                 test=False,
                                  yo_db=None,
                                  **kwargs):
         transports = transports or {}
