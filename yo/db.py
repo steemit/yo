@@ -223,6 +223,21 @@ class YoDatabase:
                 logger.exception('get_wwwpoll_notifications failed')
         return []
 
+    def wwwpoll_reset_statuses(self, username):
+        logger.debug('wwwpoll: resetting %s as unseen', username)
+        rv = False
+        with self.acquire_conn() as conn:
+            try:
+                query = wwwpoll_table.update() \
+                    .where(wwwpoll_table.c.username == username) \
+                    .values(seen=False, read=False, ) \
+                    .updated()
+                conn.execute(query)
+                rv = True
+            except:
+                logger.exception('wwwpoll_reset_statuses failed')
+        return rv
+
     def wwwpoll_mark_shown(self, uuid):
         logger.debug('wwwpoll: marking %s as shown', uuid)
         rv = False
