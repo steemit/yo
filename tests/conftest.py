@@ -3,20 +3,7 @@ import os
 
 import pytest
 
-import yo.mock_notifications
-import yo.mock_settings
 from yo.db_utils import init_db
-
-no_docker = pytest.mark.skipif(
-    os.getenv('INDOCKER', '0') == '1', reason='Does not work inside docker')
-mysql_test = pytest.mark.skipif(
-    os.getenv('SKIPMYSQL', '0') == '1', reason='Skipping MySQL tests')
-source_code_path = os.path.dirname(os.path.realpath(__file__))
-
-TESTUSER_TRANSPORTS = {
-    'username': 'testuser1337',
-    'transports': json.dumps(yo.mock_settings.YoMockSettings().create_defaults())
-}
 
 
 def add_test_users(sqlite_db):
