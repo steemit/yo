@@ -11,7 +11,12 @@ class YoAPIServer(YoBaseService):
     service_name = 'api_server'
     q = asyncio.Queue()
 
-
+    async def api_reset_statuses(self,
+                                 username=None,
+                                 context=None):
+        yo_db = context['yo_db']
+        retval = yo_db.wwwpoll_reset_statuses(username)
+        return retval
 
     async def api_get_notifications(self,
                                     username=None,
@@ -169,4 +174,5 @@ class YoAPIServer(YoBaseService):
         yo_app.add_api_method(self.api_mark_seen, 'mark_seen')
         yo_app.add_api_method(self.api_mark_unread, 'mark_unread')
         yo_app.add_api_method(self.api_mark_unseen, 'mark_unseen')
+        yo_app.add_api_method(self.api_reset_statuses, 'reset_statuses')
 
