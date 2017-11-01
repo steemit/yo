@@ -225,6 +225,40 @@ class YoDatabase:
                 logger.exception('create_user failed')
                 return None
 
+    def set_user_transports(self, username, transports):
+        """ Sets the JSON object representing user's configured transports
+
+        This method does only basic sanity checks, it should only be invoked via the API server
+
+        Args:
+            username(str):    the user whose transports need to be set
+            transports(dict): maps transports to dicts containing 'notification_types' and 'sub_data' keys
+        """
+
+        success = False
+        with self.acquire_conn() as conn:
+             query = user_settings_table.select().where(user_settings_table.c.username == username)
+             old_resp  = conn.execute(query)
+             now_time = datetime.now()
+             if old_resp.row_count >0:
+                settings_obj = dict(old_resp.fetchone()[0])
+                del settings_obj['tid']
+                settings_obj['updated_at'] = now_time
+                settings_obj['transports'] = json.dumps(transports)
+                query = user_settings_table.update().where(user_settings_table.c.username == username).values(**settings_obj)
+             else:
+                settings_obj = {'username'  :username,
+                                'created_at':now_time,
+                                'updated_at':now_time,
+                                'transports':json.dumps(transports)}
+                query = user_settings_table.update().where(user_settings_table.c.username == username)
+             try:
+                resp = conn.execute(query)
+                success = True
+             except:
+                logger.exception('Exception occurred trying to update transports for user %s to %s' % (username,str(transports)))
+        return {'success':success}
+
     def get_user_transports(self, username):
         """Returns the JSON object representing user's configured transports
 
