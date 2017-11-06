@@ -76,7 +76,6 @@ RUN python3.6 -m pip install --upgrade pip pipenv
 WORKDIR ${APP_ROOT}
 
 # Copy code into a suitable place
-COPY ./data ${APP_ROOT}/data
 COPY ./Makefile ${APP_ROOT}/Makefile
 COPY ./Pipfile ${APP_ROOT}/Pipfile
 COPY ./Pipfile.lock ${APP_ROOT}/Pipfile.lock
