@@ -52,7 +52,7 @@ class YoAPIServer(YoBaseService):
             limit=limit)
         retval = []
         for notification in notifications:
-          retval.append(notification)
+          retval.append(dict(notification))
         return retval
 
     async def api_mark_read(self,
