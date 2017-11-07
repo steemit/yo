@@ -74,7 +74,6 @@ wwwpoll_table = sa.Table(
     sa.Column('nid', sa.String(36), primary_key=True),
     sa.Column('notify_type', sa.String(20), nullable=False, index=True),
     sa.Column('to_username', sa.String(20), nullable=False, index=True),
-    sa.Column('from_username', sa.String(20), index=True, nullable=True),
     sa.Column('json_data', sa.UnicodeText(1024)),
 
     # wwwpoll specific columns
@@ -408,8 +407,7 @@ class YoDatabase:
                 logger.exception('Exception occurred!')
         return retval
 
-    def create_wwwpoll_notification(self,
-                                    **notification):
+    def create_wwwpoll_notification(self,notify_id=None,notify_type=None,created_time=None,raw_data={},to_user=None):
         """ Creates a new notification in the wwwpoll table
 
         Keyword Args:
@@ -423,8 +421,11 @@ class YoDatabase:
            dict: the notification as stored in wwwpoll, None on error
         """
 
-
-        notification['nid'] = str(uuid.uuid4)
+        if notify_id is None: notify_id = str(uuid.uuid4)
+        if created_time is None: created_time = datetime.datetime.now()
+        notification = {'nid':notify_id,'notify_type':notify_type,'created':created_time,'updated':created_time,'to_username':to_user}
+        raw_data_json = json.dumps(raw_data)
+        notification['json_data'] = raw_data
         with self.acquire_conn() as conn:
             success = False
             tx = conn.begin()
