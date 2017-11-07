@@ -75,7 +75,7 @@ wwwpoll_table = sa.Table(
     sa.Column('notify_type', sa.String(20), nullable=False, index=True),
     sa.Column('to_username', sa.String(20), nullable=False, index=True),
     sa.Column('from_username', sa.String(20), index=True, nullable=True),
-    sa.Column('json_data', sa.UnicodeText),
+    sa.Column('json_data', sa.UnicodeText(1024)),
 
     # wwwpoll specific columns
     sa.Column('created', sa.DateTime,default=sa.func.now(),nullable=False,index=True),
@@ -96,7 +96,7 @@ notifications_table = sa.Table(
     sa.Column('notify_type', sa.String(20), nullable=False, index=True),
     sa.Column('to_username', sa.String(20), nullable=False, index=True),
     sa.Column('from_username', sa.String(20), index=True, nullable=True),
-    sa.Column('json_data', sa.UnicodeText),
+    sa.Column('json_data', sa.UnicodeText(1024)),
 
     # non-wwwpoll columns
     sa.Column('priority_level', sa.Integer, index=True, default=3),
