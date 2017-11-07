@@ -48,7 +48,8 @@ class YoBlockchainFollower(YoBaseService):
     async def store_notification(self, **data):
         data['sent'] = False
         self.db.create_notification(**data)
-        
+        self.yo_app.invoke_private_api(service=['notification_sender'],api_method='trigger_notification',username=data['to_username'])
+        self.yo_app.invoke_private_api(service=['notification_sender'],api_method='trigger_notification',username=data['from_username'])
       
 
     async def handle_vote(self, op):
