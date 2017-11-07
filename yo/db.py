@@ -83,7 +83,7 @@ wwwpoll_table = sa.Table(
     sa.Column('read', sa.Boolean(), default=False),
     sa.Column('shown', sa.Boolean(), default=False),
 
-    sa.UniqueConstraint('to_username','notify_type','json_data',name='yo_wwwpoll_idx'),
+#    sa.UniqueConstraint('to_username','notify_type','json_data',name='yo_wwwpoll_idx'),
     mysql_engine='InnoDB',
 )
 
@@ -102,7 +102,7 @@ notifications_table = sa.Table(
     sa.Column('priority_level', sa.Integer, index=True, default=3),
     sa.Column('created_at',sa.DateTime,default=sa.func.now(),index=True),
     sa.Column('trx_id',sa.String(40),index=True,nullable=True),
-    sa.UniqueConstraint('to_username','notify_type','trx_id','from_username','json_data', name='yo_notification_idx'),
+    sa.UniqueConstraint('to_username','notify_type','trx_id','from_username', name='yo_notification_idx'),
     mysql_engine='InnoDB',
 )
 
