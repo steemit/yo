@@ -320,7 +320,7 @@ class YoDatabase:
                 user_settings_table.c.username == username)
                 select_response = conn.execute(query)
                 results = select_response.fetchone()
-                if results:
+                if not (results is None):
                     json_settings = results['transports']
                     return json.loads(json_settings)
                 else:
