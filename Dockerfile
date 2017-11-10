@@ -76,7 +76,7 @@ RUN python3.6 -m pip install --upgrade pip pipenv
 WORKDIR ${APP_ROOT}
 
 # Copy code into a suitable place
-COPY ./data ${APP_ROOT}/data
+
 COPY ./Makefile ${APP_ROOT}/Makefile
 COPY ./Pipfile ${APP_ROOT}/Pipfile
 COPY ./Pipfile.lock ${APP_ROOT}/Pipfile.lock
@@ -89,11 +89,8 @@ ENV HOME ${APP_ROOT}
 
 RUN pipenv install  --dev
 
-# let the test suite know it's inside docker
-ENV INDOCKER 1
-
 # run tests
-# RUN pipenv run pytest -vv tests
+RUN pipenv run pytest -vv tests
 
 # Expose the HTTP server port
 EXPOSE ${HTTP_SERVER_PORT}
