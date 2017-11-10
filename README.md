@@ -107,7 +107,6 @@ Get a user's notifications, with filters & limit.
                     "resteem"
                 ],
                 "limit": 30, // defaults to 30
-                "test": false // if true, return data from test DB
             }
         }
 ```
@@ -159,7 +158,6 @@ Get a user's notifications, with filters & limit.
             "id": 1,
             "method": "yo.mark_read",
             "params": {
-                "test": true, // optional, uses test db
                 "ids": [39, 10]
             }
         }
@@ -170,34 +168,7 @@ Get a user's notifications, with filters & limit.
 ```js
         {
             "jsonrpc": "2.0",
-            "result": [
-                {
-                    "notify_id": 39,
-                    "notify_type": "power_down",
-                    "created": "2017-10-27T01:31:29.382749",
-                    "updated": "2017-10-27T15:16:06.178975",
-                    "read": true,
-                    "shown": false,
-                    "username": "test_user",
-                    "data": {
-                        "author": "roadscape",
-                        "amount": 10000.2
-                    }
-                },
-                {
-                    "notify_id": 10,
-                    "notify_type": "power_down",
-                    "created": "2017-10-27T02:00:29.380775",
-                    "updated": "2017-10-27T15:16:06.178997",
-                    "read": true,
-                    "shown": false,
-                    "username": "test_user",
-                    "data": {
-                        "author": "roadscape",
-                        "amount": 10000.2
-                    }
-                }
-            ],
+            "result": [True, True],
             "id": 1
         }
 ```
@@ -212,7 +183,6 @@ Get a user's notifications, with filters & limit.
             "id": 1,
             "method": "yo.mark_unread",
             "params": {
-                "test": true, // optional, uses test db
                 "ids": [39, 10]
             }
         }
@@ -223,34 +193,7 @@ Get a user's notifications, with filters & limit.
 ```js
         {
             "jsonrpc": "2.0",
-            "result": [
-                {
-                    "notify_id": 39,
-                    "notify_type": "power_down",
-                    "created": "2017-10-27T01:31:29.382749",
-                    "updated": "2017-10-27T15:16:06.178975",
-                    "read": false,
-                    "shown": false,
-                    "username": "test_user",
-                    "data": {
-                        "author": "roadscape",
-                        "amount": 10000.2
-                    }
-                },
-                {
-                    "notify_id": 10,
-                    "notify_type": "power_down",
-                    "created": "2017-10-27T02:00:29.380775",
-                    "updated": "2017-10-27T15:16:06.178997",
-                    "read": false,
-                    "shown": false,
-                    "username": "test_user",
-                    "data": {
-                        "author": "roadscape",
-                        "amount": 10000.2
-                    }
-                }
-            ],
+            "result": [True, True],
             "id": 1
         }
 ```
@@ -265,7 +208,6 @@ Get a user's notifications, with filters & limit.
             "id": 1,
             "method": "yo.mark_shown",
             "params": {
-                "test": true, // optional, uses test db
                 "ids": [39, 10]
             }
         }
@@ -276,34 +218,7 @@ Get a user's notifications, with filters & limit.
 ```js
         {
             "jsonrpc": "2.0",
-            "result": [
-                {
-                    "notify_id": 39,
-                    "notify_type": "power_down",
-                    "created": "2017-10-27T01:31:29.382749",
-                    "updated": "2017-10-27T15:16:06.178975",
-                    "read": true,
-                    "shown": true,
-                    "username": "test_user",
-                    "data": {
-                        "author": "roadscape",
-                        "amount": 10000.2
-                    }
-                },
-                {
-                    "notify_id": 10,
-                    "notify_type": "power_down",
-                    "created": "2017-10-27T02:00:29.380775",
-                    "updated": "2017-10-27T15:16:06.178997",
-                    "read": true,
-                    "shown": true,
-                    "username": "test_user",
-                    "data": {
-                        "author": "roadscape",
-                        "amount": 10000.2
-                    }
-                }
-            ],
+            "result": [True, True],
             "id": 1
         }
 ```
@@ -318,7 +233,6 @@ Get a user's notifications, with filters & limit.
             "id": 1,
             "method": "yo.mark_unshown",
             "params": {
-                "test": true, // optional, uses test db
                 "ids": [39, 10]
             }
         }
@@ -329,34 +243,7 @@ Get a user's notifications, with filters & limit.
 ```js
         {
             "jsonrpc": "2.0",
-            "result": [
-                {
-                    "notify_id": 39,
-                    "notify_type": "power_down",
-                    "created": "2017-10-27T01:31:29.382749",
-                    "updated": "2017-10-27T15:16:06.178975",
-                    "read": true,
-                    "shown": false,
-                    "username": "test_user",
-                    "data": {
-                        "author": "roadscape",
-                        "amount": 10000.2
-                    }
-                },
-                {
-                    "notify_id": 10,
-                    "notify_type": "power_down",
-                    "created": "2017-10-27T02:00:29.380775",
-                    "updated": "2017-10-27T15:16:06.178997",
-                    "read": true,
-                    "shown": false,
-                    "username": "test_user",
-                    "data": {
-                        "author": "roadscape",
-                        "amount": 10000.2
-                    }
-                }
-            ],
+            "result": [True, True],
             "id": 1
         }
 ```
@@ -371,7 +258,6 @@ Get a user's notifications, with filters & limit.
             "id": 1,
             "method": "yo.get_transports",
             "params": {
-                "test": true,
                 "username": "money"
             }
         }
@@ -436,7 +322,6 @@ Get a user's notifications, with filters & limit.
             "id": 1,
             "method": "yo.set_transports",
             "params": {
-                "test": true,
                 "username": "money",
                 "transports": {
                     "email": {
@@ -525,24 +410,6 @@ Get a user's notifications, with filters & limit.
         }
 ```
 
-### Reset test data [POST]
-Mark all test data notifications as unshown, unread, and unhidden.
-
-+ Request (application/json)
-
-```js
-        {
-
-        }
-```
-
-+ Response 200 (application/json)
-
-```js
-        {
-
-        }
-```
 
 ### Generic error response [POST]
 How do errors look, in general? TODO
