@@ -109,7 +109,7 @@ actions_table = sa.Table(
     'yo_actions',
     metadata,
     sa.Column('aid', sa.Integer, primary_key=True),
-    sa.Column('nid', sa.String(20), nullable=False, index=True),
+    sa.Column('nid', None, sa.ForeignKey('yo_notifications.nid')),
     sa.Column('transport', sa.String(20), nullable=False, index=True),
     sa.Column('status', sa.String(20), nullable=False, index=True),
     sa.Column('created_at', sa.DateTime,default=sa.func.now(),index=True),
