@@ -69,7 +69,7 @@ class YoNotificationSender(YoBaseService):
 
     def init_api(self, yo_app):
         self.private_api_methods[
-            'trigger_notification'] = self.api_trigger_notification
+            'trigger_notifications'] = self.api_trigger_notifications
         self.configured_transports = {}
         if yo_app.config.config_data['wwwpoll'].getint('enabled', 1):
             logger.info('Enabling wwwpoll transport')
