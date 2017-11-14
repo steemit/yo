@@ -107,13 +107,13 @@ async def test_api_get_notifications(sqlite_db):
 
     some_notifications = await API.api_get_notifications(
         to_username='test_user1337',context=dict(yo_db=sqlite_db))
-    assert len(some_notifications) == 5
+    assert len(some_notifications) == 2
 
 
 @pytest.mark.asyncio
 async def test_api_mark_read(sqlite_db):
     test_notification = {
-            'json_data':      json.dumps({
+            'raw_data':      json.dumps({
                 'author': 'testuser1336',
                 'weight': 100,
                 'item':   {
@@ -141,7 +141,7 @@ async def test_api_mark_read(sqlite_db):
 @pytest.mark.asyncio
 async def test_api_mark_unread(sqlite_db):
     test_notification = {
-        'json_data':     json.dumps({
+        'raw_data':     json.dumps({
             'author': 'testuser1336',
             'weight': 100,
             'item':   {
@@ -171,7 +171,7 @@ async def test_api_mark_unread(sqlite_db):
 @pytest.mark.asyncio
 async def test_api_mark_shown(sqlite_db):
     test_notification = {
-        'json_data':     json.dumps({
+        'raw_data':     json.dumps({
             'author': 'testuser1336',
             'weight': 100,
             'item':   {
@@ -200,7 +200,7 @@ async def test_api_mark_shown(sqlite_db):
 @pytest.mark.asyncio
 async def test_api_mark_unshown(sqlite_db):
     test_notification = {
-        'json_data':     json.dumps({
+        'raw_data':     json.dumps({
             'author': 'testuser1336',
             'weight': 100,
             'item':   {
