@@ -173,7 +173,6 @@ def test_get_wwwpoll_notifications(sqlite_db):
 
     assert result['notify_type'] == 'vote'
     assert result['to_username'] == 'testuser1337'
-    assert result['from_username'] == 'testuser1336'
     assert json.loads(result['json_data']) == vote_data
     assert isinstance(result['created'], datetime)
 
@@ -196,7 +195,7 @@ def test_wwpoll_mark_shown (sqlite_db):
         }
     }
     test_data = {
-        'json_data':     json.dumps(vote_data),
+        'raw_data':     json.dumps(vote_data),
         'to_username':   'testuser1337',
         'notify_type':   'vote'
     }
