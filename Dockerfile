@@ -88,11 +88,8 @@ ENV HOME ${APP_ROOT}
 
 RUN pipenv install  --dev
 
-# let the test suite know it's inside docker
-ENV INDOCKER 1
-
 # run tests
-# RUN pipenv run pytest -vv tests
+RUN pipenv run pytest -vv tests
 
 # Expose the HTTP server port
 EXPOSE ${HTTP_SERVER_PORT}

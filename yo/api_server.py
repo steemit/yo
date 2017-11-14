@@ -11,13 +11,6 @@ class YoAPIServer(YoBaseService):
     service_name = 'api_server'
     q = asyncio.Queue()
 
-    async def api_reset_statuses(self,
-                                 username=None,
-                                 context=None):
-        yo_db = context['yo_db']
-        retval = yo_db.wwwpoll_reset_statuses(username)
-        return retval
-
     async def api_get_notifications(self,
                                     username=None,
                                     created_before=None,
@@ -25,7 +18,6 @@ class YoAPIServer(YoBaseService):
                                     read=None,
                                     notify_types=None,
                                     limit=30,
-                                    orig_req=None,
                                     context=None,
                                     **kwargs):
         """ Get all notifications since the specified time
@@ -43,7 +35,7 @@ class YoAPIServer(YoBaseService):
           list: list of notifications represented in dictionary format
        """
         yo_db = context['yo_db']
-        notifications = yo_db.get_wwwpoll_notifications(
+        return list(yo_db.get_notifications(
             to_username=username,
             created_before=created_before,
             updated_after=updated_after,
@@ -57,9 +49,7 @@ class YoAPIServer(YoBaseService):
 
     async def api_mark_read(self,
                             ids=None,
-                            orig_req=None,
-                            context=None,
-                            **kwargs):
+                            context=None):
         """ Mark a list of notifications as read
 
        Keyword args:
@@ -70,36 +60,13 @@ class YoAPIServer(YoBaseService):
        """
         yo_db = context['yo_db']
         ids = ids or []
-        rv = []
-        for id in ids:
-            rv.append(yo_db.wwwpoll_mark_read(id))
-        return rv
+        return [yo_db.wwwpoll_mark_read(nid) for nid in ids]
 
-    async def api_mark_shown(self,
-                            ids=None,
-                            orig_req=None,
-                            context=None,
-                            **kwargs):
-        """ Mark a list of notifications as shown
 
-       Keyword args:
-           ids(list): List of notifications to mark shown
-
-       Returns:
-           list: list of notifications updated
-       """
-        yo_db = context['yo_db']
-        ids = ids or []
-        rv = []
-        for id in ids:
-            rv.append(yo_db.wwwpoll_mark_shown(id))
-        return rv
 
     async def api_mark_unread(self,
                               ids=None,
-                              orig_req=None,
-                              context=None,
-                              **kwargs):
+                              context=None):
         """ Mark a list of notifications as unread
 
        Keyword args:
@@ -110,17 +77,29 @@ class YoAPIServer(YoBaseService):
        """
         yo_db = context['yo_db']
         ids = ids or []
-        rv = []
-        for id in ids:
-            rv.append(yo_db.wwwpoll_mark_unread(id))
-        return rv
+        return [yo_db.wwwpoll_mark_unread(nid) for nid in ids]
+
+
+    async def api_mark_shown(self,
+                            ids=None,
+                            context=None):
+        """ Mark a list of notifications as shown
+
+       Keyword args:
+           ids(list): List of notifications to mark shown
+
+       Returns:
+           list: list of notifications updated
+       """
+        yo_db = context['yo_db']
+        return [yo_db.wwwpoll_mark_shown(nid) for nid in ids]
+
+
 
 
     async def api_mark_unshown(self,
                               ids=None,
-                              orig_req=None,
-                              context=None,
-                              **kwargs):
+                              context=None):
         """ Mark a list of notifications as unshown
 
        Keyword args:
@@ -131,10 +110,15 @@ class YoAPIServer(YoBaseService):
        """
         yo_db = context['yo_db']
         ids = ids or []
-        rv = []
-        for id in ids:
-            rv.append(yo_db.wwwpoll_mark_unshown(id))
-        return rv
+        return [yo_db.wwwpoll_mark_unshown(nid) for nid in ids]
+
+
+    async def api_get_transports(self,
+                                 username=None,
+                                 context=None,
+                                 **kwargs):
+        yo_db = context['yo_db']
+        return yo_db.get_user_transports(username)
 
     async def api_set_transports(self,
                                  username=None,
@@ -155,21 +139,13 @@ class YoAPIServer(YoBaseService):
         yo_db = context['yo_db']
         return yo_db.set_user_transports(username, transports)
 
-    async def api_get_transports(self,
-                                 username=None,
-                                 context=None,
-                                 **kwargs):
-        yo_db = context['yo_db']
-        return yo_db.get_user_transports(username)
-
-
     async def async_task(self, yo_app):  # pragma: no cover
-        yo_app.add_api_method(self.api_set_transports, 'set_transports')
-        yo_app.add_api_method(self.api_get_transports, 'get_transports')
         yo_app.add_api_method(self.api_get_notifications, 'get_notifications')
         yo_app.add_api_method(self.api_mark_read, 'mark_read')
-        yo_app.add_api_method(self.api_mark_shown, 'mark_shown')
         yo_app.add_api_method(self.api_mark_unread, 'mark_unread')
+        yo_app.add_api_method(self.api_mark_shown, 'mark_shown')
         yo_app.add_api_method(self.api_mark_unshown, 'mark_unshown')
-        yo_app.add_api_method(self.api_reset_statuses, 'reset_statuses')
+        yo_app.add_api_method(self.api_get_transports, 'get_transports')
+        yo_app.add_api_method(self.api_set_transports, 'set_transports')
+
 
