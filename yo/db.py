@@ -90,6 +90,9 @@ notifications_table = sa.Table(
     sa.Column('from_username', sa.String(20), index=True, nullable=True),
     sa.Column('json_data', sa.UnicodeText(1024)),
 
+    sa.Column('created', sa.DateTime,default=sa.func.now(),nullable=False,index=True),
+    sa.Column('updated', sa.DateTime, nullable=True, index=True),
+
     # non-wwwpoll columns
     sa.Column('priority_level', sa.Integer, index=True, default=3),
     sa.Column('created_at',sa.DateTime,default=sa.func.now(),index=True),

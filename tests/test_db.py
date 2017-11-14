@@ -84,7 +84,7 @@ def test_create_wwwpoll_notification(sqlite_db):
         }
     }
     test_data = {
-        'json_data':     json.dumps(vote_data),
+        'raw_data':     json.dumps(vote_data),
         'to_username':   'testuser1337',
         'from_username': 'testuser1336',
         'notify_type':   'vote'
@@ -160,9 +160,8 @@ def test_get_wwwpoll_notifications(sqlite_db):
         }
     }
     test_data = {
-        'json_data':     json.dumps(vote_data),
+        'raw_data':     json.dumps(vote_data),
         'to_username':   'testuser1337',
-        'from_username': 'testuser1336',
         'notify_type':   'vote',
         'trx_id':        '123abc'
     }
