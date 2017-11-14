@@ -35,7 +35,7 @@ class YoAPIServer(YoBaseService):
           list: list of notifications represented in dictionary format
        """
         yo_db = context['yo_db']
-        return list(yo_db.get_notifications(
+        notifications = yo_db.get_notifications(
             to_username=username,
             created_before=created_before,
             updated_after=updated_after,
