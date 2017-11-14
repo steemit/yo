@@ -237,45 +237,7 @@ class YoDatabase:
                         '_create_notification failed for %s' % notification)
             return False
 
-    def create_wwwpoll_notification(self,
-                                    **notification):
-        """ Creates a new notification in wwwpoll table
 
-        Keyword Args:
-            nid(int):
-            notify_type(str):
-            to_username(str):
-            from_username(str):
-            json_data(str):
-            created(datetime):
-            updated(datetime):
-            read(bool):
-            shown(bool):
-
-        Returns:
-            bool:             True on success, False otherwise
-        """
-        table = wwwpoll_table
-        return self._create_notification(table=table, **notification)
-
-    def create_notification(self, **notification):
-        """ Creates a new notification in the notifications table
-
-        Keyword Args:
-            nid(int):
-            notify_type(str):
-            to_username(str):
-            from_username(str):
-            json_data(str):
-            created(datetime):
-            priority_level(int):
-            trx_id(str):
-
-        Returns:
-            bool:             True on success, False otherwise
-        """
-        table = notifications_table
-        return self._create_notification(table=table, **notification)
 
     def wwwpoll_mark_shown(self, nid):
         logger.debug('wwwpoll: marking %s as shown', nid)
