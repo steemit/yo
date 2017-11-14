@@ -82,7 +82,6 @@ wwwpoll_table = sa.Table(
 
 # This is where ALL notifications go, not to be confused with the wwwpoll transport specific table above
 notifications_table = sa.Table(
-<<<<<<< HEAD
     'yo_notifications',
     metadata,
     sa.Column('nid', sa.Integer, primary_key=True),
@@ -358,13 +357,8 @@ class YoDatabase:
                 query = user_settings_table.select().where(
                         user_settings_table.c.username == username)
                 select_response = conn.execute(query)
-<<<<<<< HEAD
                 results = select_response.fetchone()
                 if not (results is None):
-=======
-                results = select_response.first()
-                if results:
->>>>>>> master
                     json_settings = results['transports']
                     return json.loads(json_settings)
                 else:
@@ -401,9 +395,8 @@ class YoDatabase:
                         'Exception occurred trying to update transports for user %s to %s' % (
                             username, str(transports)))
                 result = self.create_user(username, transports=transports)
-                logger.debug('set_user_transpors insert result: %s', result)
+                logger.debug('set_user_transports insert result: %s', result)
                 if result:
-<<<<<<< HEAD
                     return  transports
                 return None
 
@@ -519,7 +512,3 @@ class YoDatabase:
                     logger.exception('failed to add notification')
                     tx.rollback()
         return False
-=======
-                    return transports
-            return False
->>>>>>> master
