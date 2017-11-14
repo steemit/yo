@@ -445,7 +445,7 @@ class YoDatabase:
                 logger.exception('Exception occurred!')
         return retval
 
-    def create_wwwpoll_notification(self,notify_id=None,notify_type=None,created_time=None,raw_data={},to_user=None):
+    def create_wwwpoll_notification(self,notify_id=None,notify_type=None,created_time=None,raw_data={},to_username=None):
         """ Creates a new notification in the wwwpoll table
 
         Keyword Args:
@@ -461,7 +461,7 @@ class YoDatabase:
 
         if notify_id is None: notify_id = str(uuid.uuid4)
         if created_time is None: created_time = datetime.datetime.now()
-        notification = {'nid':notify_id,'notify_type':notify_type,'created':created_time,'updated':created_time,'to_username':to_user}
+        notification = {'nid':notify_id,'notify_type':notify_type,'created':created_time,'updated':created_time,'to_username':to_username}
         raw_data_json = json.dumps(raw_data)
         notification['json_data'] = raw_data
         with self.acquire_conn() as conn:

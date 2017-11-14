@@ -125,7 +125,6 @@ async def test_api_mark_read(sqlite_db):
                 }
             }),
             'to_username':    'testuser1337',
-            'from_username':  'testuser1336',
             'notify_type':    'vote',
         }
     API = api_server.YoAPIServer()
@@ -153,7 +152,6 @@ async def test_api_mark_unread(sqlite_db):
             }
         }),
         'to_username':   'testuser1337',
-        'from_username': 'testuser1336',
         'notify_type':   'vote',
         'read': True
     }
@@ -183,7 +181,6 @@ async def test_api_mark_shown(sqlite_db):
             }
         }),
         'to_username':   'testuser1337',
-        'from_username': 'testuser1336',
         'notify_type':   'vote',
     }
     API = api_server.YoAPIServer()
@@ -212,7 +209,6 @@ async def test_api_mark_unshown(sqlite_db):
             }
         }),
         'to_username':   'testuser1337',
-        'from_username': 'testuser1336',
         'notify_type':   'vote',
         'shown':          True
     }
