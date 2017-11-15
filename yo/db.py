@@ -84,7 +84,7 @@ wwwpoll_table = sa.Table(
 notifications_table = sa.Table(
     'yo_notifications',
     metadata,
-    sa.Column('nid', sa.Integer, primary_key=True),
+    sa.Column('nid', sa.String(36), primary_key=True),
     sa.Column('notify_type', sa.String(20), nullable=False, index=True),
     sa.Column('to_username', sa.String(20), nullable=False, index=True),
     sa.Column('from_username', sa.String(20), index=True, nullable=True),
