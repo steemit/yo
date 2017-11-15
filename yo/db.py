@@ -72,7 +72,7 @@ wwwpoll_table = sa.Table(
 
     # wwwpoll specific columns
     sa.Column('created', sa.DateTime,default=sa.func.now(),nullable=False,index=True),
-    sa.Column('updated', sa.DateTime, nullable=True, index=True),
+    sa.Column('updated', sa.DateTime, default=sa.func.now(), onupdate=sa.func.current_timestamp(), nullable=False, index=True),
     sa.Column('read', sa.Boolean(), default=False),
     sa.Column('shown', sa.Boolean(), default=False),
 
@@ -91,7 +91,7 @@ notifications_table = sa.Table(
     sa.Column('json_data', sa.UnicodeText(1024)),
 
     sa.Column('created', sa.DateTime,default=sa.func.now(),nullable=False,index=True),
-    sa.Column('updated', sa.DateTime, nullable=True, index=True),
+    sa.Column('updated', sa.DateTime, default=sa.func.now(), onupdate=sa.func.current_timestamp(), nullable=False, index=True),
 
     # non-wwwpoll columns
     sa.Column('priority_level', sa.Integer, index=True, default=3),
@@ -121,8 +121,8 @@ user_settings_table = sa.Table(
                   default=DEFAULT_USER_TRANSPORT_SETTINGS_STRING,
                   nullable=False),
         sa.Column('created', sa.DateTime, default=sa.func.now(), index=False),
-        sa.Column('updated', sa.DateTime, default=sa.func.now(), index=False,
-                  onupdate=sa.func.now()),
+
+        sa.Column('updated', sa.DateTime, default=sa.func.now(), onupdate=sa.func.current_timestamp(), nullable=False, index=True),
         mysql_engine='InnoDB',
 )
 
