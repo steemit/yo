@@ -9,11 +9,14 @@ import json
 from yo import blockchain_follower
 from yo import notification_sender
 from yo import api_server
+from yo import config
 from yo.transports import base_transport
 
 class MockApp:
    def __init__(self,db):
        self.db = db
+       self.config = config.YoConfigManager(None)
+
 
 class MockTransport(base_transport.BaseTransport):
    def __init__(self):
@@ -21,6 +24,7 @@ class MockTransport(base_transport.BaseTransport):
    def send_notification(self,to_subdata=None,to_username=None,notify_type=None,data=None):
        seld.received_by_user[to_username] = (to_subdata,notify_type,data)
 
+@pytest.mark.asyncio
 async def test_vote_flow(sqlite_db):
     """Tests vote events get through to a transport
     """
@@ -34,14 +38,15 @@ async def test_vote_flow(sqlite_db):
     yo_app   = MockApp(yo_db)
     sender   = notification_sender.YoNotificationSender(db=yo_db,yo_app=yo_app)
     mock_tx  = MockTransport()
+    sender.configured_transports = {}
     sender.configured_transports['mock'] = mock_tx
     API      = api_server.YoAPIServer()
     follower = blockchain_follower.YoBlockchainFollower(db=yo_db,yo_app=yo_app)
 
     # configure testupvoted and testupvoter users to use mock transport for votes
-    transports = {'mock':{'notification_types':['vote'],'sub_data':''}}
-    await API.api_set_user_transports(username='testupvoted',transports=transports,context=dict(yo_db=sqlite_db))
-    await API.api_set_user_transports(username='testupvoter',transports=transports,context=dict(yo_db=sqlite_db))
+    transports_obj = {'mock':{'notification_types':['vote'],'sub_data':''}}
+    await API.api_set_transports(username='testupvoted',transports=transports,context=dict(yo_db=sqlite_db))
+    await API.api_set_transports(username='testupvoter',transports=transports,context=dict(yo_db=sqlite_db))
 
     # handle the mock vote op
     follower.notify(mock_vote_op)
@@ -53,31 +58,37 @@ async def test_vote_flow(sqlite_db):
     assert 'testupvoted' in mock_tx.received_by_user.keys()
     assert not ('testupvoter' in mock_tx.received_by_user.keys())
 
+@pytest.mark.asyncio
 async def test_follow_flow():
     """Tests follow events get throught to a transport
     """
     assert False # dummy
 
+@pytest.mark.asyncio
 async def test_send_flow():
     """Tests send events get through to a transport
     """
     assert False
 
+@pytest.mark.asyncio
 async def test_receive_flow():
     """Tests receive events get through to a transport
     """
     assert False
 
+@pytest.mark.asyncio
 async def test_mention():
     """Tests mention events get through to a transport
     """
     assert False
 
+@pytest.mark.asyncio
 async def test_comment():
     """Tests comment events (comment on post) get through to a transport
     """
     assert False
 
+@pytest.mark.asyncio
 async def test_reply():
     """Tests reply events (replies to comments) get through to a transport
     """
