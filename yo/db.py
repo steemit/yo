@@ -463,6 +463,8 @@ class YoDatabase:
         Returns:
           True on success, False on error
         """
+        if not 'nid' in notification_object.keys():
+           notification_object['nid'] = str(uuid.uuid4())
         with self.acquire_conn() as conn:
             tx = conn.begin()
             try:

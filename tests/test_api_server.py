@@ -106,7 +106,7 @@ async def test_api_get_notifications(sqlite_db):
         result = sqlite_db.create_notification(**notification)
 
     some_notifications = await API.api_get_notifications(
-        to_username='test_user1337',context=dict(yo_db=sqlite_db))
+        to_username='testuser1337',context=dict(yo_db=sqlite_db))
     assert len(some_notifications) == 2
 
 
