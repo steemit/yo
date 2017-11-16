@@ -53,7 +53,8 @@ install: clean
     	brew install openssl; \
         env LDFLAGS="-L$(shell brew --prefix openssl)/lib" CFLAGS="-I$(shell brew --prefix openssl)/include" pipenv install --python 3.6 --dev; \
         else \
-        	pipenv install --python 3.6 --dev; \
+		pipenv lock --python 3.6 --hashes; \
+		pipenv install --python 3.6 --dev; \
         fi
 
 
