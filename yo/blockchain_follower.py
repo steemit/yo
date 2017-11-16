@@ -50,7 +50,7 @@ class YoBlockchainFollower(YoBaseService):
         self.db.create_notification(**data)
 
     async def handle_vote(self, op):
-        logger.debug('handle_vote received %s op' % ['op'][0])
+        logger.debug('handle_vote received %s op' % op['op'][0])
         vote_info = op['op'][1]
         logger.debug('Vote on %s (written by %s) by %s with weight %s' %
                      (vote_info['permlink'], vote_info['author'],

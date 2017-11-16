@@ -6,6 +6,7 @@
 
 import pytest
 import json
+import uuid
 from yo import blockchain_follower
 from yo import notification_sender
 from yo import api_server
@@ -28,7 +29,8 @@ class MockTransport(base_transport.BaseTransport):
 async def test_vote_flow(sqlite_db):
     """Tests vote events get through to a transport
     """
-    mock_vote_op = {'op':('vote',{'permlink':'test-post',
+    mock_vote_op = {'trx_id':str(uuid.uuid4()),
+                    'op':('vote',{'permlink':'test-post',
                                   'author'  :'testupvoted',
                                   'voter'   :'testupvoter',
                                   'weight'  :10000})}
@@ -45,11 +47,11 @@ async def test_vote_flow(sqlite_db):
 
     # configure testupvoted and testupvoter users to use mock transport for votes
     transports_obj = {'mock':{'notification_types':['vote'],'sub_data':''}}
-    await API.api_set_transports(username='testupvoted',transports=transports,context=dict(yo_db=sqlite_db))
-    await API.api_set_transports(username='testupvoter',transports=transports,context=dict(yo_db=sqlite_db))
+    await API.api_set_transports(username='testupvoted',transports=transports_obj,context=dict(yo_db=sqlite_db))
+    await API.api_set_transports(username='testupvoter',transports=transports_obj,context=dict(yo_db=sqlite_db))
 
     # handle the mock vote op
-    follower.notify(mock_vote_op)
+    await follower.notify(mock_vote_op)
 
     # since we don't run stuff in the background in test suite, manually invoke the notification sender
     await sender.api_trigger_notifications()
@@ -58,38 +60,3 @@ async def test_vote_flow(sqlite_db):
     assert 'testupvoted' in mock_tx.received_by_user.keys()
     assert not ('testupvoter' in mock_tx.received_by_user.keys())
 
-@pytest.mark.asyncio
-async def test_follow_flow():
-    """Tests follow events get throught to a transport
-    """
-    assert False # dummy
-
-@pytest.mark.asyncio
-async def test_send_flow():
-    """Tests send events get through to a transport
-    """
-    assert False
-
-@pytest.mark.asyncio
-async def test_receive_flow():
-    """Tests receive events get through to a transport
-    """
-    assert False
-
-@pytest.mark.asyncio
-async def test_mention():
-    """Tests mention events get through to a transport
-    """
-    assert False
-
-@pytest.mark.asyncio
-async def test_comment():
-    """Tests comment events (comment on post) get through to a transport
-    """
-    assert False
-
-@pytest.mark.asyncio
-async def test_reply():
-    """Tests reply events (replies to comments) get through to a transport
-    """
-    assert False
