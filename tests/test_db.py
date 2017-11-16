@@ -103,7 +103,6 @@ def test_create_wwwpoll_notification(sqlite_db):
     assert isinstance(result['created'], datetime)
 
     # wwwpoll only columns
-    assert result['updated'] is None
     assert result['read'] == False
     assert result['shown'] == False
 
