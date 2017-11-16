@@ -176,7 +176,6 @@ def test_get_wwwpoll_notifications(sqlite_db):
     assert isinstance(result['created'], datetime)
 
     # wwwpoll only columns
-    assert result['updated'] is None
     assert result['read'] == False
     assert result['shown'] == False
 
@@ -223,9 +222,8 @@ def test_wwpoll_mark_unshown(sqlite_db):
         }
     }
     test_data = {
-        'json_data':     json.dumps(vote_data),
+        'raw_data':     json.dumps(vote_data),
         'to_username':   'testuser1337',
-        'from_username': 'testuser1336',
         'notify_type':   'vote',
         'shown':         True
     }
@@ -254,7 +252,7 @@ def test_wwpoll_mark_read(sqlite_db):
         }
     }
     test_data = {
-        'json_data':     json.dumps(vote_data),
+        'raw_data':     json.dumps(vote_data),
         'to_username':   'testuser1337',
         'notify_type':   'vote'
     }
@@ -283,7 +281,7 @@ def test_wwpoll_mark_unread(sqlite_db):
         }
     }
     test_data = {
-        'json_data':     json.dumps(vote_data),
+        'raw_data':     json.dumps(vote_data),
         'to_username':   'testuser1337',
         'notify_type':   'vote',
         'read':         True
