@@ -176,8 +176,11 @@ class YoBlockchainFollower(YoBaseService):
             # top level post
             return True
         parent_id = '@' + op_data['parent_author'] + '/' + op_data['parent_permlink']
-        parent = steem.post.Post(parent_id)
-        note_type = COMMENT_REPLY if parent.is_comment() else POST_REPLY
+        if op_data['depth']==1:
+           note_type = POST_REPLY
+        elif op_data['depth']>1:
+           note_type = COMMENT_REPLY
+
         logger.debug('Comment(%s): %s replied to %s', note_type,
                      op_data['author'], parent_id)
         await self.store_notification(
