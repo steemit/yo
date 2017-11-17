@@ -33,4 +33,4 @@ class WWWPollTransport(BaseTransport):
           the subscription data for wwwpoll is ignored at present and not used
        """
        logger.debug('wwwpoll sending notification to %s' % to_username)
-       db.create_wwwpoll_notification(to_user=to_username, raw_data=data)
+       db.create_wwwpoll_notification(to_user=to_username, notify_type=notify_type, raw_data=data)
