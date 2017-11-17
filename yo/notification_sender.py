@@ -30,18 +30,7 @@ class YoNotificationSender(YoBaseService):
         return {'result': 'Succeeded'}  # dummy for now
 
     async def run_send_notify(self):
-        with self.db.acquire_conn() as conn:
-             query = notifications_table.join(actions_table).select([notifications_table.c.notify_type,
-                                                                     notifications_table.c.to_username,
-                                                                     notifications_table.c.from_username,
-                                                                     notifications_table.c.json_data,
-                                                                     notifications_table.c.priority_level])
-             query = query.where(actions_table.c.nid == None)
-             select_response = conn.execute(query)
-             unsents = {}
-             for row in select_response:
-                 if not row[1] in unsents.keys(): unsents[row[1]] = []
-                 unsents[row[1]].append(dict(row.items()))
+        unsents = self.db.get_unsents()
 
         
         for username,notifications in unsents.items():
