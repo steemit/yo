@@ -14,7 +14,7 @@ docker-image: clean
 .env: ${YO_CONFIG} scripts/make_docker_env.py
 	pipenv run python scripts/make_docker_env.py ${YO_CONFIG} >.env
 
-test: test-without-lint test-pylint
+test: format test-without-lint test-pylint
 
 test-without-lint:
 	pipenv run pytest -vv --cov=yo --cov-report term tests
