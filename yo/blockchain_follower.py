@@ -8,7 +8,7 @@ import steem
 from steem.blockchain import Blockchain
 
 from .base_service import YoBaseService
-from .db import PRIORITY_LEVELS
+from .db import Priority
 
 logger = logging.getLogger(__name__)
 
@@ -61,7 +61,7 @@ class YoBlockchainFollower(YoBaseService):
             to_username=vote_info['author'],
             json_data=json.dumps(vote_info),
             notify_type=VOTE,
-            priority_level=PRIORITY_LEVELS['low'])
+            priority_level=Priority.LOW)
         return True
 
     async def handle_follow(self, op):
@@ -85,7 +85,7 @@ class YoBlockchainFollower(YoBaseService):
             to_username=following,
             json_data=json.dumps(follow_data[1]),
             notify_type=FOLLOW,
-            priority_level=PRIORITY_LEVELS['low'])
+            priority_level=Priority.LOW)
         return True
 
     async def handle_account_update(self, op):
@@ -97,7 +97,7 @@ class YoBlockchainFollower(YoBaseService):
             to_username=op_data['account'],
             json_data=json.dumps(op_data),
             notify_type=ACCOUNT_UPDATE,
-            priority_level=PRIORITY_LEVELS['low'])
+            priority_level=Priority.LOW)
         return True
 
     async def handle_send(self, op):
@@ -115,7 +115,7 @@ class YoBlockchainFollower(YoBaseService):
             to_username=send_data['from'],
             json_data=json.dumps(send_data),
             notify_type=SEND_STEEM,
-            priority_level=PRIORITY_LEVELS['low'])
+            priority_level=Priority.LOW)
         return True
 
     async def handle_receive(self, op):
@@ -134,7 +134,7 @@ class YoBlockchainFollower(YoBaseService):
             from_username=receive_data['from'],
             json_data=json.dumps(receive_data),
             notify_type=RECEIVE_STEEM,
-            priority_level=PRIORITY_LEVELS['low'])
+            priority_level=Priority.LOW)
         return True
 
     async def handle_power_down(self, op):
@@ -146,7 +146,7 @@ class YoBlockchainFollower(YoBaseService):
             to_username=op_data['account'],
             json_data=json.dumps(op_data),
             notify_type=POWER_DOWN,
-            priority_level=PRIORITY_LEVELS['low'])
+            priority_level=Priority.LOW)
         return True
 
     async def handle_mention(self, op):
@@ -166,7 +166,7 @@ class YoBlockchainFollower(YoBaseService):
                 from_username=data['author'],
                 json_data=json.dumps(data),
                 notify_type=MENTION,
-                priority_level=PRIORITY_LEVELS['low'])
+                priority_level=Priority.LOW)
         return True
 
     async def handle_comment(self, op):
@@ -176,8 +176,11 @@ class YoBlockchainFollower(YoBaseService):
             # top level post
             return True
         parent_id = '@' + op_data['parent_author'] + '/' + op_data['parent_permlink']
-        parent = steem.post.Post(parent_id)
-        note_type = COMMENT_REPLY if parent.is_comment() else POST_REPLY
+        if op_data['depth']==1:
+           note_type = POST_REPLY
+        elif op_data['depth']>1:
+           note_type = COMMENT_REPLY
+
         logger.debug('Comment(%s): %s replied to %s', note_type,
                      op_data['author'], parent_id)
         await self.store_notification(
@@ -186,7 +189,7 @@ class YoBlockchainFollower(YoBaseService):
             from_username=op_data['author'],
             json_data=json.dumps(op_data),
             notify_type=note_type,
-            priority_level=PRIORITY_LEVELS['low'])
+            priority_level=Priority.LOW)
         return True
 
     async def handle_resteem(self, op):
@@ -212,7 +215,7 @@ class YoBlockchainFollower(YoBaseService):
             to_username=author,
             json_data=json.dumps(resteem_data[1]),
             notify_type=RESTEEM,
-            priority_level=PRIORITY_LEVELS['low'])
+            priority_level=Priority.LOW)
         return True
 
     async def notify(self, blockchain_op):
