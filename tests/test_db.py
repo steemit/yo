@@ -57,7 +57,7 @@ def test_create_notification(sqlite_db):
     retval = yo_db.create_notification(**test_data)
     assert retval is True
     result = yo_db.get_notifications(to_username='testuser1337',
-                                               limit=2).fetchall()
+                                               limit=2)
     assert len(result) == 1
     result = result[0]
 
@@ -84,7 +84,7 @@ def test_create_wwwpoll_notification(sqlite_db):
         }
     }
     test_data = {
-        'raw_data':     json.dumps(vote_data),
+        'json_data':     json.dumps(vote_data),
         'to_username':   'testuser1337',
         'notify_type':   'vote'
     }
@@ -93,7 +93,7 @@ def test_create_wwwpoll_notification(sqlite_db):
     retval = yo_db.create_wwwpoll_notification(**test_data)
     assert retval is True
     result = yo_db.get_wwwpoll_notifications(to_username='testuser1337',
-                                             limit=2).fetchall()
+                                             limit=2)
     assert len(result) == 1
     result = result[0]
 
@@ -131,7 +131,7 @@ def test_get_notifications(sqlite_db):
     retval = yo_db.create_notification(**test_data)
     assert retval is True
     result = yo_db.get_notifications(to_username='testuser1337',
-                                             limit=2).fetchall()
+                                             limit=2)
     assert len(result) == 1
     result = result[0]
 
@@ -157,7 +157,7 @@ def test_get_wwwpoll_notifications(sqlite_db):
         }
     }
     test_data = {
-        'raw_data':     json.dumps(vote_data),
+        'json_data':     json.dumps(vote_data),
         'to_username':   'testuser1337',
         'notify_type':   'vote',
     }
@@ -166,7 +166,7 @@ def test_get_wwwpoll_notifications(sqlite_db):
     retval = yo_db.create_wwwpoll_notification(**test_data)
     assert retval is True
     result = yo_db.get_wwwpoll_notifications(to_username='testuser1337',
-                                             limit=2).fetchall()
+                                             limit=2)
     assert len(result) == 1
     result = result[0]
 
@@ -193,20 +193,20 @@ def test_wwpoll_mark_shown (sqlite_db):
         }
     }
     test_data = {
-        'raw_data':     json.dumps(vote_data),
+        'json_data':     json.dumps(vote_data),
         'to_username':   'testuser1337',
         'notify_type':   'vote'
     }
 
     yo_db = sqlite_db
     _ = yo_db.create_wwwpoll_notification(**test_data)
-    result = yo_db.get_wwwpoll_notifications(to_username='testuser1337').first()
+    result = yo_db.get_wwwpoll_notifications(to_username='testuser1337')[0]
     assert result['shown'] is False
 
     _ = yo_db.wwwpoll_mark_shown(result['nid'])
     assert _ is True
 
-    result = yo_db.get_wwwpoll_notifications(to_username='testuser1337').first()
+    result = yo_db.get_wwwpoll_notifications(to_username='testuser1337')[0]
     assert result['shown'] is True
 
 def test_wwpoll_mark_unshown(sqlite_db):
@@ -222,7 +222,7 @@ def test_wwpoll_mark_unshown(sqlite_db):
         }
     }
     test_data = {
-        'raw_data':     json.dumps(vote_data),
+        'json_data':     json.dumps(vote_data),
         'to_username':   'testuser1337',
         'notify_type':   'vote',
         'shown':         True
@@ -230,13 +230,13 @@ def test_wwpoll_mark_unshown(sqlite_db):
 
     yo_db = sqlite_db
     _ = yo_db.create_wwwpoll_notification(**test_data)
-    result = yo_db.get_wwwpoll_notifications(to_username='testuser1337').first()
+    result = yo_db.get_wwwpoll_notifications(to_username='testuser1337')[0]
     assert result['shown'] is True
 
     _ = yo_db.wwwpoll_mark_unshown(result['nid'])
     assert _ is True
 
-    result = yo_db.get_wwwpoll_notifications(to_username='testuser1337').first()
+    result = yo_db.get_wwwpoll_notifications(to_username='testuser1337')[0]
     assert result['shown'] is False
 
 def test_wwpoll_mark_read(sqlite_db):
@@ -252,20 +252,20 @@ def test_wwpoll_mark_read(sqlite_db):
         }
     }
     test_data = {
-        'raw_data':     json.dumps(vote_data),
+        'json_data':     json.dumps(vote_data),
         'to_username':   'testuser1337',
         'notify_type':   'vote'
     }
 
     yo_db = sqlite_db
     _ = yo_db.create_wwwpoll_notification(**test_data)
-    result = yo_db.get_wwwpoll_notifications(to_username='testuser1337').first()
+    result = yo_db.get_wwwpoll_notifications(to_username='testuser1337')[0]
     assert result['read'] is False
 
     _ = yo_db.wwwpoll_mark_read(result['nid'])
     assert _ is True
 
-    result = yo_db.get_wwwpoll_notifications(to_username='testuser1337').first()
+    result = yo_db.get_wwwpoll_notifications(to_username='testuser1337')[0]
     assert result['read'] is True
 
 def test_wwpoll_mark_unread(sqlite_db):
@@ -281,7 +281,7 @@ def test_wwpoll_mark_unread(sqlite_db):
         }
     }
     test_data = {
-        'raw_data':     json.dumps(vote_data),
+        'json_data':     json.dumps(vote_data),
         'to_username':   'testuser1337',
         'notify_type':   'vote',
         'read':         True
@@ -289,13 +289,13 @@ def test_wwpoll_mark_unread(sqlite_db):
 
     yo_db = sqlite_db
     _ = yo_db.create_wwwpoll_notification(**test_data)
-    result = yo_db.get_wwwpoll_notifications(to_username='testuser1337').first()
+    result = yo_db.get_wwwpoll_notifications(to_username='testuser1337')[0]
     assert result['read'] is True
 
     _ = yo_db.wwwpoll_mark_unread(result['nid'])
     assert _ is True
 
-    result = yo_db.get_wwwpoll_notifications(to_username='testuser1337').first()
+    result = yo_db.get_wwwpoll_notifications(to_username='testuser1337')[0]
     assert result['read'] is False
 
 def test_create_user(sqlite_db):

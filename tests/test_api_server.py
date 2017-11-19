@@ -1,119 +1,58 @@
-import pytest
+from datetime import datetime
 import json
-from yo import api_server
 
+import pytest
+
+from yo.services import api_server
 
 
 @pytest.mark.asyncio
 async def test_api_get_notifications(sqlite_db):
     """Basic test of get_notifications backed by sqlite3"""
-    notifications = [
-        {
-        'trx_id':                           1337,
-        'json_data':                        json.dumps({
-            'author': 'testuser1336',
-            'weight': 100,
-            'item': {
-                'author': 'testuser1337',
-                'permlink': 'test-post-1',
-                'summary': 'A test post',
-                'category': 'test1',
-                'depth': 0
-            }
-        }),
-        'to_username':                      'testuser1337',
-        'from_username':                    'testuser1336',
-        'notify_type':                             'vote',
-        'priority_level': 1
-        },
-        {
-            'trx_id':         1338,
-            'json_data':      json.dumps({
-                'author': 'testuser1336',
-                'weight': 100,
-                'item':   {
-                    'author':   'testuser1337',
-                    'permlink': 'test-post-1',
-                    'summary':  'A test post',
-                    'category': 'test2',
-                    'depth':    0
-                }
-            }),
-            'to_username':    'testuser1337',
-            'from_username':  'testuser1336',
-            'notify_type':           'vote',
-            'priority_level': 1
-        },
-        {
-            'trx_id':         1338,
-            'json_data':      json.dumps({
-                'author': 'testuser1336',
-                'weight': 100,
-                'item':   {
-                    'author':   'testuser1337',
-                    'permlink': 'test-post-1',
-                    'summary':  'A test post',
-                    'category': 'test3',
-                    'depth':    0
-                }
-            }),
-            'to_username':    'testuser1337',
-            'from_username':  'testuser1336',
-            'notify_type':           'vote',
-            'priority_level': 1
-        },
-        {
-            'trx_id':         1338,
-            'json_data':      json.dumps({
-                'author': 'testuser1336',
-                'weight': 100,
-                'item':   {
-                    'author':   'testuser1337',
-                    'permlink': 'test-post-1',
-                    'summary':  'A test post',
-                    'category': 'test4',
-                    'depth':    0
-                }
-            }),
-            'to_username':    'testuser1337',
-            'from_username':  'testuser1336',
-            'notify_type':           'vote',
-            'priority_level': 1
-        },
-        {
-            'trx_id':         1338,
-            'json_data':      json.dumps({
-                'author': 'testuser1336',
-                'weight': 100,
-                'item':   {
-                    'author':   'testuser1337',
-                    'permlink': 'test-post-1',
-                    'summary':  'A test post',
-                    'category': 'test5',
-                    'depth':    0
-                }
-            }),
-            'to_username':    'testuser1337',
-            'from_username':  'testuser1336',
-            'notify_type':           'vote',
-            'priority_level': 1
-        },
-
-    ]
+    vote_data = {
+        'author': 'testuser1337',
+        'weight': 100,
+        'item':   {
+            'author':   'testuser1337',
+            'permlink': 'test-post-1',
+            'summary':  'A test post',
+            'category': 'test',
+            'depth':    0
+        }
+    }
+    test_data = {
+        'json_data':     json.dumps(vote_data),
+        'to_username':   'testuser1337',
+        'from_username': 'testuser1336',
+        'notify_type':   'vote',
+        'trx_id':        '123abc'
+    }
     API = api_server.YoAPIServer()
+    yo_db = sqlite_db
+    retval = yo_db.create_notification(**test_data)
+    assert retval is True
 
-    for notification in notifications:
-        result = sqlite_db.create_notification(**notification)
+    result = await API.api_get_notifications(
+            username='testuser1337', context=dict(yo_db=sqlite_db))
 
-    some_notifications = await API.api_get_notifications(
-        to_username='testuser1337',context=dict(yo_db=sqlite_db))
-    assert len(some_notifications) == 2
+    assert len(result) == 1
+    result = result[0]
+
+    assert result['notify_type'] == 'vote'
+    assert result['to_username'] == 'testuser1337'
+    assert result['from_username'] == 'testuser1336'
+    assert json.loads(result['json_data']) == vote_data
+    assert isinstance(result['created'], datetime)
+
+    # notifications only columns
+    assert result['trx_id'] == '123abc'
+
 
 
 @pytest.mark.asyncio
 async def test_api_mark_read(sqlite_db):
     test_notification = {
-            'raw_data':      json.dumps({
+            'json_data':      json.dumps({
                 'author': 'testuser1336',
                 'weight': 100,
                 'item':   {
@@ -125,22 +64,23 @@ async def test_api_mark_read(sqlite_db):
                 }
             }),
             'to_username':    'testuser1337',
+            'from_username':  'testuser1336',
             'notify_type':    'vote',
         }
     API = api_server.YoAPIServer()
     _ = sqlite_db.create_wwwpoll_notification(**test_notification)
     assert _ is True
-    notification = sqlite_db.get_wwwpoll_notifications().first()
+    notification = sqlite_db.get_wwwpoll_notifications()[0]
     assert notification['read'] is False
     result = await API.api_mark_read(ids=[notification['nid']],context=dict(yo_db=sqlite_db))
     assert result == [True]
-    notification = sqlite_db.get_wwwpoll_notifications().first()
+    notification = sqlite_db.get_wwwpoll_notifications()[0]
     assert notification['read'] is True
 
 @pytest.mark.asyncio
 async def test_api_mark_unread(sqlite_db):
     test_notification = {
-        'raw_data':     json.dumps({
+        'json_data':     json.dumps({
             'author': 'testuser1336',
             'weight': 100,
             'item':   {
@@ -152,24 +92,25 @@ async def test_api_mark_unread(sqlite_db):
             }
         }),
         'to_username':   'testuser1337',
+        'from_username': 'testuser1336',
         'notify_type':   'vote',
         'read': True
     }
     API = api_server.YoAPIServer()
     _ = sqlite_db.create_wwwpoll_notification(**test_notification)
     assert _ is True
-    notification = sqlite_db.get_wwwpoll_notifications().first()
+    notification = sqlite_db.get_wwwpoll_notifications()[0]
     assert notification['read'] is True
     result = await API.api_mark_unread(ids=[notification['nid']],
                                      context=dict(yo_db=sqlite_db))
     assert result == [True]
-    notification = sqlite_db.get_wwwpoll_notifications().first()
+    notification = sqlite_db.get_wwwpoll_notifications()[0]
     assert notification['read'] is False
 
 @pytest.mark.asyncio
 async def test_api_mark_shown(sqlite_db):
     test_notification = {
-        'raw_data':     json.dumps({
+        'json_data':     json.dumps({
             'author': 'testuser1336',
             'weight': 100,
             'item':   {
@@ -181,23 +122,24 @@ async def test_api_mark_shown(sqlite_db):
             }
         }),
         'to_username':   'testuser1337',
+        'from_username': 'testuser1336',
         'notify_type':   'vote',
     }
     API = api_server.YoAPIServer()
     _ = sqlite_db.create_wwwpoll_notification(**test_notification)
     assert _ is True
-    notification = sqlite_db.get_wwwpoll_notifications().first()
+    notification = sqlite_db.get_wwwpoll_notifications()[0]
     assert notification['shown'] is False
     result = await API.api_mark_shown(ids=[notification['nid']],
                                      context=dict(yo_db=sqlite_db))
     assert result == [True]
-    notification = sqlite_db.get_wwwpoll_notifications().first()
+    notification = sqlite_db.get_wwwpoll_notifications()[0]
     assert notification['shown'] is True
 
 @pytest.mark.asyncio
 async def test_api_mark_unshown(sqlite_db):
     test_notification = {
-        'raw_data':     json.dumps({
+        'json_data':     json.dumps({
             'author': 'testuser1336',
             'weight': 100,
             'item':   {
@@ -209,18 +151,19 @@ async def test_api_mark_unshown(sqlite_db):
             }
         }),
         'to_username':   'testuser1337',
+        'from_username': 'testuser1336',
         'notify_type':   'vote',
         'shown':          True
     }
     API = api_server.YoAPIServer()
     _ = sqlite_db.create_wwwpoll_notification(**test_notification)
     assert _ is True
-    notification = sqlite_db.get_wwwpoll_notifications().first()
+    notification = sqlite_db.get_wwwpoll_notifications()[0]
     assert notification['shown'] is True
     result = await API.api_mark_unshown(ids=[notification['nid']],
                                        context=dict(yo_db=sqlite_db))
     assert result == [True]
-    notification = sqlite_db.get_wwwpoll_notifications().first()
+    notification = sqlite_db.get_wwwpoll_notifications()[0]
     assert notification['shown'] is False
 
 @pytest.mark.asyncio

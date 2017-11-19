@@ -7,14 +7,15 @@ import re
 import steem
 from steem.blockchain import Blockchain
 
+from ..db import Priority
 from .base_service import YoBaseService
-from .db import Priority
 
 logger = logging.getLogger(__name__)
 
 # TODO - use reliable stream when merged into steem-python
 
-# Basically this service just follows the blockchain and inserts into the DB then triggers the notification sender to send the actual notification
+# Basically this service just follows the blockchain and inserts into the
+# DB then triggers the notification sender to send the actual notification
 
 # NOTIFICATION TYPES
 ACCOUNT_UPDATE = 'account_update'
@@ -38,11 +39,11 @@ MENTION_PATTERN = re.compile(r'@([a-z][a-z0-9\-]{2,15})\s')
 class YoBlockchainFollower(YoBaseService):
     service_name = 'blockchain_follower'
 
-    def __init__(self,**kwargs):
+    def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
         steemd_url = self.yo_app.config.config_data['blockchain_follower'].get(
-                'steemd_url', 'https://api.steemit.com')
+            'steemd_url', 'https://api.steemit.com')
         self.steemd_rpc = steem.steemd.Steemd(nodes=[steemd_url])
 
     async def store_notification(self, **data):
@@ -50,11 +51,11 @@ class YoBlockchainFollower(YoBaseService):
         self.db.create_notification(**data)
 
     async def handle_vote(self, op):
-        logger.debug('handle_vote received %s op' % ['op'][0])
+        logger.debug('handle_vote received %s op', ['op'][0])
         vote_info = op['op'][1]
-        logger.debug('Vote on %s (written by %s) by %s with weight %s' %
-                     (vote_info['permlink'], vote_info['author'],
-                      vote_info['voter'], vote_info['weight']))
+        logger.debug('Vote on %s (written by %s) by %s with weight %s',
+                     vote_info['permlink'], vote_info['author'],
+                     vote_info['voter'], vote_info['weight'])
         await self.store_notification(
             trx_id=op['trx_id'],
             from_username=vote_info['voter'],
@@ -72,8 +73,8 @@ class YoBlockchainFollower(YoBaseService):
         follower = follow_data[1]['follower']
         following = follow_data[1]['following']
         if len(op_data['required_posting_auths']) != 1:
-            logger.error('inavlid follow op, got %d posting auths, expected 1'
-                         % op_data['required_posting_auths'])
+            logger.error('inavlid follow op, got %d posting auths, expected 1',
+                         op_data['required_posting_auths'])
             return False
         if op_data['required_posting_auths'][0] != follower:
             logger.error('invalid follow op, follower must be signer')
@@ -170,17 +171,14 @@ class YoBlockchainFollower(YoBaseService):
         return True
 
     async def handle_comment(self, op):
-        logger.debug('handle_comment recevied %s op' % ['op'][0])
+        logger.debug('handle_comment recevied %s op', ['op'][0])
         op_data = op['op'][1]
         if op_data['parent_author'] == '':
             # top level post
             return True
         parent_id = '@' + op_data['parent_author'] + '/' + op_data['parent_permlink']
-        if op_data['depth']==1:
-           note_type = POST_REPLY
-        elif op_data['depth']>1:
-           note_type = COMMENT_REPLY
-
+        parent = steem.post.Post(parent_id)
+        note_type = COMMENT_REPLY if parent.is_comment() else POST_REPLY
         logger.debug('Comment(%s): %s replied to %s', note_type,
                      op_data['author'], parent_id)
         await self.store_notification(
@@ -201,14 +199,14 @@ class YoBlockchainFollower(YoBaseService):
         author = resteem_data[1]['author']
         permlink = resteem_data[1]['permlink']
         if len(op_data['required_posting_auths']) != 1:
-            logger.error('inavlid resteem op, got %d posting auths, expected 1'
-                         % op_data['required_posting_auths'])
+            logger.error(
+                'inavlid resteem op, got %d posting auths, expected 1',
+                op_data['required_posting_auths'])
             return True
         if op_data['required_posting_auths'][0] != account:
             logger.error('invalid resteem op, account must be signer')
             return True
-        logger.debug('Resteem: %s reblogged @%s/%s' % (account, author,
-                                                       permlink))
+        logger.debug('Resteem: %s reblogged @%s/%s', account, author, permlink)
         await self.store_notification(
             trx_id=op['trx_id'],
             from_username=account,
@@ -270,7 +268,7 @@ class YoBlockchainFollower(YoBaseService):
 
             resp = await self.notify(op)
             if not resp:
-                logger.debug('Re-queueing operation: %s' % str(op))
+                logger.debug('Re-queueing operation: %s', str(op))
                 return op
         return None
 
@@ -294,11 +292,12 @@ class YoBlockchainFollower(YoBaseService):
             next_val = None
             try:
                 next_val = await loop.run_in_executor(None, next, ops)
-            except Exception as e:
+            except Exception:
                 logger.exception('Exception occurred')
-            if not (next_val is None): yield next_val
+            if next_val:
+                yield next_val
 
-    async def async_task(self, yo_app):
+    async def async_task(self):
 
         queue = asyncio.Queue()
         logger.info('Blockchain follower started')
@@ -307,13 +306,16 @@ class YoBlockchainFollower(YoBaseService):
                 b = Blockchain(steemd_instance=self.steemd_rpc)
                 while True:
                     try:
-                        async for op in self.async_ops(yo_app.loop, b):
+                        async for op in self.async_ops(self.yo_app.loop, b):
                             await queue.put(op)
                             await asyncio.sleep(0)
                             runner_resp = await self.run_queue(queue)
-                            if not (runner_resp is None):
+                            if runner_resp:
                                 queue.put(runner_resp)
-                    except Exception as e:
+                    except Exception:
                         logger.exception('Exception occurred')
-            except Exception as e:
+            except Exception:
                 logger.exception('Exception occurred')
+
+    def init_api(self):
+        pass
