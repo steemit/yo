@@ -90,7 +90,7 @@ ENV HOME ${APP_ROOT}
 RUN pipenv install  --dev
 
 # run tests
-RUN pipenv run pytest -vv tests
+RUN make test
 
 # Expose the HTTP server port
 EXPOSE ${HTTP_SERVER_PORT}
