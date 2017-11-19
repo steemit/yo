@@ -3,12 +3,12 @@ import argparse
 import os
 import sys
 
-from yo.api_server import YoAPIServer
-from yo.app import YoApp
-from yo.blockchain_follower import YoBlockchainFollower
-from yo.config import YoConfigManager
-from yo.db import YoDatabase
-from yo.notification_sender import YoNotificationSender
+from .app import YoApp
+from .config import YoConfigManager
+from .db import YoDatabase
+from .services.api_server import YoAPIServer
+from .services.blockchain_follower import YoBlockchainFollower
+from .services.notification_sender import YoNotificationSender
 
 
 def main():
@@ -25,7 +25,6 @@ def main():
     yo_config = YoConfigManager(args.config)
     yo_database = YoDatabase(db_url=os.environ.get('YO_DATABASE_URL'))
     yo_app = YoApp(config=yo_config, db=yo_database)
-
 
     yo_app.add_service(YoNotificationSender)
     yo_app.add_service(YoAPIServer)

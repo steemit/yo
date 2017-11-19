@@ -1,16 +1,16 @@
 # coding=utf-8
 """Twilio transport, sends sms"""
 
+import logging
+
 from twilio.rest import Client
 
 from .base_transport import BaseTransport
-import logging
 
 logger = logging.getLogger(__name__)
 
 
 class TwilioTransport(BaseTransport):
-
     def __init__(self, account_sid, auth_token, from_number):
         """Transport implementation for twilio
 
@@ -25,8 +25,8 @@ class TwilioTransport(BaseTransport):
     def send_notification(self, to_subdata=None, notify_type=None, data=None):
         if data is None:
             data = {}
-        logger.debug('Twilio sending notification %s to %s',
-                     notify_type, to_subdata)
+        logger.debug('Twilio sending notification %s to %s', notify_type,
+                     to_subdata)
 
         if notify_type == 'vote':
             vote_info = data['op'][1]
@@ -37,7 +37,5 @@ class TwilioTransport(BaseTransport):
             return
 
         response = self.client.messages.create(
-            to=to_subdata,
-            from_=self.from_number,
-            body=message)
+            to=to_subdata, from_=self.from_number, body=message)
         logger.debug('Twilio response %s', response)

@@ -76,7 +76,6 @@ RUN python3.6 -m pip install --upgrade pip pipenv
 WORKDIR ${APP_ROOT}
 
 # Copy code into a suitable place
-
 COPY ./Makefile ${APP_ROOT}/Makefile
 COPY ./Pipfile ${APP_ROOT}/Pipfile
 COPY ./Pipfile.lock ${APP_ROOT}/Pipfile.lock
@@ -84,6 +83,7 @@ COPY ./scripts ${APP_ROOT}/scripts
 COPY ./tests ${APP_ROOT}/tests
 COPY ./yo ${APP_ROOT}/yo
 COPY ./yo.cfg ${APP_ROOT}/yo.cfg
+COPY ./.pylintrc ${APP_ROOT}/.pylintrc
 
 ENV HOME ${APP_ROOT}
 
