@@ -1,9 +1,9 @@
 # coding=utf-8
-import os
 import configparser
-import py_vapid
-
 import logging
+import os
+
+import py_vapid
 
 
 class YoConfigManager:
@@ -17,18 +17,19 @@ class YoConfigManager:
         self.config_data = configparser.ConfigParser(
             inline_comment_prefixes=';')
         # a couple of defaults to enable stuff to work-ish if the config file is missing
-        # TODO - add a general get method with defaults so we don't have to define it all in multiple places
+        # TODO - add a general get method with defaults so we don't have to define
+        # it all in multiple places
         self.config_data['yo_general'] = {'log_level': 'INFO', 'yo_db_url': ''}
         self.config_data['vapid'] = {}
         self.config_data['blockchain_follower'] = {}
         self.config_data['notification_sender'] = {}
         self.config_data['api_server'] = {}
-
-
+        self.vapid_priv_key = None
+        self.vapid = None
         for k, v in defaults.items():  # load defaults passed as param
             self.config_data[k] = v
 
-        if not (filename is None):
+        if filename:
             self.config_data.read(filename)
 
         for section in self.config_data.sections():
@@ -44,7 +45,6 @@ class YoConfigManager:
         logging.basicConfig(level=log_level)
         self.generate_needed()
 
-
     def get_listen_host(self):
         return self.config_data['http'].get('listen_host',
                                             '0.0.0.0')  # pragma: no cover
@@ -52,7 +52,6 @@ class YoConfigManager:
     def get_listen_port(self):
         return int(self.config_data['http'].get('listen_port',
                                                 8080))  # pragma: no cover
-
 
     def generate_needed(self):
         """If needed, regenerates VAPID keys and similar
@@ -62,7 +61,7 @@ class YoConfigManager:
             self.vapid = py_vapid.Vapid()
             self.vapid.generate_keys()
         else:
-            if len(self.vapid_priv_key) == 0:
+            if not self.vapid_priv_key:
                 self.vapid = py_vapid.Vapid()
                 self.vapid.generate_keys()
             else:

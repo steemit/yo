@@ -20,11 +20,36 @@ test-without-lint:
 	pipenv run pytest -vv --cov=yo --cov-report term tests
 
 test-pylint:
-	pipenv run pytest -v --pylint
+	pipenv run pytest -v --pylint $(PROJECT_NAME)
 
-.PHONY: format
-format:
-	pipenv run yapf -i **/*.py
+.PHONY: lint
+lint: ## lint python files
+	pipenv run pylint $(PROJECT_NAME)
+
+.PHONY: fix-imports
+fix-imports: remove-unused-imports sort-imports ## remove unused and then sort imports
+
+.PHONY: remove-unused-imports
+remove-unused-imports: ## remove unused imports from python files
+	pipenv run autoflake --in-place --remove-all-unused-imports --recursive $(PROJECT_NAME)
+
+.PHONY: sort-imports
+sort-imports: ## sorts python imports using isort with settings from .editorconfig
+	pipenv run isort --verbose --recursive --atomic --settings-path  .editorconfig --virtual-env .venv $(PROJECT_NAME)
+
+.PHONY: fmt
+fmt: remove-unused-imports sort-imports ## format python files
+    # yapf is disabled until the update 3.6 fstring compat
+	pipenv run yapf --in-place --style pep8 --recursive $(PROJECT_NAME)
+	pipenv run autopep8 --verbose --verbose --max-line-length=100 --aggressive --jobs -1 --in-place  --recursive $(PROJECT_NAME)
+
+.PHONY: pre-commit
+pre-commit: ## run pre-commit against modified files
+	pipenv run pre-commit run
+
+.PHONY: pre-commit-all
+pre-commit-all: ## run pre-commit against all files
+	pipenv run pre-commit run --all-files
 
 .PHONY: run-local
 run-local:

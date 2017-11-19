@@ -84,6 +84,7 @@ COPY ./scripts ${APP_ROOT}/scripts
 COPY ./tests ${APP_ROOT}/tests
 COPY ./yo ${APP_ROOT}/yo
 COPY ./yo.cfg ${APP_ROOT}/yo.cfg
+COPY ./.pylintrc ${APP_ROOT}/.pylintrc
 
 ENV HOME ${APP_ROOT}
 
