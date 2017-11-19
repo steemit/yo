@@ -6,7 +6,6 @@ url = "https://pypi.python.org/simple"
 python_version = "3.6"
 
 [packages]
-
 ujson = "*"
 aiohttp = "*"
 jsonrpcclient = "*"
@@ -15,7 +14,6 @@ toolz = "*"
 websockets = "*"
 cchardet = "*"
 uvloop = "*"
-funcy = "*"
 aiomysql = "*"
 cryptography = "*"
 "http-ece" = "*"
@@ -32,7 +30,6 @@ premailer = "*"
 
 
 [dev-packages]
-
 ipython = "*"
 "pep8" = "*"
 pytest = "*"

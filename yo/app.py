@@ -52,9 +52,7 @@ class YoApp:
         logger.info('Starting tasks...')
         for k, v in self.service_tasks.items():
             logger.info('Starting %s', k)
-            self.web_app['service_task:%s' %
-                         k] = self.web_app.loop.create_task(v(self))
-
+            self.web_app['service_task:%s' % k] = self.web_app.loop.create_task(v())
     # pylint: enable=unused-argument
 
     @staticmethod
@@ -112,7 +110,7 @@ class YoApp:
         self.service_tasks[name] = service.async_task
         service.yo_app = self
         self.services[name] = service
-        service.init_api(self)
+        service.init_api()
 
     async def invoke_private_api(self, service=None, api_method=None,
                                  **kwargs):

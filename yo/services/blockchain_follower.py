@@ -297,7 +297,7 @@ class YoBlockchainFollower(YoBaseService):
             if next_val:
                 yield next_val
 
-    async def async_task(self, yo_app):
+    async def async_task(self):
 
         queue = asyncio.Queue()
         logger.info('Blockchain follower started')
@@ -306,7 +306,7 @@ class YoBlockchainFollower(YoBaseService):
                 b = Blockchain(steemd_instance=self.steemd_rpc)
                 while True:
                     try:
-                        async for op in self.async_ops(yo_app.loop, b):
+                        async for op in self.async_ops(self.yo_app.loop, b):
                             await queue.put(op)
                             await asyncio.sleep(0)
                             runner_resp = await self.run_queue(queue)

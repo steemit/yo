@@ -21,3 +21,7 @@ class YoBaseService(ABC):
     @abstractmethod
     def init_api(self):
         pass
+
+    @abstractmethod
+    async def async_task(self):
+        pass

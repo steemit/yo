@@ -98,3 +98,6 @@ class YoNotificationSender(YoBaseService):
                 self.yo_app.config.config_data['twilio']['auth_token'],
                 self.yo_app.config.config_data['twilio']['from_number'],
             )
+
+    async def async_task(self):
+        pass

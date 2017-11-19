@@ -122,14 +122,14 @@ class YoAPIServer(YoBaseService):
         yo_db = context['yo_db']
         return yo_db.set_user_transports(username, transports)
 
-    async def async_task(self, yo_app):
-        yo_app.add_api_method(self.api_get_notifications, 'get_notifications')
-        yo_app.add_api_method(self.api_mark_read, 'mark_read')
-        yo_app.add_api_method(self.api_mark_unread, 'mark_unread')
-        yo_app.add_api_method(self.api_mark_shown, 'mark_shown')
-        yo_app.add_api_method(self.api_mark_unshown, 'mark_unshown')
-        yo_app.add_api_method(self.api_get_transports, 'get_transports')
-        yo_app.add_api_method(self.api_set_transports, 'set_transports')
+    async def async_task(self):
+        self.yo_app.add_api_method(self.api_get_notifications, 'get_notifications')
+        self.yo_app.add_api_method(self.api_mark_read, 'mark_read')
+        self.yo_app.add_api_method(self.api_mark_unread, 'mark_unread')
+        self.yo_app.add_api_method(self.api_mark_shown, 'mark_shown')
+        self.yo_app.add_api_method(self.api_mark_unshown, 'mark_unshown')
+        self.yo_app.add_api_method(self.api_get_transports, 'get_transports')
+        self.yo_app.add_api_method(self.api_set_transports, 'set_transports')
 
     def init_api(self):
         pass
