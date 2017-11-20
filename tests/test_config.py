@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from yo import config
 from unittest import mock
 import configparser

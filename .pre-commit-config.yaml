@@ -28,4 +28,3 @@
   hooks:
     - id: remove-tabs
       exclude: Makefile
-

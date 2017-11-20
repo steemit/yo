@@ -1,4 +1,4 @@
-# coding=utf-8
+# -*- coding: utf-8 -*-
 """Renders HTML and plaintext emails for notifications."""
 import os
 

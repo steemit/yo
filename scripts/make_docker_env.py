@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # simple script to make a docker-env from yo.cfg
 # spits out the results to stdout
 import configparser

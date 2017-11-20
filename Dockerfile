@@ -31,7 +31,7 @@ RUN \
         libmysqlclient-dev \
         libssl-dev \
         make \
-        python3 \   
+        python3 \
         python3-dev \
         python3-pip \
         libxml2-dev \
@@ -94,4 +94,3 @@ RUN pipenv run pytest -vv tests
 
 # Expose the HTTP server port
 EXPOSE ${HTTP_SERVER_PORT}
-

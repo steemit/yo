@@ -1,4 +1,4 @@
-# coding=utf-8
+# -*- coding: utf-8 -*-
 """Twilio transport, sends sms"""
 
 import logging

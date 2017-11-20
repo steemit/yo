@@ -3,8 +3,8 @@
 This file contains some example notifications - one for each notification type as returned by the wwwpoll API interface immediately after creation.
 
 ## account_update
-```js   
-        {   
+```js  
+        {  
             "notify_id": "be31a66e-bb6f-11e7-90d4-901b0e968c44",
             "notify_type": "account_update",
             "created": "2017-10-27T01:31:29.382749",
@@ -12,7 +12,7 @@ This file contains some example notifications - one for each notification type a
             "read": false,
             "shown": false,
             "username": "test_user",
-            "data": { 
+            "data": {
                 "account_metadata": {
                      "profile": {
                         "profile_image": "https://www.example.com/test.png",
@@ -27,8 +27,8 @@ This file contains some example notifications - one for each notification type a
 ## comment_reply
 
 
-```js   
-        {   
+```js  
+        {  
             "notify_id": "f4648680-bb73-11e7-8683-901b0e968c44",
             "notify_type": "comment_reply",
             "created": "2017-10-28T00:10:29.523562",
@@ -36,7 +36,7 @@ This file contains some example notifications - one for each notification type a
             "read": false,
             "shown": false,
             "username": "test_user",
-            "data": { 
+            "data": {
                 "account_metadata": {
                      "profile": {
                         "profile_image": "https://www.example.com/test.png",
@@ -59,4 +59,3 @@ This file contains some example notifications - one for each notification type a
 ## resteem
 ## reward
 ## vote
-

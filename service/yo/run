@@ -7,5 +7,5 @@ cd "${APP_ROOT}"
 export HOME=/app
 
 # Run the actual app here
-	exec 2>&1 \
-	     pipenv run python -m yo.cli 2>&1
+    exec 2>&1 \
+         pipenv run python -m yo.cli 2>&1

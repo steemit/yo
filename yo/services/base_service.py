@@ -1,4 +1,4 @@
-# coding=utf-8
+# -*- coding: utf-8 -*-
 """ Base class for other services
 """
 from abc import ABC

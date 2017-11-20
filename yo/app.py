@@ -1,4 +1,4 @@
-# coding=utf-8
+# -*- coding: utf-8 -*-
 import asyncio
 import datetime
 import logging
@@ -52,7 +52,9 @@ class YoApp:
         logger.info('Starting tasks...')
         for k, v in self.service_tasks.items():
             logger.info('Starting %s', k)
-            self.web_app['service_task:%s' % k] = self.web_app.loop.create_task(v())
+            self.web_app['service_task:%s' %
+                         k] = self.web_app.loop.create_task(v())
+
     # pylint: enable=unused-argument
 
     @staticmethod

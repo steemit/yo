@@ -1,4 +1,4 @@
-# coding=utf-8
+# -*- coding: utf-8 -*-
 import asyncio
 import logging
 
@@ -123,7 +123,8 @@ class YoAPIServer(YoBaseService):
         return yo_db.set_user_transports(username, transports)
 
     async def async_task(self):
-        self.yo_app.add_api_method(self.api_get_notifications, 'get_notifications')
+        self.yo_app.add_api_method(self.api_get_notifications,
+                                   'get_notifications')
         self.yo_app.add_api_method(self.api_mark_read, 'mark_read')
         self.yo_app.add_api_method(self.api_mark_unread, 'mark_unread')
         self.yo_app.add_api_method(self.api_mark_shown, 'mark_shown')

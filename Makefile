@@ -6,6 +6,10 @@ PROJECT_NAME := yo
 PROJECT_DOCKER_TAG := steemit/$(PROJECT_NAME)
 PROJECT_DOCKER_RUN_ARGS := -p8080:8080 --env-file .env
 
+GIT_USER := steemit
+GIT_REMOTE_REPO := $(PROJECT_NAME)
+CURRENT_BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
+CURRENT_ISSUE := $(subst 'issue-','', $(CURRENT_BRANCH))
 
 .PHONY: help
 help:
@@ -20,6 +24,17 @@ docker-image: clean ## build docker image
 
 Pipfile.lock:
 	$(shell docker run $(PROJECT_DOCKER_TAG) /bin/bash -c 'pipenv lock && cat Pipfile.lock' > $@)
+
+.PHONY: begin-fix
+begin-fix: ## begin github issue fix: 'make begin-fix issue=99'
+	git checkout master
+	git pull
+	git checkout -b issue-$(issue)
+
+.PHONY: commit-fix
+commit-fix: fmt test pre-commit docker-image Pipfile.lock ## commit fix
+	git commit -am'Fixes $(CURRENT_ISSUE)'
+	git push --set-upstream origin $(CURRENT_BRANCH)
 
 .PHONY: run
 run: .env ## run docker image
@@ -104,4 +119,3 @@ install: clean ## install python app
 .PHONY: install-python-steem-macos
 install-python-steem-macos: ## install steem-python lib on macos using homebrew's openssl
 	env LDFLAGS="-L$(brew --prefix openssl)/lib" CFLAGS="-I$(brew --prefix openssl)/include" pipenv install steem
-
