@@ -236,9 +236,25 @@ class YoDatabase:
         kwargs['table'] = notifications_table
         return self._get_notifications(**kwargs)
 
-    def get_wwwpoll_notifications(self, **kwargs):
-        kwargs['table'] = wwwpoll_table
-        return self._get_notifications(**kwargs)
+    def get_wwwpoll_unsents(self, **kwargs):
+        retval = []
+        with self.db.acquire_conn() as conn:
+             query = notifications_table.join(actions_table).select([notifications_table.c.notify_type,
+                                                                     notifications_table.c.to_username,
+                                                                     notifications_table.c.from_username,
+                                                                     notifications_table.c.json_data,
+                                                                     notifications_table.c.priority_level])
+             query = query.where(actions_table.c.nid == None)
+             select_response = conn.execute(query)
+             retval = {}
+             for row in select_response:
+                 if not row[1] in retval.keys(): retval[row[1]] = []
+                 retval[row[1]].append(dict(row.items()))
+        return retval
+
+   def get_wwwpoll_notififications(self, **kwargs):
+       kwargs['table'] = wwwpoll_table
+       return self._get_notifications(**kwargs)
 
     def _create_notification(self, table=None, **notification):
         with self.acquire_conn() as conn:
