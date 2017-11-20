@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import jsonrpcclient
 
 from jsonrpcclient.http_client import HTTPClient

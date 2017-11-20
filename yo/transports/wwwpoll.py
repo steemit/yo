@@ -1,4 +1,4 @@
-# coding=utf-8
+# -*- coding: utf-8 -*-
 """ wwwpoll transport class
 
     This handles the notifications accessible via the API with polling (as used by condenser).

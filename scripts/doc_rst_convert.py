@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import pypandoc
 pypandoc.convert(
     source='README.md',

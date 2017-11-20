@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from datetime import datetime
 import json
 
@@ -6,18 +7,18 @@ from sqlalchemy import MetaData
 from yo.db import DEFAULT_USER_TRANSPORT_SETTINGS
 
 TEST_USER_TRANSPORT_SETTINGS = {
-                "email": {
-                    "notification_types": ['reward','comment_reply'],
-                    "sub_data": "test@example.com"
-                },
-                "wwwpoll": {
-                    "notification_types": [
-                        "power_down",
-                        "power_up",
+    "email": {
+        "notification_types": ['reward', 'comment_reply'],
+        "sub_data": "test@example.com"
+    },
+    "wwwpoll": {
+        "notification_types": [
+            "power_down",
+            "power_up",
 
-                    ]
-                }
-            }
+        ]
+    }
+}
 
 
 def test_schema_sqlite(sqlite_db):
@@ -32,24 +33,23 @@ def test_schema_sqlite(sqlite_db):
             assert len(response) == 0, '%s should have 0 rows' % table
 
 
-
 def test_create_notification(sqlite_db):
     vote_data = {
         'author': 'testuser1336',
         'weight': 100,
-        'item':   {
-            'author':   'testuser1337',
+        'item': {
+            'author': 'testuser1337',
             'permlink': 'test-post-1',
-            'summary':  'A test post',
+            'summary': 'A test post',
             'category': 'test',
-            'depth':    0
+            'depth': 0
         }
     }
     test_data = {
-        'json_data':     json.dumps(vote_data),
-        'to_username':   'testuser1337',
+        'json_data': json.dumps(vote_data),
+        'to_username': 'testuser1337',
         'from_username': 'testuser1336',
-        'notify_type':   'vote',
+        'notify_type': 'vote',
         'trx_id': '123abc'
     }
 
@@ -57,7 +57,7 @@ def test_create_notification(sqlite_db):
     retval = yo_db.create_notification(**test_data)
     assert retval is True
     result = yo_db.get_notifications(to_username='testuser1337',
-                                               limit=2)
+                                     limit=2)
     assert len(result) == 1
     result = result[0]
 
@@ -75,18 +75,18 @@ def test_create_wwwpoll_notification(sqlite_db):
     vote_data = {
         'author': 'testuser1336',
         'weight': 100,
-        'item':   {
-            'author':   'testuser1337',
+        'item': {
+            'author': 'testuser1337',
             'permlink': 'test-post-1',
-            'summary':  'A test post',
+            'summary': 'A test post',
             'category': 'test',
-            'depth':    0
+            'depth': 0
         }
     }
     test_data = {
-        'json_data':     json.dumps(vote_data),
-        'to_username':   'testuser1337',
-        'notify_type':   'vote'
+        'json_data': json.dumps(vote_data),
+        'to_username': 'testuser1337',
+        'notify_type': 'vote'
     }
 
     yo_db = sqlite_db
@@ -111,27 +111,27 @@ def test_get_notifications(sqlite_db):
     vote_data = {
         'author': 'testuser1336',
         'weight': 100,
-        'item':   {
-            'author':   'testuser1337',
+        'item': {
+            'author': 'testuser1337',
             'permlink': 'test-post-1',
-            'summary':  'A test post',
+            'summary': 'A test post',
             'category': 'test',
-            'depth':    0
+            'depth': 0
         }
     }
     test_data = {
-        'json_data':     json.dumps(vote_data),
-        'to_username':   'testuser1337',
+        'json_data': json.dumps(vote_data),
+        'to_username': 'testuser1337',
         'from_username': 'testuser1336',
-        'notify_type':   'vote',
-        'trx_id':        '123abc'
+        'notify_type': 'vote',
+        'trx_id': '123abc'
     }
 
     yo_db = sqlite_db
     retval = yo_db.create_notification(**test_data)
     assert retval is True
     result = yo_db.get_notifications(to_username='testuser1337',
-                                             limit=2)
+                                     limit=2)
     assert len(result) == 1
     result = result[0]
 
@@ -144,22 +144,23 @@ def test_get_notifications(sqlite_db):
     # notifications only columns
     assert result['trx_id'] == '123abc'
 
+
 def test_get_wwwpoll_notifications(sqlite_db):
     vote_data = {
         'author': 'testuser1336',
         'weight': 100,
-        'item':   {
-            'author':   'testuser1337',
+        'item': {
+            'author': 'testuser1337',
             'permlink': 'test-post-1',
-            'summary':  'A test post',
+            'summary': 'A test post',
             'category': 'test',
-            'depth':    0
+            'depth': 0
         }
     }
     test_data = {
-        'json_data':     json.dumps(vote_data),
-        'to_username':   'testuser1337',
-        'notify_type':   'vote',
+        'json_data': json.dumps(vote_data),
+        'to_username': 'testuser1337',
+        'notify_type': 'vote',
     }
 
     yo_db = sqlite_db
@@ -180,22 +181,22 @@ def test_get_wwwpoll_notifications(sqlite_db):
     assert result['shown'] == False
 
 
-def test_wwpoll_mark_shown (sqlite_db):
+def test_wwpoll_mark_shown(sqlite_db):
     vote_data = {
         'author': 'testuser1336',
         'weight': 100,
-        'item':   {
-            'author':   'testuser1337',
+        'item': {
+            'author': 'testuser1337',
             'permlink': 'test-post-1',
-            'summary':  'A test post',
+            'summary': 'A test post',
             'category': 'test',
-            'depth':    0
+            'depth': 0
         }
     }
     test_data = {
-        'json_data':     json.dumps(vote_data),
-        'to_username':   'testuser1337',
-        'notify_type':   'vote'
+        'json_data': json.dumps(vote_data),
+        'to_username': 'testuser1337',
+        'notify_type': 'vote'
     }
 
     yo_db = sqlite_db
@@ -209,23 +210,24 @@ def test_wwpoll_mark_shown (sqlite_db):
     result = yo_db.get_wwwpoll_notifications(to_username='testuser1337')[0]
     assert result['shown'] is True
 
+
 def test_wwpoll_mark_unshown(sqlite_db):
     vote_data = {
         'author': 'testuser1336',
         'weight': 100,
-        'item':   {
-            'author':   'testuser1337',
+        'item': {
+            'author': 'testuser1337',
             'permlink': 'test-post-1',
-            'summary':  'A test post',
+            'summary': 'A test post',
             'category': 'test',
-            'depth':    0
+            'depth': 0
         }
     }
     test_data = {
-        'json_data':     json.dumps(vote_data),
-        'to_username':   'testuser1337',
-        'notify_type':   'vote',
-        'shown':         True
+        'json_data': json.dumps(vote_data),
+        'to_username': 'testuser1337',
+        'notify_type': 'vote',
+        'shown': True
     }
 
     yo_db = sqlite_db
@@ -239,22 +241,23 @@ def test_wwpoll_mark_unshown(sqlite_db):
     result = yo_db.get_wwwpoll_notifications(to_username='testuser1337')[0]
     assert result['shown'] is False
 
+
 def test_wwpoll_mark_read(sqlite_db):
     vote_data = {
         'author': 'testuser1336',
         'weight': 100,
-        'item':   {
-            'author':   'testuser1337',
+        'item': {
+            'author': 'testuser1337',
             'permlink': 'test-post-1',
-            'summary':  'A test post',
+            'summary': 'A test post',
             'category': 'test',
-            'depth':    0
+            'depth': 0
         }
     }
     test_data = {
-        'json_data':     json.dumps(vote_data),
-        'to_username':   'testuser1337',
-        'notify_type':   'vote'
+        'json_data': json.dumps(vote_data),
+        'to_username': 'testuser1337',
+        'notify_type': 'vote'
     }
 
     yo_db = sqlite_db
@@ -268,23 +271,24 @@ def test_wwpoll_mark_read(sqlite_db):
     result = yo_db.get_wwwpoll_notifications(to_username='testuser1337')[0]
     assert result['read'] is True
 
+
 def test_wwpoll_mark_unread(sqlite_db):
     vote_data = {
         'author': 'testuser1336',
         'weight': 100,
-        'item':   {
-            'author':   'testuser1337',
+        'item': {
+            'author': 'testuser1337',
             'permlink': 'test-post-1',
-            'summary':  'A test post',
+            'summary': 'A test post',
             'category': 'test',
-            'depth':    0
+            'depth': 0
         }
     }
     test_data = {
-        'json_data':     json.dumps(vote_data),
-        'to_username':   'testuser1337',
-        'notify_type':   'vote',
-        'read':         True
+        'json_data': json.dumps(vote_data),
+        'to_username': 'testuser1337',
+        'notify_type': 'vote',
+        'read': True
     }
 
     yo_db = sqlite_db
@@ -298,6 +302,7 @@ def test_wwpoll_mark_unread(sqlite_db):
     result = yo_db.get_wwwpoll_notifications(to_username='testuser1337')[0]
     assert result['read'] is False
 
+
 def test_create_user(sqlite_db):
     yo_db = sqlite_db
     result = yo_db.create_user(username='testuser')
@@ -305,10 +310,12 @@ def test_create_user(sqlite_db):
     transports = yo_db.get_user_transports(username='testuser')
     assert transports == DEFAULT_USER_TRANSPORT_SETTINGS
 
+
 def test_get_user_transports_user_doesnt_exist(sqlite_db):
     yo_db = sqlite_db
     transports = yo_db.get_user_transports(username='testuser')
     assert transports == DEFAULT_USER_TRANSPORT_SETTINGS
+
 
 def test_get_user_transports_user_exists(sqlite_db):
     yo_db = sqlite_db
@@ -316,6 +323,7 @@ def test_get_user_transports_user_exists(sqlite_db):
 
     transports = yo_db.get_user_transports(username='testuser')
     assert transports == TEST_USER_TRANSPORT_SETTINGS
+
 
 def test_set_user_transports(sqlite_db):
     yo_db = sqlite_db
