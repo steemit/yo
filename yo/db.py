@@ -1,4 +1,5 @@
-# -*- coding: utf-8 -*-
+# coding=utf-8
+import datetime
 import enum
 import json
 import logging
@@ -11,7 +12,6 @@ import dateutil.parser
 import sqlalchemy as sa
 from sqlalchemy.engine.url import make_url
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.sql.expression import bindparam
 
 logger = logging.getLogger(__name__)
 
@@ -54,34 +54,29 @@ DEFAULT_USER_TRANSPORT_SETTINGS_STRING = json.dumps(
 wwwpoll_table = sa.Table(
     'yo_wwwpoll',
     metadata,
-    sa.Column(
-        'nid',
-        sa.String(32),
-        primary_key=True,
-        default=lambda: uuid.uuid4().hex),
+    sa.Column('nid', sa.String(36), primary_key=True),
     sa.Column('notify_type', sa.String(20), nullable=False, index=True),
     sa.Column('to_username', sa.String(20), nullable=False, index=True),
-    sa.Column('from_username', sa.String(20), index=True, nullable=True),
-    sa.Column('json_data', sa.UnicodeText),
+    sa.Column('json_data', sa.UnicodeText(1024)),
+
+    # wwwpoll specific columns
     sa.Column(
         'created',
         sa.DateTime,
         default=sa.func.now(),
         nullable=False,
         index=True),
-
-    # wwwpoll specific columns
     sa.Column(
         'updated',
         sa.DateTime,
-        nullable=True,
-        index=True,
-        onupdate=sa.func.now()),
-    sa.Column('read', sa.Boolean, default=False),
-    sa.Column('shown', sa.Boolean, default=False),
-    sa.UniqueConstraint(
-        'to_username', 'notify_type', 'json_data',
-        name='ix_yo_wwwpoll_unique'),
+        default=sa.func.now(),
+        onupdate=sa.func.current_timestamp(),
+        nullable=False,
+        index=True),
+    sa.Column('read', sa.Boolean(), default=False),
+    sa.Column('shown', sa.Boolean(), default=False),
+
+    #    sa.UniqueConstraint('to_username','notify_type','json_data',name='yo_wwwpoll_idx'),
     mysql_engine='InnoDB',
 )
 
@@ -90,47 +85,47 @@ wwwpoll_table = sa.Table(
 notifications_table = sa.Table(
     'yo_notifications',
     metadata,
-    sa.Column(
-        'nid',
-        sa.String(32),
-        primary_key=True,
-        default=lambda: uuid.uuid4().hex),
+    sa.Column('nid', sa.String(36), primary_key=True),
     sa.Column('notify_type', sa.String(20), nullable=False, index=True),
     sa.Column('to_username', sa.String(20), nullable=False, index=True),
     sa.Column('from_username', sa.String(20), index=True, nullable=True),
-    sa.Column('json_data', sa.UnicodeText),
+    sa.Column('json_data', sa.UnicodeText(1024)),
     sa.Column(
         'created',
         sa.DateTime,
         default=sa.func.now(),
         nullable=False,
         index=True),
+    sa.Column(
+        'updated',
+        sa.DateTime,
+        default=sa.func.now(),
+        onupdate=sa.func.current_timestamp(),
+        nullable=False,
+        index=True),
 
     # non-wwwpoll columns
+    sa.Column('priority_level', sa.Integer, index=True, default=3),
+    sa.Column('created_at', sa.DateTime, default=sa.func.now(), index=True),
     sa.Column('trx_id', sa.String(40), index=True, nullable=True),
     sa.UniqueConstraint(
         'to_username',
         'notify_type',
         'trx_id',
         'from_username',
-        'json_data',
-        name='ix_yo_notification_unique'),
+        name='yo_notification_idx'),
     mysql_engine='InnoDB',
 )
 
 actions_table = sa.Table(
     'yo_actions',
     metadata,
-    sa.Column(
-        'aid',
-        sa.BigInteger().with_variant(sa.Integer, "sqlite"),
-        primary_key=True),
-    sa.Column('nid', sa.String(32), nullable=False, index=True),
+    sa.Column('aid', sa.Integer, primary_key=True),
+    sa.Column('nid', None, sa.ForeignKey('yo_notifications.nid')),
     sa.Column('transport', sa.String(20), nullable=False, index=True),
     sa.Column('status', sa.String(20), nullable=False, index=True),
-    sa.Column('created', sa.DateTime, default=sa.func.now(), index=True),
-    sa.UniqueConstraint(
-        'aid', 'nid', 'transport', name='ix_yo_actions_unique'),
+    sa.Column('created_at', sa.DateTime, default=sa.func.now(), index=True),
+    sa.UniqueConstraint('aid', 'nid', 'transport', name='yo_wwwpoll_idx'),
     mysql_engine='InnoDB',
 )
 
@@ -149,8 +144,9 @@ user_settings_table = sa.Table(
         'updated',
         sa.DateTime,
         default=sa.func.now(),
-        index=False,
-        onupdate=sa.func.now()),
+        onupdate=sa.func.current_timestamp(),
+        nullable=False,
+        index=True),
     mysql_engine='InnoDB',
 )
 
@@ -182,7 +178,6 @@ class YoDatabase:
     def backend(self):
         return self.url.get_backend_name()
 
-    # pylint: disable=too-many-arguments
     def _get_notifications(self,
                            table=None,
                            nid=None,
@@ -196,7 +191,7 @@ class YoDatabase:
 
        Keyword args:
           nid(int):            notification id
-          to_username(str):       the username to lookup notifications for
+          username(str):       the username to lookup notifications for
           created_before(str): ISO8601-formatted timestamp
           updated_after(str):  ISO8601-formatted
           read(bool):          if set, only return notifications where the read flag is set to this value
@@ -224,37 +219,18 @@ class YoDatabase:
                 if notify_types:
                     query = query.filter(table.c.notify_type.in_(notify_types))
                 query = query.limit(limit)
-                return list(map(dict, conn.execute(query)))
-
+                return conn.execute(query)
             except BaseException:
                 logger.exception('_get_notifications failed')
         return []
-
-    # pylint: enable=too-many-arguments
 
     def get_notifications(self, **kwargs):
         kwargs['table'] = notifications_table
         return self._get_notifications(**kwargs)
 
-    def get_wwwpoll_unsents(self, **kwargs):
-        retval = []
-        with self.db.acquire_conn() as conn:
-             query = notifications_table.join(actions_table).select([notifications_table.c.notify_type,
-                                                                     notifications_table.c.to_username,
-                                                                     notifications_table.c.from_username,
-                                                                     notifications_table.c.json_data,
-                                                                     notifications_table.c.priority_level])
-             query = query.where(actions_table.c.nid == None)
-             select_response = conn.execute(query)
-             retval = {}
-             for row in select_response:
-                 if not row[1] in retval.keys(): retval[row[1]] = []
-                 retval[row[1]].append(dict(row.items()))
-        return retval
-
-   def get_wwwpoll_notififications(self, **kwargs):
-       kwargs['table'] = wwwpoll_table
-       return self._get_notifications(**kwargs)
+    def get_wwwpoll_notifications(self, **kwargs):
+        kwargs['table'] = wwwpoll_table
+        return self._get_notifications(**kwargs)
 
     def _create_notification(self, table=None, **notification):
         with self.acquire_conn() as conn:
@@ -262,6 +238,7 @@ class YoDatabase:
             try:
                 result = conn.execute(table.insert(), **notification)
                 logger.debug('_create_notification response: %s', result)
+
                 tx.commit()
                 return True
             except (IntegrityError, SQLiteIntegrityError) as e:
@@ -275,107 +252,60 @@ class YoDatabase:
                     tx.rollback()
             except BaseException:
                 tx.rollback()
-                logger.exception('_create_notification failed for %s',
-                                 notification)
+                logger.exception(
+                    '_create_notification failed for %s' % notification)
             return False
 
-    def create_wwwpoll_notification(self, **notification):
-        """ Creates a new notification in wwwpoll table
-
-        Keyword Args:
-            nid(int):
-            notify_type(str):
-            to_username(str):
-            from_username(str):
-            json_data(str):
-            created(datetime):
-            updated(datetime):
-            read(bool):
-            shown(bool):
-
-        Returns:
-            bool:             True on success, False otherwise
-        """
-        table = wwwpoll_table
-        return self._create_notification(table=table, **notification)
-
-    def create_notification(self, **notification):
-        """ Creates a new notification in the notifications table
-
-        Keyword Args:
-            nid(int):
-            notify_type(str):
-            to_username(str):
-            from_username(str):
-            json_data(str):
-            created(datetime):
-            priority_level(int):
-            trx_id(str):
-
-        Returns:
-            bool:             True on success, False otherwise
-        """
-        table = notifications_table
-        return self._create_notification(table=table, **notification)
-
-    def _wwwpoll_mark(self, nid, name, value):
-        logger.debug('wwwpoll_mark_%s: marking %s as %s', name, nid, value)
+    def wwwpoll_mark_shown(self, nid):
+        logger.debug('wwwpoll: marking %s as shown', nid)
         with self.acquire_conn() as conn:
             try:
-                # pylint: disable=no-value-for-parameter
-                query = wwwpoll_table.update().where(
-                    wwwpoll_table.c.nid == nid).values(**{
-                        name: value
-                    })
-                # pylint: enable=no-value-for-parameter
+                query = wwwpoll_table.update() \
+                    .where(wwwpoll_table.c.nid == nid) \
+                    .values(shown=True)
                 conn.execute(query)
                 return True
             except BaseException:
-                logger.exception('wwwpoll_mark_%s failed', name)
+                logger.exception('wwwpoll_mark_shown failed')
         return False
-
-    def wwwpoll_mark_shown(self, nid):
-        return self._wwwpoll_mark(nid, 'shown', True)
 
     def wwwpoll_mark_unshown(self, nid):
-        return self._wwwpoll_mark(nid, 'shown', False)
-
-    def wwwpoll_mark_read(self, nid):
-        return self._wwwpoll_mark(nid, 'read', True)
-
-    def wwwpoll_mark_unread(self, nid):
-        return self._wwwpoll_mark(nid, 'read', False)
-
-    def mark_noitification_sent(self, nid):
-        logger.debug('mark_notification_sent: marking %s as sent', nid)
+        logger.debug('wwwpoll: marking %s as unshown', nid)
         with self.acquire_conn() as conn:
             try:
-                # pylint: disable=no-value-for-parameter
-                query = notifications_table.update().where(
-                    notifications_table.c.nid == nid).values(sent=True)
-                # pylint: enable=no-value-for-parameter
+                query = wwwpoll_table.update() \
+                    .where(wwwpoll_table.c.nid == nid) \
+                    .values(shown=False)
                 conn.execute(query)
                 return True
             except BaseException:
-                logger.exception(
-                    'mark_notification_sent: marking %s as sent failed', nid)
+                logger.exception('wwwpoll_mark_unshown failed')
         return False
 
-    def mark_notifications_sent(self, nids):
-        logger.debug('mark_notification_sent: marking %s as sent', nids)
+    def wwwpoll_mark_read(self, nid):
+        logger.debug('wwwpoll: marking %s as read', nid)
         with self.acquire_conn() as conn:
             try:
-                # pylint: disable=no-value-for-parameter
-                stmt = notifications_table.update().where(
-                    notifications_table.c.nid in bindparam('nid')).values(
-                        sent=True)
-                # pylint: enable=no-value-for-parameter
-                values = [{'nid': nid} for nid in nids]
-                conn.execute(stmt, values)
+                query = wwwpoll_table.update() \
+                    .where(wwwpoll_table.c.nid == nid) \
+                    .values(read=True)
+                conn.execute(query)
                 return True
             except BaseException:
-                logger.exception(
-                    'mark_notification_sent: marking %s as sent failed', nids)
+                logger.exception('wwwpoll_mark_read failed')
+        return False
+
+    def wwwpoll_mark_unread(self, nid):
+        logger.debug('wwwpoll: marking %s as unread', nid)
+        with self.acquire_conn() as conn:
+            try:
+                query = wwwpoll_table.update() \
+                    .where(wwwpoll_table.c.nid == nid) \
+                    .values(read=False)
+                conn.execute(query)
+                return True
+            except BaseException:
+                logger.exception('wwwpoll_mark_unread failed')
         return False
 
     def create_user(self, username, transports=None):
@@ -386,9 +316,7 @@ class YoDatabase:
         user_settings_data = {'username': username, 'transports': transports}
         with self.acquire_conn() as conn:
             try:
-                # pylint: disable=no-value-for-parameter
-                stmt = user_settings_table.insert().values(user_settings_data)
-                # pylint: enable=no-value-for-parameter
+                stmt = user_settings_table.insert(values=user_settings_data)
                 _ = conn.execute(stmt)
                 return True
             except BaseException:
@@ -411,8 +339,8 @@ class YoDatabase:
                 query = user_settings_table.select().where(
                     user_settings_table.c.username == username)
                 select_response = conn.execute(query)
-                results = select_response.first()
-                if results:
+                results = select_response.fetchone()
+                if not (results is None):
                     json_settings = results['transports']
                     return json.loads(json_settings)
                 else:
@@ -438,20 +366,150 @@ class YoDatabase:
             # user exists
             # user doesnt exist
             try:
-                # pylint: disable=no-value-for-parameter
                 stmt = user_settings_table.update().where(
                     user_settings_table.c.username == username). \
                     values(transports=json.dumps(transports))
-                # pylint: enable=no-value-for-parameter
                 result = conn.execute(stmt).first()
                 logger.debug('set_user_transpors update result: %s', result)
                 return transports
-            except Exception:
+            except Exception as e:
                 logger.exception(
-                    'Exception occurred trying to update transports for user %s to %s',
-                    username, str(transports))
+                    'Exception occurred trying to update transports for user %s to %s'
+                    % (username, str(transports)))
                 result = self.create_user(username, transports=transports)
-                logger.debug('set_user_transpors insert result: %s', result)
+                logger.debug('set_user_transports insert result: %s', result)
                 if result:
                     return transports
-            return False
+                return None
+
+    def get_priority_count(self,
+                           to_username,
+                           priority,
+                           timeframe,
+                           start_time=None):
+        """Returns count of notifications to a user of a set priority or higher
+
+       This is used to implement the rate limits
+
+       Args:
+           to_username(str): The username to lookup
+           priority(int):    The priority level to lookup
+           timeframe(int):   The timeframe in seconds to check
+
+       Keyword args:
+           start_time(datetime.datetime): the current time to go backwards from, if not set datetime.now() will be used
+
+       Returns:
+           An integer count of the number of notifications sent to the specified user within the specified timeframe of that priority level or higher
+           :param timeframe:
+           :param priority:
+           :param to_username:
+           :param start_time:
+       """
+        if start_time is None:
+            start_time = datetime.datetime.now() - datetime.timedelta(
+                seconds=timeframe)
+        retval = 0
+        with self.acquire_conn() as conn:
+            try:
+                query = notifications_table.select().where(
+                    notifications_table.c.to_username == to_username)
+                query = query.where(
+                    notifications_table.c.priority_level >= priority)
+                query = query.where(notifications_table.c.sent == True)
+                query = query.where(
+                    notifications_table.c.sent_at >= start_time)
+                select_response = conn.execute(query)
+                retval = select_response.rowcount
+            except BaseException:
+                logger.exception('Exception occurred!')
+        return retval
+
+    def create_wwwpoll_notification(self,
+                                    notify_id=None,
+                                    notify_type=None,
+                                    created_time=None,
+                                    raw_data={},
+                                    to_username=None,
+                                    shown=False,
+                                    read=False):
+        """ Creates a new notification in the wwwpoll table
+
+        Keyword Args:
+           notify_id(str):    if not provided, will be autogenerated as a UUID
+           notify_type(str):  the notification type
+           created_time(str): ISO8601-formatted timestamp, if not set current time will be used
+           raw_data(dict):    what to include in the data field of the stored notification, will be JSON-serialised for storage
+           to_user(str):      the username we're sending to
+           shown(bool):       whether or not the notification should start marked as shown (default False)
+           read(bool):       whether or not the notification should start marked as shown (default False)
+
+        Returns:
+           dict: the notification as stored in wwwpoll, None on error
+        """
+
+        if notify_id is None:
+            notify_id = str(uuid.uuid4)
+        if created_time is None:
+            created_time = datetime.datetime.now()
+        notification = {
+            'nid': notify_id,
+            'notify_type': notify_type,
+            'created': created_time,
+            'updated': created_time,
+            'to_username': to_username,
+            'shown': shown,
+            'read': read
+        }
+        raw_data_json = json.dumps(raw_data)
+        notification['json_data'] = raw_data
+        with self.acquire_conn() as conn:
+            success = False
+            tx = conn.begin()
+            try:
+                insert_response = conn.execute(wwwpoll_table.insert(),
+                                               **notification)
+                tx.commit()
+                return True
+            except (IntegrityError, SQLiteIntegrityError) as e:
+                if is_duplicate_entry_error(e):
+                    logger.debug('Ignoring duplicate entry error')
+                    return True
+                else:
+                    logger.exception('failed to add notification')
+                    tx.rollback()
+                    return False
+            except BaseException:
+                tx.rollback()
+                logger.exception(
+                    'Failed to create new wwwpoll notification object: %s' %
+                    notification)
+                return False
+
+    def create_notification(self, **notification_object):
+        """ Creates an unsent notification in the DB
+
+        Keyword Args:
+           notification_object(dict): the actual notification to create+store
+
+        Returns:
+          True on success, False on error
+        """
+        if not 'nid' in notification_object.keys():
+            notification_object['nid'] = str(uuid.uuid4())
+        with self.acquire_conn() as conn:
+            tx = conn.begin()
+            try:
+                _ = conn.execute(notifications_table.insert(),
+                                 **notification_object)
+                tx.commit()
+                logger.debug('Created new notification object: %s',
+                             notification_object)
+                return True
+            except Exception as e:
+                if is_duplicate_entry_error(e):
+                    logger.debug('Ignoring duplicate entry error')
+                else:
+                    logger.exception('failed to add notification')
+                    tx.rollback()
+        return False
