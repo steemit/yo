@@ -233,6 +233,22 @@ class YoDatabase:
         kwargs['table'] = wwwpoll_table
         return self._get_notifications(**kwargs)
 
+    def get_wwwpoll_unsents(self):
+        retval = {}
+        with self.acquire_conn() as conn:
+             query = notifications_table.join(actions_table).select([notifications_table.c.notify_type,
+                                                                     notifications_table.c.to_username,
+                                                                     notifications_table.c.from_username,
+                                                                     notifications_table.c.json_data,
+                                                                     notifications_table.c.priority_level])
+             query = query.where(actions_table.c.nid == None)
+             select_response = conn.execute(query)
+             
+             for row in select_response:
+                 if not row[1] in retval.keys(): retval[row[1]] = []
+                 retval[row[1]].append(dict(row.items()))
+        return retval
+
     def _create_notification(self, table=None, **notification):
         with self.acquire_conn() as conn:
             tx = conn.begin()
@@ -366,22 +382,20 @@ class YoDatabase:
         with self.acquire_conn() as conn:
             # user exists
             # user doesnt exist
+            success = False
             try:
                 stmt = user_settings_table.update().where(
                     user_settings_table.c.username == username). \
                     values(transports=json.dumps(transports))
-                result = conn.execute(stmt).first()
-                logger.debug('set_user_transpors update result: %s', result)
-                return transports
+                success = False
             except Exception as e:
                 logger.exception(
                     'Exception occurred trying to update transports for user %s to %s'
                     % (username, str(transports)))
                 result = self.create_user(username, transports=transports)
                 logger.debug('set_user_transports insert result: %s', result)
-                if result:
-                    return transports
-                return None
+                if result: success = True
+            return success
 
     def get_priority_count(self,
                            to_username,
