@@ -219,7 +219,7 @@ class YoDatabase:
                 if notify_types:
                     query = query.filter(table.c.notify_type.in_(notify_types))
                 query = query.limit(limit)
-                return conn.execute(query)
+                return conn.execute(query).fetchall() # DO NOT remove - if you do things WILL break
             except BaseException:
                 logger.exception('_get_notifications failed')
         return []
