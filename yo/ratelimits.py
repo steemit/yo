@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 import logging
 
-from .db import Priority
+#from .db import Priority
 
 logger = logging.getLogger(__name__)
 
 
 # pylint: disable=too-many-branches
+# pylint: disable-msg=unused-argument
 def check_ratelimit(db, notification_object, override=False):
     """Checks if this notification should be sent or not
 
