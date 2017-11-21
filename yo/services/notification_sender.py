@@ -30,9 +30,10 @@ class YoNotificationSender(YoBaseService):
 
     async def run_send_notify(self):
         unsents = self.db.get_wwwpoll_unsents()
+        logger.info('run_send_notify() handling %s unsents', str(len(unsents)))
 
         for username, notifications in unsents.items():
-            logger.debug(
+            logger.info(
                 'run_send_notify() handling user %s with %d notifications' %
                 (username, len(notifications)))
             user_transports = self.db.get_user_transports(username)
@@ -46,13 +47,13 @@ class YoNotificationSender(YoBaseService):
                         (transport_name, transport_data['sub_data']))
             for notification in notifications:
                 if not check_ratelimit(self.db, notification):
-                    logger.debug(
+                    logger.info(
                         'Skipping notification for failing rate limit check: %s'
                         % str(notification))
                     continue
                 for t in user_notify_types_transports[notification[
                         'notify_type']]:
-                    logger.debug('Sending notification %s to transport %s' %
+                    logger.info('Sending notification %s to transport %s' %
                                  (str(notification), str(t[0])))
                     self.configured_transports[t[0]].send_notification(
                         to_subdata=t[1],
