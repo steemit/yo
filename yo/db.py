@@ -160,7 +160,8 @@ def is_duplicate_entry_error(error):
         return "unique" in msg
     return False
 
-#pylint: disable-msg=no-value-for-parameter
+
+# pylint: disable-msg=no-value-for-parameter
 class YoDatabase:
     def __init__(self, db_url=None):
         self.db_url = db_url
@@ -278,7 +279,8 @@ class YoDatabase:
                     tx.rollback()
             except BaseException:
                 tx.rollback()
-                logger.exception('_create_notification failed for %s', notification)
+                logger.exception('_create_notification failed for %s',
+                                 notification)
             return False
 
     def wwwpoll_mark_shown(self, nid):
@@ -347,8 +349,8 @@ class YoDatabase:
                 stmt = user_settings_table.insert(values=user_settings_data)
                 _ = conn.execute(stmt)
                 if _ is not None:
-                    logger.info('Created user %s with settings %s',
-                                username, json.dumps(transports))
+                    logger.info('Created user %s with settings %s', username,
+                                json.dumps(transports))
                     success = True
             except BaseException:
                 logger.exception('create_user failed')
@@ -517,6 +519,7 @@ class YoDatabase:
                     'Failed to create new wwwpoll notification object: %s',
                     notification)
         return success
+
     def create_notification(self, **notification_object):
         """ Creates an unsent notification in the DB
 

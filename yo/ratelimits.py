@@ -23,6 +23,8 @@ def check_ratelimit(db, notification_object, override=False):
         :param db:
     """
     return True  # TODO - undo this
+
+
 #    notification_priority = notification_object['priority_level']
 #    to_username = notification_object['to_username']
 #

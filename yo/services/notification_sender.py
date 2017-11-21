@@ -34,27 +34,26 @@ class YoNotificationSender(YoBaseService):
 
         for username, notifications in unsents.items():
             logger.info(
-                'run_send_notify() handling user %s with %d notifications' %
-                (username, len(notifications)))
+                'run_send_notify() handling user %s with %d notifications',
+                username, len(notifications))
             user_transports = self.db.get_user_transports(username)
             user_notify_types_transports = {}
             for transport_name, transport_data in user_transports.items():
                 for notify_type in transport_data['notification_types']:
-                    if not (notify_type in user_notify_types_transports.keys()
-                            ):
+                    if notify_type not in user_notify_types_transports.keys():
                         user_notify_types_transports[notify_type] = []
                     user_notify_types_transports[notify_type].append(
                         (transport_name, transport_data['sub_data']))
             for notification in notifications:
                 if not check_ratelimit(self.db, notification):
                     logger.info(
-                        'Skipping notification for failing rate limit check: %s'
-                        % str(notification))
+                        'Skipping notification for failing rate limit check: %s',
+                        str(notification))
                     continue
                 for t in user_notify_types_transports[notification[
                         'notify_type']]:
-                    logger.info('Sending notification %s to transport %s' %
-                                (str(notification), str(t[0])))
+                    logger.info('Sending notification %s to transport %s',
+                                str(notification), str(t[0]))
                     self.configured_transports[t[0]].send_notification(
                         to_subdata=t[1],
                         to_username=username,
@@ -63,7 +62,7 @@ class YoNotificationSender(YoBaseService):
 
     def init_api(self):
         self.private_api_methods[
-            'trigger_notifications'] = self.api_trigger_notification
+            'trigger_notifications'] = self.api_trigger_notifications
         if self.yo_app.config.config_data['wwwpoll'].getint('enabled', 1):
             logger.info('Enabling wwwpoll transport')
             self.configured_transports['wwwpoll'] = wwwpoll.WWWPollTransport(
