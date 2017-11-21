@@ -54,7 +54,7 @@ class YoNotificationSender(YoBaseService):
                 for t in user_notify_types_transports[notification[
                         'notify_type']]:
                     logger.info('Sending notification %s to transport %s' %
-                                 (str(notification), str(t[0])))
+                                (str(notification), str(t[0])))
                     self.configured_transports[t[0]].send_notification(
                         to_subdata=t[1],
                         to_username=username,

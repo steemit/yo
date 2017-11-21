@@ -223,7 +223,8 @@ class YoDatabase:
                     query = query.filter(table.c.notify_type.in_(notify_types))
                 query = query.limit(limit)
                 resp = conn.execute(query)
-                if not (resp is None): return resp.fetchall()
+                if not (resp is None):
+                    return resp.fetchall()
             except BaseException:
                 logger.exception('_get_notifications failed')
         return []
@@ -239,16 +240,19 @@ class YoDatabase:
     def get_wwwpoll_unsents(self):
         retval = {}
         with self.acquire_conn() as conn:
-            query = notifications_table.select()
-            #    actions_table).select()  # [notifications_table.c.notify_type,
-            # notifications_table.c.to_username,
-            # notifications_table.c.from_username,
-            # notifications_table.c.json_data,
-            # notifications_table.c.priority_level])
-            #             query = query.where(actions_table.c.nid == None)
-            select_response = conn.execute(query)
+            query = sa.sql.select([notifications_table.c.nid])
+            query = query.except_(
+                sa.sql.select([
+                    actions_table.c.nid
+                ]).where(actions_table.c.nid == notifications_table.c.nid))
+            select_response = conn.execute(query).fetchall()
+            logger.info(str(select_response))
 
-            for row in select_response.fetchall():
+            for nid in select_response:
+                row = conn.execute(
+                    sa.sql.select([
+                        notifications_table
+                    ]).where(notifications_table.c.nid == nid[0])).fetchone()
                 if not row['to_username'] in retval.keys():
                     retval[row['to_username']] = []
                 retval[row['to_username']].append(dict(row.items()))
@@ -344,9 +348,9 @@ class YoDatabase:
                 stmt = user_settings_table.insert(values=user_settings_data)
                 _ = conn.execute(stmt)
                 if not (_ is None):
-                   logger.info('Created user %s with settings %s' %
-                               (username, json.dumps(transports)))
-                   success = True
+                    logger.info('Created user %s with settings %s' %
+                                (username, json.dumps(transports)))
+                    success = True
             except BaseException:
                 logger.exception('create_user failed')
                 success = False
@@ -378,10 +382,10 @@ class YoDatabase:
             except BaseException:
                 logger.exception('get_user_transports failed')
         if (retval is None) and (not retry):
-           if self.create_user(username):
-              return self.get_user_transports(username=username,retry=True)
-           else:
-              logger.error('get_user_transports failed')
+            if self.create_user(username):
+                return self.get_user_transports(username=username, retry=True)
+            else:
+                logger.error('get_user_transports failed')
         return retval
 
     def set_user_transports(self, username=None, transports=None):
@@ -406,9 +410,9 @@ class YoDatabase:
                     'Exception occurred trying to update transports for user %s to %s'
                     % (username, str(transports)))
         if not success:
-           result = self.create_user(username, transports=transports)
-           if result:
-              success = True
+            result = self.create_user(username, transports=transports)
+            if result:
+                success = True
         return success
 
     def get_priority_count(self,
@@ -535,7 +539,7 @@ class YoDatabase:
                                  **notification_object)
                 tx.commit()
                 logger.info('Created new notification object: %s',
-                             notification_object)
+                            notification_object)
                 return True
             except Exception as e:
                 if is_duplicate_entry_error(e):
