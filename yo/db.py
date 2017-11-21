@@ -223,7 +223,7 @@ class YoDatabase:
                     query = query.filter(table.c.notify_type.in_(notify_types))
                 query = query.limit(limit)
                 resp = conn.execute(query)
-                if not (resp is None):
+                if resp is not None:
                     return resp.fetchall()
             except BaseException:
                 logger.exception('_get_notifications failed')
@@ -278,8 +278,7 @@ class YoDatabase:
                     tx.rollback()
             except BaseException:
                 tx.rollback()
-                logger.exception(
-                    '_create_notification failed for %s' % notification)
+                logger.exception('_create_notification failed for %s', notification)
             return False
 
     def wwwpoll_mark_shown(self, nid):
@@ -335,7 +334,7 @@ class YoDatabase:
         return False
 
     def create_user(self, username, transports=None):
-        logger.info('Creating user %s' % username)
+        logger.info('Creating user %s', username)
         if transports is None:
             transports = DEFAULT_USER_TRANSPORT_SETTINGS
         user_settings_data = {
@@ -347,9 +346,9 @@ class YoDatabase:
             try:
                 stmt = user_settings_table.insert(values=user_settings_data)
                 _ = conn.execute(stmt)
-                if not (_ is None):
-                    logger.info('Created user %s with settings %s' %
-                                (username, json.dumps(transports)))
+                if _ is not None:
+                    logger.info('Created user %s with settings %s',
+                                username, json.dumps(transports))
                     success = True
             except BaseException:
                 logger.exception('create_user failed')
@@ -374,7 +373,7 @@ class YoDatabase:
                     user_settings_table.c.username == username)
                 select_response = conn.execute(query)
                 results = select_response.fetchone()
-                if not (results is None):
+                if results is not None:
                     json_settings = results['transports']
                     retval = json.loads(json_settings)
                 else:
@@ -405,10 +404,10 @@ class YoDatabase:
                     values(transports=json.dumps(transports))
                 result = conn.execute(stmt).fetchone()
                 success = True
-            except sa.exc.SQLAlchemyError as e:
+            except sa.exc.SQLAlchemyError:
                 logger.info(
-                    'Exception occurred trying to update transports for user %s to %s'
-                    % (username, str(transports)))
+                    'Exception occurred trying to update transports for user %s to %s',
+                    username, str(transports))
         if not success:
             result = self.create_user(username, transports=transports)
             if result:
@@ -449,7 +448,7 @@ class YoDatabase:
                     notifications_table.c.to_username == to_username)
                 query = query.where(
                     notifications_table.c.priority_level >= priority)
-                query = query.where(notifications_table.c.sent == True)
+                query = query.where(notifications_table.c.sent)
                 query = query.where(
                     notifications_table.c.sent_at >= start_time)
                 select_response = conn.execute(query)
