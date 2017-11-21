@@ -160,7 +160,7 @@ def is_duplicate_entry_error(error):
         return "unique" in msg
     return False
 
-
+#pylint: disable-msg=no-value-for-parameter
 class YoDatabase:
     def __init__(self, db_url=None):
         self.db_url = db_url
@@ -497,29 +497,26 @@ class YoDatabase:
             'json_data': json_data,
             'read': read
         }
+        success = False
         with self.acquire_conn() as conn:
-            success = False
             tx = conn.begin()
             try:
-                insert_response = conn.execute(wwwpoll_table.insert(),
-                                               **notification)
+                conn.execute(wwwpoll_table.insert(), **notification)
                 tx.commit()
-                return True
+                success = True
             except (IntegrityError, SQLiteIntegrityError) as e:
                 if is_duplicate_entry_error(e):
                     logger.debug('Ignoring duplicate entry error')
-                    return True
+                    success = True
                 else:
                     logger.exception('failed to add notification')
                     tx.rollback()
-                    return False
             except BaseException:
                 tx.rollback()
                 logger.exception(
-                    'Failed to create new wwwpoll notification object: %s' %
+                    'Failed to create new wwwpoll notification object: %s',
                     notification)
-                return False
-
+        return success
     def create_notification(self, **notification_object):
         """ Creates an unsent notification in the DB
 
@@ -529,7 +526,7 @@ class YoDatabase:
         Returns:
           True on success, False on error
         """
-        if not 'nid' in notification_object.keys():
+        if 'nid' not in notification_object.keys():
             notification_object['nid'] = str(uuid.uuid4())
         with self.acquire_conn() as conn:
             tx = conn.begin()
