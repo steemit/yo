@@ -23,7 +23,8 @@ class MockTransport(base_transport.BaseTransport):
    def __init__(self):
        self.received_by_user = {}
    def send_notification(self,to_subdata=None,to_username=None,notify_type=None,data=None):
-       seld.received_by_user[to_username] = (to_subdata,notify_type,data)
+       print((to_subdata,to_username,notify_type,data))
+       self.received_by_user[to_username] = (to_subdata,notify_type,data)
 
 @pytest.mark.asyncio
 async def test_vote_flow(sqlite_db):
@@ -55,6 +56,8 @@ async def test_vote_flow(sqlite_db):
 
     # since we don't run stuff in the background in test suite, manually invoke the notification sender
     await sender.api_trigger_notifications()
+
+    print(mock_tx.received_by_user.items())
 
     # test it got through to our mock transport for testupvoted only
     assert 'testupvoted' in mock_tx.received_by_user.keys()

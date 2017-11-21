@@ -1,10 +1,10 @@
 # coding=utf-8
 import datetime
-import enum
 import json
 import logging
 import uuid
 from contextlib import contextmanager
+from enum import Enum
 from sqlite3 import IntegrityError as SQLiteIntegrityError
 
 import dateutil
@@ -24,7 +24,7 @@ NOTIFY_TYPES = ('power_down', 'power_up', 'resteem', 'feed', 'reward', 'send',
 TRANSPORT_TYPES = ('email', 'sms', 'wwwpoll', 'mock')
 
 
-class Priority(enum.Enum):
+class Priority(Enum):
     MARKETING = 1
     LOW = 2
     NORMAL = 3
@@ -57,7 +57,9 @@ wwwpoll_table = sa.Table(
     sa.Column('nid', sa.String(36), primary_key=True),
     sa.Column('notify_type', sa.String(20), nullable=False, index=True),
     sa.Column('to_username', sa.String(20), nullable=False, index=True),
-    sa.Column('from_username', sa.String(20), nullable=False, index=True), # TODO - do we actually need this? @jg please discuss as you keep adding references to this field
+    sa.Column(
+        'from_username', sa.String(20), nullable=False, index=True
+    ),  # TODO - do we actually need this? @jg please discuss as you keep adding references to this field
     sa.Column('json_data', sa.UnicodeText(1024)),
 
     # wwwpoll specific columns
@@ -220,7 +222,8 @@ class YoDatabase:
                 if notify_types:
                     query = query.filter(table.c.notify_type.in_(notify_types))
                 query = query.limit(limit)
-                return conn.execute(query).fetchall() # DO NOT remove - if you do things WILL break
+                return conn.execute(query).fetchall(
+                )  # DO NOT remove - if you do things WILL break
             except BaseException:
                 logger.exception('_get_notifications failed')
         return []
@@ -236,17 +239,19 @@ class YoDatabase:
     def get_wwwpoll_unsents(self):
         retval = {}
         with self.acquire_conn() as conn:
-             query = notifications_table.join(actions_table).select([notifications_table.c.notify_type,
-                                                                     notifications_table.c.to_username,
-                                                                     notifications_table.c.from_username,
-                                                                     notifications_table.c.json_data,
-                                                                     notifications_table.c.priority_level])
-             query = query.where(actions_table.c.nid == None)
-             select_response = conn.execute(query)
-             
-             for row in select_response:
-                 if not row[1] in retval.keys(): retval[row[1]] = []
-                 retval[row[1]].append(dict(row.items()))
+            query = notifications_table.join(
+                actions_table).select()  # [notifications_table.c.notify_type,
+            # notifications_table.c.to_username,
+            # notifications_table.c.from_username,
+            # notifications_table.c.json_data,
+            # notifications_table.c.priority_level])
+            #             query = query.where(actions_table.c.nid == None)
+            select_response = conn.execute(query)
+
+            for row in select_response:
+                if not row[1] in retval.keys():
+                    retval[row[1]] = []
+                retval[row[1]].append(dict(row.items()))
         return retval
 
     def _create_notification(self, table=None, **notification):
@@ -326,19 +331,25 @@ class YoDatabase:
         return False
 
     def create_user(self, username, transports=None):
-        if transports:
-            transports = json.dumps(transports)
-        else:
-            transports = DEFAULT_USER_TRANSPORT_SETTINGS_STRING
-        user_settings_data = {'username': username, 'transports': transports}
+        logger.info('Creating user %s' % username)
+        if transports is None:
+            transports = DEFAULT_USER_TRANSPORT_SETTINGS
+        user_settings_data = {
+            'username': username,
+            'transports': json.dumps(transports)
+        }
+        success = False
         with self.acquire_conn() as conn:
             try:
                 stmt = user_settings_table.insert(values=user_settings_data)
                 _ = conn.execute(stmt)
-                return True
+                logger.info('Created user %s with settings %s' %
+                            (username, json.dumps(transports)))
+                success = True
             except BaseException:
                 logger.exception('create_user failed')
-            return False
+                success = False
+        return success
 
     def get_user_transports(self, username=None):
         """Returns the JSON object representing user's configured transports
@@ -351,6 +362,7 @@ class YoDatabase:
        Returns:
           dict: the transports configured for the user
        """
+        retval = None
         with self.acquire_conn() as conn:
             try:
                 query = user_settings_table.select().where(
@@ -359,18 +371,20 @@ class YoDatabase:
                 results = select_response.fetchone()
                 if not (results is None):
                     json_settings = results['transports']
-                    return json.loads(json_settings)
+                    retval = json.loads(json_settings)
                 else:
                     logger.info(
                         'get_user_transports no user found, creating new user')
-                    self.create_user(username)
-                    select_response = conn.execute(query)
-                    results = select_response.fetchone()
-                    json_settings = results['transports']
-                    return json.loads(json_settings)
+                    if self.create_user(username):
+                        select_response = conn.execute(query)
+                        results = select_response.fetchone()
+                        json_settings = results['transports']
+                        retval = json.loads(json_settings)
+                    else:
+                        logger.error('get_user_transports failed')
             except BaseException:
                 logger.exception('get_user_transports failed')
-            return False
+            return retval
 
     def set_user_transports(self, username=None, transports=None):
         """ Sets the JSON object representing user's configured transports
@@ -387,15 +401,18 @@ class YoDatabase:
                 stmt = user_settings_table.update().where(
                     user_settings_table.c.username == username). \
                     values(transports=json.dumps(transports))
-                success = False
+                result = conn.execute(stmt)
+                logger.info('result from insert: %s' % str(result.fetchall()))
+                success = True
             except Exception as e:
                 logger.exception(
                     'Exception occurred trying to update transports for user %s to %s'
                     % (username, str(transports)))
                 result = self.create_user(username, transports=transports)
-                logger.debug('set_user_transports insert result: %s', result)
-                if result: success = True
-            return success
+                logger.info('set_user_transports insert result: %s', result)
+                if result:
+                    success = True
+        return success
 
     def get_priority_count(self,
                            to_username,
@@ -473,7 +490,8 @@ class YoDatabase:
             'notify_type': notify_type,
             'created': created_time,
             'updated': created_time,
-            'from_username': from_username, # TODO - does this field even make sense for the wwwpoll table?
+            'from_username':
+            from_username,  # TODO - does this field even make sense for the wwwpoll table?
             'to_username': to_username,
             'shown': shown,
             'json_data': json_data,

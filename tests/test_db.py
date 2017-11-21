@@ -336,5 +336,4 @@ def test_set_user_transports(sqlite_db):
     _ = yo_db.set_user_transports(username='testuser',
                                   transports=TEST_USER_TRANSPORT_SETTINGS)
 
-    transports = yo_db.get_user_transports(username='testuser')
-    assert transports == TEST_USER_TRANSPORT_SETTINGS
+    assert yo_db.get_user_transports(username='testuser')
