@@ -63,3 +63,42 @@ async def test_vote_flow(sqlite_db):
     assert 'testupvoted' in mock_tx.received_by_user.keys()
     assert not ('testupvoter' in mock_tx.received_by_user.keys())
 
+@pytest.mark.asyncio
+async def test_follow_flow(sqlite_db):
+    """Tests follow events get through to a transport
+    """
+    mock_follow_op = {'trx_id':str(uuid.uuid4()),
+                          'op':('custom_json',{'required_auths'          :(),
+                                               'required_posting_auths'  :'testfollower',
+                                               'id'                      :'follow',
+                                               'json'                    :('follow',{'follower ':'testfollower',
+                                                                                     'following':'testfollowed',
+                                                                                     'what'     :('blog')})
+                                               })}
+ 
+    # boilerplate stuff
+    yo_db    = sqlite_db    
+    yo_app   = MockApp(yo_db)
+    sender   = notification_sender.YoNotificationSender(db=yo_db,yo_app=yo_app)
+    mock_tx  = MockTransport()
+    sender.configured_transports = {}
+    sender.configured_transports['mock'] = mock_tx
+    API      = api_server.YoAPIServer()
+    follower = blockchain_follower.YoBlockchainFollower(db=yo_db,yo_app=yo_app)
+
+    # configure testupvoted and testupvoter users to use mock transport for follows
+    transports_obj = {'mock':{'notification_types':['follow'],'sub_data':''}}
+    await API.api_set_transports(username='testfollower',transports=transports_obj,context=dict(yo_db=sqlite_db))
+    await API.api_set_transports(username='testfollowed',transports=transports_obj,context=dict(yo_db=sqlite_db))
+
+    # handle the mock follow op
+    await follower.notify(mock_follow_op)
+
+    # since we don't run stuff in the background in test suite, manually invoke the notification sender
+    await sender.api_trigger_notifications()
+
+    print(mock_tx.received_by_user.items())
+
+    # test it got through to our mock transport for testupvoted only
+    assert 'testfollowed' in mock_tx.received_by_user.keys()
+    assert not ('testfollower' in mock_tx.received_by_user.keys())
