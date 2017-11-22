@@ -4,7 +4,7 @@ import json
 import logging
 import uuid
 from contextlib import contextmanager
-from enum import Enum
+from enum import IntFlag
 from sqlite3 import IntegrityError as SQLiteIntegrityError
 
 import dateutil
@@ -24,7 +24,7 @@ NOTIFY_TYPES = ('power_down', 'power_up', 'resteem', 'feed', 'reward', 'send',
 TRANSPORT_TYPES = ('email', 'sms', 'wwwpoll')
 
 
-class Priority(Enum):
+class Priority(IntFlag):
     MARKETING = 1
     LOW = 2
     NORMAL = 3
