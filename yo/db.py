@@ -21,7 +21,7 @@ NOTIFY_TYPES = ('power_down', 'power_up', 'resteem', 'feed', 'reward', 'send',
                 'mention', 'follow', 'vote', 'comment_reply', 'post_reply',
                 'account_update', 'message', 'receive')
 
-TRANSPORT_TYPES = ('email', 'sms', 'wwwpoll', 'mock')
+TRANSPORT_TYPES = ('email', 'sms', 'wwwpoll')
 
 
 class Priority(Enum):
