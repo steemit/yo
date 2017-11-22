@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
-import datetime
 import json
 import logging
 
-from ..db import notifications_table
 from ..ratelimits import check_ratelimit
 from ..transports import sendgrid
 from ..transports import twilio
@@ -26,62 +24,45 @@ class YoNotificationSender(YoBaseService):
         super().__init__(yo_app=yo_app, config=config, db=db)
         self.configured_transports = {}
 
-    async def api_trigger_notification(self, username=None):
-        logger.info('api_trigger_notification invoked for %s', username)
-        await self.run_send_notify({'to_username': username})
+    async def api_trigger_notifications(self):
+        await self.run_send_notify()
         return {'result': 'Succeeded'}  # FIXME
 
-    async def run_send_notify(self, notification_job):
-        logger.debug('run_send_notify executing! %s', notification_job)
-        user_transports = self.db.get_user_transports(
-            notification_job['to_username'])
-        user_notify_types_transports = {
-        }  # map notification types to the transports enabled for them
-        for transport_name, transport_data in user_transports.items():
-            for notify_type in transport_data['notification_types']:
-                if notify_type not in user_notify_types_transports:
-                    user_notify_types_transports[notify_type] = []
-                user_notify_types_transports[notify_type].append(
-                    (transport_name, transport_data['sub_data']))
-        with self.db.acquire_conn() as conn:
-            query = notifications_table.select().where(
-                notifications_table.c.to_username == notification_job[
-                    'to_username'])
-            # TODO - add check for already sent
-            select_response = conn.execute(query)
-            for row in select_response:
-                row_dict = dict(row.items())
-                if not check_ratelimit(self.db, row_dict):
-                    logger.debug(
-                        'Skipping sending of notification for failing rate limit check: %s',
-                        str(row))
-                    continue
-                logger.debug('>>>>>> Sending new notification: %s', str(row))
+    async def run_send_notify(self):
+        unsents = self.db.get_wwwpoll_unsents()
+        logger.info('run_send_notify() handling %s unsents', str(len(unsents)))
 
-                for t in user_notify_types_transports[row_dict['type']]:
-                    logger.debug('Sending notification to transport %s',
-                                 str(t[0]))
-                    try:
-                        t[0].send_notification(
-                            to_subdata=t[1],
-                            to_username=notification_job['to_username'],
-                            notify_type=row['type'],
-                            data=json.loads(row['json_data']))
-                    except Exception:
-                        logger.exception('Transport failed')
-                # TODO - check actually sent here, and check per transport - if failing
-                # only on a single transport, retry only single transport
-                row_dict['sent'] = True
-                row_dict['sent_at'] = datetime.datetime.now()
-                # pylint: disable=no-value-for-parameter
-                update_query = notifications_table.update().where(
-                    notifications_table.c.nid == row.nid).values(sent=True)
-                # pylint: enable=no-value-for-parameter
-                conn.execute(update_query)
+        for username, notifications in unsents.items():
+            logger.info(
+                'run_send_notify() handling user %s with %d notifications',
+                username, len(notifications))
+            user_transports = self.db.get_user_transports(username)
+            user_notify_types_transports = {}
+            for transport_name, transport_data in user_transports.items():
+                for notify_type in transport_data['notification_types']:
+                    if notify_type not in user_notify_types_transports.keys():
+                        user_notify_types_transports[notify_type] = []
+                    user_notify_types_transports[notify_type].append(
+                        (transport_name, transport_data['sub_data']))
+            for notification in notifications:
+                if not check_ratelimit(self.db, notification):
+                    logger.info(
+                        'Skipping notification for failing rate limit check: %s',
+                        str(notification))
+                    continue
+                for t in user_notify_types_transports[notification[
+                        'notify_type']]:
+                    logger.info('Sending notification %s to transport %s',
+                                str(notification), str(t[0]))
+                    self.configured_transports[t[0]].send_notification(
+                        to_subdata=t[1],
+                        to_username=username,
+                        notify_type=notification['notify_type'],
+                        data=json.loads(notification['json_data']))
 
     def init_api(self):
         self.private_api_methods[
-            'trigger_notification'] = self.api_trigger_notification
+            'trigger_notifications'] = self.api_trigger_notifications
         if self.yo_app.config.config_data['wwwpoll'].getint('enabled', 1):
             logger.info('Enabling wwwpoll transport')
             self.configured_transports['wwwpoll'] = wwwpoll.WWWPollTransport(

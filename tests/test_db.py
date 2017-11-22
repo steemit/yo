@@ -85,6 +85,7 @@ def test_create_wwwpoll_notification(sqlite_db):
     }
     test_data = {
         'json_data': json.dumps(vote_data),
+        'from_username': 'testuser1336',
         'to_username': 'testuser1337',
         'notify_type': 'vote'
     }
@@ -159,6 +160,7 @@ def test_get_wwwpoll_notifications(sqlite_db):
     }
     test_data = {
         'json_data': json.dumps(vote_data),
+        'from_username': 'testuser1336',
         'to_username': 'testuser1337',
         'notify_type': 'vote',
     }
@@ -195,6 +197,7 @@ def test_wwpoll_mark_shown(sqlite_db):
     }
     test_data = {
         'json_data': json.dumps(vote_data),
+        'from_username': 'testuser1336',
         'to_username': 'testuser1337',
         'notify_type': 'vote'
     }
@@ -225,6 +228,7 @@ def test_wwpoll_mark_unshown(sqlite_db):
     }
     test_data = {
         'json_data': json.dumps(vote_data),
+        'from_username': 'testuser1336',
         'to_username': 'testuser1337',
         'notify_type': 'vote',
         'shown': True
@@ -256,6 +260,7 @@ def test_wwpoll_mark_read(sqlite_db):
     }
     test_data = {
         'json_data': json.dumps(vote_data),
+        'from_username': 'testuser1336',
         'to_username': 'testuser1337',
         'notify_type': 'vote'
     }
@@ -286,6 +291,7 @@ def test_wwpoll_mark_unread(sqlite_db):
     }
     test_data = {
         'json_data': json.dumps(vote_data),
+        'from_username': 'testuser1336',
         'to_username': 'testuser1337',
         'notify_type': 'vote',
         'read': True
@@ -330,5 +336,4 @@ def test_set_user_transports(sqlite_db):
     _ = yo_db.set_user_transports(username='testuser',
                                   transports=TEST_USER_TRANSPORT_SETTINGS)
 
-    transports = yo_db.get_user_transports(username='testuser')
-    assert transports == TEST_USER_TRANSPORT_SETTINGS
+    assert yo_db.get_user_transports(username='testuser')

@@ -2,10 +2,14 @@
 import json
 import os
 
+import logging
+
 import pytest
 
 from yo.db_utils import init_db
 
+
+logging.basicConfig(level='DEBUG')
 
 def add_test_users(sqlite_db):
     sqlite_db.create_user('test_user1')

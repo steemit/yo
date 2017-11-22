@@ -43,10 +43,9 @@ run: .env ## run docker image
 .PHONY: test
 test: test-without-lint test-pylint ## run pylint tests locally
 
-
 .PHONY: test-without-lint
 test-without-lint:
-	pipenv run pytest -vv --cov=yo --cov-report term tests
+	pipenv run pytest -vv --cov=yo --cov-report html tests
 
 .PHONY: test-pylint
 test-pylint:

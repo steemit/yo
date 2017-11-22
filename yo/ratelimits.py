@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 import logging
 
-from .db import Priority
+#from .db import Priority
 
 logger = logging.getLogger(__name__)
 
 
 # pylint: disable=too-many-branches
+# pylint: disable-msg=unused-argument
 def check_ratelimit(db, notification_object, override=False):
     """Checks if this notification should be sent or not
 
@@ -21,42 +22,45 @@ def check_ratelimit(db, notification_object, override=False):
         :param override:
         :param db:
     """
-    notification_priority = notification_object['priority_level']
-    to_username = notification_object['to_username']
+    return True  # TODO - undo this
 
-    if notification_priority == Priority.ALWAYS:
-        return db.get_priority_count(to_username, Priority.ALWAYS, 3600) < 10
-    elif notification_priority == Priority.PRIORITY:
-        if override:
-            return (db.get_priority_count(to_username, Priority.PRIORITY, 3600)
-                    <= 10)
-        else:
-            return (db.get_priority_count(to_username, Priority.PRIORITY,
-                                          3600) == 0)
-    elif notification_priority == Priority.NORMAL:
-        if override:
-            return (db.get_priority_count(to_username, Priority.NORMAL, 60) <
-                    3)
-        else:
-            return (db.get_priority_count(to_username, Priority.NORMAL,
-                                          60) == 0)
-    elif notification_priority == Priority.LOW:
-        if override:
-            return (db.get_priority_count(to_username, Priority.LOW, 3600) <
-                    10)
-        else:
-            return (db.get_priority_count(to_username, Priority.LOW,
-                                          3600) == 0)
-    elif notification_priority == Priority.MARKETING:
-        if override:
-            return (db.get_priority_count(to_username, Priority.MARKETING,
-                                          86400) == 0)
-        else:
-            return (db.get_priority_count(to_username, Priority.MARKETING,
-                                          3600) == 0)
-    else:
-        logger.error(
-            'Invalid notification priority level! Assuming corrupted data for notification: %s',
-            notification_object)
 
-    return False  # for invalid stuff, assume it's bad
+#    notification_priority = notification_object['priority_level']
+#    to_username = notification_object['to_username']
+#
+#    if notification_priority == Priority.ALWAYS:
+#        return db.get_priority_count(to_username, Priority.ALWAYS, 3600) < 10
+#    elif notification_priority == Priority.PRIORITY:
+#        if override:
+#            return (db.get_priority_count(to_username, Priority.PRIORITY, 3600)
+#                    <= 10)
+#        else:
+#            return (db.get_priority_count(to_username, Priority.PRIORITY,
+#                                          3600) == 0)
+#    elif notification_priority == Priority.NORMAL:
+#        if override:
+#            return (db.get_priority_count(to_username, Priority.NORMAL, 60) <
+#                    3)
+#        else:
+#            return (db.get_priority_count(to_username, Priority.NORMAL,
+#                                          60) == 0)
+#    elif notification_priority == Priority.LOW:
+#        if override:
+#            return (db.get_priority_count(to_username, Priority.LOW, 3600) <
+#                    10)
+#        else:
+#            return (db.get_priority_count(to_username, Priority.LOW,
+#                                          3600) == 0)
+#    elif notification_priority == Priority.MARKETING:
+#        if override:
+#            return (db.get_priority_count(to_username, Priority.MARKETING,
+#                                          86400) == 0)
+#        else:
+#            return (db.get_priority_count(to_username, Priority.MARKETING,
+#                                          3600) == 0)
+#    else:
+#        logger.error(
+#            'Invalid notification priority level! Assuming corrupted data for notification: %s',
+#            notification_object)
+#
+#    return False  # for invalid stuff, assume it's bad
