@@ -137,7 +137,8 @@ actions_table = sa.Table(
 chain_status_table = sa.Table(
     'yo_chain_status',
     metadata,
-    sa.Column('active_follower',          sa.Integer,  primary_key=True),
+    sa.Column('id',                       sa.Integer, primary_key=True),
+    sa.Column('active_follower',          sa.Integer,  index=True),
     sa.Column('last_processed_timestamp', sa.DateTime, index=True),
     sa.Column('last_processed_block',     sa.Integer,  index=True),
     mysql_engine='InnoDB',
@@ -202,7 +203,7 @@ class YoDatabase:
 
     @contextmanager
     def acquire_status_lock(self, timeout=5):
-        """Locks the chain status table if possible, yields a transaction that can be used to do whatever
+        """Locks the chain status table if possible, yields a connection ready to use
 
            If not possible to acquire a table lock due to already being locked, yields None
 
@@ -213,8 +214,10 @@ class YoDatabase:
              2 - write a row to the locks table (this first write makes sqlite lock out other transactions)
              3 - query for existing active locks that have not yet expired
              4 - if any rows are returned from step 3, rollback our transaction, yield None
-             5 - if no rows are returned from step 3, drop all rows except for our lock, yield a transaction object (it is up to caller to either commit or rollback)
+             5 - if no rows are returned from step 3, drop all rows except for our lock, yield conn
              6 - at cleanup time, drop our lock row and commit the outer transaction
+
+           The return value is either None or a valid connection ready to use, caller should use a transaction in addition
         """
         with self.acquire_conn() as conn:
              outer_tx  = conn.begin()
@@ -236,12 +239,27 @@ class YoDatabase:
                    query = locks_table.delete()
                    query = query.where(locks_table.c.lock_id != lock_id)
                    conn.execute(locks_table.query)
-                   yield outer_tx
+                   yield conn
              finally:
                  if do_commit:
                     conn.execute(locks_table.delete())
                     outer_tx.commit()
 
+    def get_chain_state(self, conn=None):
+        """ Get the chain state
+
+            If conn is not provided, acquire_conn() will be used to get a connection
+            
+            Returns either a dict of the current chain status or None
+        """
+        query = chain_status_table.select()
+        if conn is None:
+           with self.acquire_conn() as db_conn:
+                resp   = db_conn.execute(query)
+        else:
+           resp = db_conn.execute(query)
+        if resp is not None:
+           return dict(resp.fetchone().items())
 
     @property
     def backend(self):

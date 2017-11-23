@@ -340,10 +340,23 @@ class YoBlockchainFollower(YoBaseService):
           block_interval         = self.chain.config().get("STEEMIT_BLOCK_INTERVAL")
           start_block            = self.get_start_block()
           block_timeout_interval = block_interval*3 # if active follower exceeds this, we take over
+          head_block             = self.chain.get_current_block_num()
 
           while True:
              if self.active:
-                head_block = b.get_current_block_num()
+                with self.db.acquire_status_lock() as conn:
+                     if conn is None: # we failed to get the lock, we should probably just sleep
+                        await asyncio.sleep(0)
+                     else: # we got the lock!
+                        # first grab the current chain state
+                        chain_state = self.db.get_chain_state(conn)
+                        if chain_state is not None: # chain state exists, let's check it out
+                            if chain_state['active_follower'] != self.node_id:
+                               self.active = False # another follower is active
+                        if self.active: # if we're still active, let's continue
+                           tx = conn.begin()
+                           # TODO - do the main stuff here
+                           tx.commit()
              else:
                 await asyncio.sleep(self.timeout_val)
                 

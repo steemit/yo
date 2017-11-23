@@ -1,0 +1,35 @@
+requirements:
+  1 - only one active follower at a time
+  2 - if the active follower times out, another follower should take over
+  3 - must not spam the DB or constantly fill a DB table
+
+each iteration:
+  if not active, determine if active node has crashed
+  if active, do work and update timestamp
+
+if active:
+   lock status table
+   verify follower ID is ours, if not set ourselves to inactive
+   start tx
+    insert notifications
+    update blockchain status table
+   commit tx
+   unlock status table
+
+if not active:
+   sleep for id%9 seconds
+   query blockchain status table
+   if last_processed_timestamp is further back than block interval*3:
+      try to lock blockchain status table, on failure go back to sleep
+      once locked:
+        update blockchain status table with own ID
+        set local active flag true
+        do active iteration
+        unlock
+
+blockchain status table:
+  single row
+    active_follower_id
+    last_processed_timestamp
+    last_processed_block
+
