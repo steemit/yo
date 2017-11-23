@@ -132,6 +132,28 @@ actions_table = sa.Table(
     mysql_engine='InnoDB',
 )
 
+# used for coordinating multiple blockchain followers
+# only 1 row max should exist in this table
+chain_status_table = sa.Table(
+    'yo_chain_status',
+    metadata,
+    sa.Column('active_follower',          sa.Integer,  primary_key=True),
+    sa.Column('last_processed_timestamp', sa.DateTime, index=True),
+    sa.Column('last_processed_block',     sa.Integer,  index=True),
+    mysql_engine='InnoDB',
+)
+
+# hack to support cross-database locking
+locks_table = sa.Table(
+    'yo_status_locks',
+    metadata,
+    sa.Column('lock_id', sa.String(36), primary_key=True),
+    sa.Column('active', sa.Boolean(), default=False, index=True),
+    sa.Column('expires', sa.DateTime, index=True),
+    mysql_engine='InnoDB',
+)
+
+
 user_settings_table = sa.Table(
     'yo_user_settings',
     metadata,
@@ -177,6 +199,49 @@ class YoDatabase:
             yield conn
         finally:
             conn.close()
+
+    @contextmanager
+    def acquire_status_lock(self, timeout=5):
+        """Locks the chain status table if possible, yields a transaction that can be used to do whatever
+
+           If not possible to acquire a table lock due to already being locked, yields None
+
+           This is a bit of a messy hack due to needing to support sqlite (which has no proper table locks) and MySQL/postgres
+
+           To "lock" a table we do the following:
+             1 - open a new outer transaction
+             2 - write a row to the locks table (this first write makes sqlite lock out other transactions)
+             3 - query for existing active locks that have not yet expired
+             4 - if any rows are returned from step 3, rollback our transaction, yield None
+             5 - if no rows are returned from step 3, drop all rows except for our lock, yield a transaction object (it is up to caller to either commit or rollback)
+             6 - at cleanup time, drop our lock row and commit the outer transaction
+        """
+        with self.acquire_conn() as conn:
+             outer_tx  = conn.begin()
+             lock_id   = str(uuid.uuid1())
+             curtime   = datetime.datetime.now()
+             expires   = curtime + datetime.timedelta(seconds=timeout)
+             do_commit = True
+             try:
+                conn.execute(locks_table.insert(), dict(lock_id=lock_id,expires=expires,active=False))
+                query = locks_table.select()
+                query = query.where(locks_table.c.active)
+                query = query.where(locks_table.c.expires <= curtime)
+                existing_locks = conn.execute(query)
+                if existing_locks.rowcount > 0:
+                   outer_tx.rollback()
+                   do_commit = False
+                   yield None
+                else:
+                   query = locks_table.delete()
+                   query = query.where(locks_table.c.lock_id != lock_id)
+                   conn.execute(locks_table.query)
+                   yield outer_tx
+             finally:
+                 if do_commit:
+                    conn.execute(locks_table.delete())
+                    outer_tx.commit()
+
 
     @property
     def backend(self):
@@ -229,6 +294,7 @@ class YoDatabase:
             except BaseException:
                 logger.exception('_get_notifications failed')
         return []
+
 
     def get_notifications(self, **kwargs):
         kwargs['table'] = notifications_table

@@ -4,6 +4,8 @@ import json
 import logging
 import re
 
+import uuid
+
 import steem
 from steem.blockchain import Blockchain
 
@@ -45,6 +47,11 @@ class YoBlockchainFollower(YoBaseService):
         steemd_url = self.yo_app.config.config_data['blockchain_follower'].get(
             'steemd_url', 'https://api.steemit.com')
         self.steemd_rpc = steem.steemd.Steemd(nodes=[steemd_url])
+
+        # for multifollower coordination
+        self.node_id     = hash(uuid.uuid1())
+        self.timeout_val = self.node_id % 9
+        self.active      = False
 
     async def store_notification(self, **data):
         data['sent'] = False
@@ -297,7 +304,7 @@ class YoBlockchainFollower(YoBaseService):
             if next_val:
                 yield next_val
 
-    async def async_task(self):
+    async def old_async_task(self):
 
         queue = asyncio.Queue()
         logger.info('Blockchain follower started')
@@ -316,6 +323,30 @@ class YoBlockchainFollower(YoBaseService):
                         logger.exception('Exception occurred')
             except Exception:
                 logger.exception('Exception occurred')
+
+    def get_start_block(self):
+        start_block = str(self.yo_app.config.config_data['blockchain_follower'].get('start_block',''))
+        if start_block == '':
+           return self.chain.get_current_block_num()
+        else:
+           start_block = int(start_block)
+           if start_block < 0:
+              start_block = self.chain.get_current_block_num()
+           return start_block
+
+    async def async_task(self):
+          logger.info('Blockchain follower %s started, using timeout value of %d', self.node_id, self.timeout_val)
+          self.chain             = Blockchain(steemd_instance=self.steemd_rpc)
+          block_interval         = self.chain.config().get("STEEMIT_BLOCK_INTERVAL")
+          start_block            = self.get_start_block()
+          block_timeout_interval = block_interval*3 # if active follower exceeds this, we take over
+
+          while True:
+             if self.active:
+                head_block = b.get_current_block_num()
+             else:
+                await asyncio.sleep(self.timeout_val)
+                
 
     def init_api(self):
         pass
