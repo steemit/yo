@@ -1,0 +1,9 @@
+version: '3'
+services:
+  postgres:
+    image: postgres:9.6
+    environment:
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: yo
+    ports:
+     - 5432:5432

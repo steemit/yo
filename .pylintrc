@@ -67,7 +67,7 @@ confidence=
 # --disable=W"
 disable=
     # disabled by me,
-
+    bare-except,
     broad-except,
     cyclic-import,
     duplicate-code,
@@ -82,7 +82,6 @@ disable=
     no-else-return,
     too-few-public-methods,
     too-many-return-statements,
-
 
     # disabled by default,
     apply-builtin,
@@ -295,7 +294,7 @@ expected-line-ending-format=
 
 # Logging modules to check that the string format arguments are in logging
 # function parameter format
-logging-modules=logging
+logging-modules=logging, structlog
 
 
 [MISCELLANEOUS]

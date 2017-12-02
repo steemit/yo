@@ -9,7 +9,7 @@ from yo.services import api_server
 
 @pytest.mark.asyncio
 async def test_api_get_notifications(sqlite_db):
-    """Basic test of get_notifications backed by sqlite3"""
+    """Basic test of get_db_notifications backed by sqlite3"""
     vote_data = {
         'author': 'testuser1337',
         'weight': 100,
@@ -30,7 +30,7 @@ async def test_api_get_notifications(sqlite_db):
     }
     API = api_server.YoAPIServer()
     yo_db = sqlite_db
-    retval = yo_db.create_notification(**test_data)
+    retval = yo_db.create_db_notification(**test_data)
     assert retval is True
 
     result = await API.api_get_notifications(
@@ -200,5 +200,3 @@ async def test_api_get_set_transports(sqlite_db):
     resp = await API.api_get_transports(
         username='testuser1337', context=dict(yo_db=sqlite_db))
     assert resp == simple_transports_obj['transports']
-
-

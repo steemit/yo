@@ -22,7 +22,7 @@ docker-image: clean ## build docker image
 .env: ${YO_CONFIG} scripts/make_docker_env.py
 	pipenv run python scripts/make_docker_env.py ${YO_CONFIG} >.env
 
-Pipfile.lock:
+Pipfile.lock: Pipfile
 	$(shell docker run $(PROJECT_DOCKER_TAG) /bin/bash -c 'pipenv lock && cat Pipfile.lock' > $@)
 
 .PHONY: begin-fix
@@ -36,6 +36,9 @@ commit-fix: fmt test pre-commit docker-image Pipfile.lock ## commit fix
 	git commit -am'Fixes $(CURRENT_ISSUE)'
 	git push --set-upstream origin $(CURRENT_BRANCH)
 
+.PHONY: prepare
+prepare: fmt test pre-commit docker-image Pipfile.lock
+
 .PHONY: run
 run: .env ## run docker image
 	docker run $(PROJECT_DOCKER_RUN_ARGS) $(PROJECT_DOCKER_TAG)
@@ -45,15 +48,15 @@ test: test-without-lint test-pylint ## run pylint tests locally
 
 .PHONY: test-without-lint
 test-without-lint:
-	pipenv run pytest -vv --cov=yo --cov-report html tests
+	pipenv run pytest -vv --cov=yo --cov-report term tests
 
 .PHONY: test-pylint
 test-pylint:
-	pipenv run pytest -v --pylint $(PROJECT_NAME)
+	pipenv run pytest -vvv --pylint-rcfile=$(ROOT_DIR)/.pylintrc --pylint $(PROJECT_NAME)
 
 .PHONY: lint
 lint: ## lint python files
-	pipenv run pylint $(PROJECT_NAME)
+	pipenv run pytest -vvv --pylint-rcfile=$(ROOT_DIR)/.pylintrc --pylint $(PROJECT_NAME)
 
 .PHONY: fix-imports
 fix-imports: remove-unused-imports sort-imports ## remove unused and then sort imports
@@ -64,11 +67,10 @@ remove-unused-imports: ## remove unused imports from python files
 
 .PHONY: sort-imports
 sort-imports: ## sorts python imports using isort with settings from .editorconfig
-	pipenv run isort --verbose --recursive --atomic --settings-path  .editorconfig --virtual-env .venv $(PROJECT_NAME)
+	pipenv run isort --verbose --recursive --atomic --force-single-line-imports --order-by-type --force-sort-within-sections --virtual-env .venv $(PROJECT_NAME)
 
 .PHONY: fmt
 fmt: remove-unused-imports sort-imports ## format python files
-    # yapf is disabled until the update 3.6 fstring compat
 	pipenv run yapf --in-place --style pep8 --recursive $(PROJECT_NAME)
 	pipenv run autopep8 --verbose --verbose --max-line-length=100 --aggressive --jobs -1 --in-place  --recursive $(PROJECT_NAME)
 
@@ -84,13 +86,17 @@ pre-commit-all: ## run pre-commit against all files
 run-local: ## run application locally
 	env YO_DATABASE_URL=sqlite:///yo.db pipenv run python -m yo.cli
 
+.PHONY: run-local-pg
+run-local-pg: ## run application locally
+	env YO_DATABASE_URL=postgres://postgres:password@localhost/yo pipenv run python -m yo.cli
+
 .PHONY: init-db
 init-db: ## initialize app db
-	pipenv run python -m yo.db_utils sqlite:///yo.db init
+	pipenv run python -m yo.db_utils $(YO_DATABASE_URL) init
 
 .PHONY: reset-db
 reset-db: ## reset app db
-	pipenv run python -m yo.db_utils sqlite:///yo.db reset
+	pipenv run python -m yo.db_utils $(YO_DATABASE_URL) reset
 
 .PHONY: clean
 clean: clean-build clean-pyc ## clean

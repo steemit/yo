@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import configparser
-import logging
 import os
 
 import py_vapid
@@ -16,10 +15,7 @@ class YoConfigManager:
         defaults = defaults or {}
         self.config_data = configparser.ConfigParser(
             inline_comment_prefixes=';')
-        # a couple of defaults to enable stuff to work-ish if the config file is missing
-        # TODO - add a general get method with defaults so we don't have to define
-        # it all in multiple places
-        self.config_data['yo_general'] = {'log_level': 'INFO', 'yo_db_url': ''}
+
         self.config_data['vapid'] = {}
         self.config_data['blockchain_follower'] = {}
         self.config_data['notification_sender'] = {}
@@ -40,9 +36,13 @@ class YoConfigManager:
                     env_name = 'YO_%s_%s' % (section.upper(), k.upper())
                 if not os.getenv(env_name) is None:
                     self.config_data[section][k] = os.getenv(env_name)
+        try:
+            self.log_level = os.environ.get('LOG_LEVEL',
+                                            self.config_data['logging'].get(
+                                                'log_level', 'INFO'))
+        except BaseException:
+            self.log_level = 'INFO'
 
-        log_level = self.config_data['yo_general'].get('log_level', 'INFO')
-        logging.basicConfig(level=log_level)
         self.generate_needed()
 
     def get_listen_host(self):

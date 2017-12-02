@@ -38,7 +38,7 @@ class YoAPIServer(YoBaseService):
           list: list of notifications represented in dictionary format
        """
         yo_db = context['yo_db']
-        return yo_db.get_notifications(
+        return yo_db.get_db_notifications(
             to_username=username,
             created_before=created_before,
             updated_after=updated_after,
@@ -122,15 +122,18 @@ class YoAPIServer(YoBaseService):
         yo_db = context['yo_db']
         return yo_db.set_user_transports(username, transports)
 
-    async def async_task(self):
+    async def main_task(self):
+        pass
+
+    async def shutdown(self):
+        pass
+
+    def init_api(self):
         self.yo_app.add_api_method(self.api_get_notifications,
-                                   'get_notifications')
+                                   'get_db_notifications')
         self.yo_app.add_api_method(self.api_mark_read, 'mark_read')
         self.yo_app.add_api_method(self.api_mark_unread, 'mark_unread')
         self.yo_app.add_api_method(self.api_mark_shown, 'mark_shown')
         self.yo_app.add_api_method(self.api_mark_unshown, 'mark_unshown')
         self.yo_app.add_api_method(self.api_get_transports, 'get_transports')
         self.yo_app.add_api_method(self.api_set_transports, 'set_transports')
-
-    def init_api(self):
-        pass
