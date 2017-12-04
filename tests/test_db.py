@@ -54,10 +54,10 @@ def test_create_notification(sqlite_db):
     }
 
     yo_db = sqlite_db
-    retval = yo_db.create_notification(**test_data)
+    retval = yo_db.create_db_notification(**test_data)
     assert retval is True
-    result = yo_db.get_notifications(to_username='testuser1337',
-                                     limit=2)
+    result = yo_db.get_db_notifications(to_username='testuser1337',
+                                        limit=2)
     assert len(result) == 1
     result = result[0]
 
@@ -129,10 +129,10 @@ def test_get_notifications(sqlite_db):
     }
 
     yo_db = sqlite_db
-    retval = yo_db.create_notification(**test_data)
+    retval = yo_db.create_db_notification(**test_data)
     assert retval is True
-    result = yo_db.get_notifications(to_username='testuser1337',
-                                     limit=2)
+    result = yo_db.get_db_notifications(to_username='testuser1337',
+                                        limit=2)
     assert len(result) == 1
     result = result[0]
 
@@ -325,7 +325,9 @@ def test_get_user_transports_user_doesnt_exist(sqlite_db):
 
 def test_get_user_transports_user_exists(sqlite_db):
     yo_db = sqlite_db
-    _ = yo_db.set_user_transports(username='testuser', transports=TEST_USER_TRANSPORT_SETTINGS)
+    result = yo_db.set_user_transports(username='testuser',
+                                       transports=TEST_USER_TRANSPORT_SETTINGS)
+    assert result is True
 
     transports = yo_db.get_user_transports(username='testuser')
     assert transports == TEST_USER_TRANSPORT_SETTINGS

@@ -1,19 +1,23 @@
-# coding=utf-8
-import datetime
-import json
-import logging
-import uuid
+# -*- coding: utf-8 -*-
 from contextlib import contextmanager
+import datetime
 from enum import IntFlag
 from sqlite3 import IntegrityError as SQLiteIntegrityError
+import uuid
 
 import dateutil
 import dateutil.parser
 import sqlalchemy as sa
 from sqlalchemy.engine.url import make_url
 from sqlalchemy.exc import IntegrityError
+import structlog
 
-logger = logging.getLogger(__name__)
+import ujson
+
+from .services.registration import Registration
+from .services.registration import ServiceState
+
+logger = structlog.getLogger(__name__, source='YoDatabase')
 
 metadata = sa.MetaData()
 
@@ -32,6 +36,10 @@ class Priority(IntFlag):
     ALWAYS = 5
 
 
+class UserNotFoundError(Exception):
+    pass
+
+
 DEFAULT_USER_TRANSPORT_SETTINGS = {
     "email": {
         "notification_types": [],
@@ -47,20 +55,22 @@ DEFAULT_USER_TRANSPORT_SETTINGS = {
     }
 }
 
-DEFAULT_USER_TRANSPORT_SETTINGS_STRING = json.dumps(
+DEFAULT_USER_TRANSPORT_SETTINGS_STRING = ujson.dumps(
     DEFAULT_USER_TRANSPORT_SETTINGS)
 
 # This is the table queried by API server for the wwwpoll transport
 wwwpoll_table = sa.Table(
     'yo_wwwpoll',
     metadata,
-    sa.Column('nid', sa.String(36), primary_key=True),
+    sa.Column(
+        'nid',
+        sa.String(32),
+        primary_key=True,
+        default=lambda: uuid.uuid4().hex),
     sa.Column('notify_type', sa.String(20), nullable=False, index=True),
     sa.Column('to_username', sa.String(20), nullable=False, index=True),
-    sa.Column(
-        'from_username', sa.String(20), nullable=False, index=True
-    ),  # TODO - do we actually need this? @jg please discuss as you keep adding references to this field
-    sa.Column('json_data', sa.UnicodeText(1024)),
+    sa.Column('from_username', sa.String(20), nullable=True, index=True),
+    sa.Column('json_data', sa.UnicodeText()),
 
     # wwwpoll specific columns
     sa.Column(
@@ -78,9 +88,7 @@ wwwpoll_table = sa.Table(
         index=True),
     sa.Column('read', sa.Boolean(), default=False),
     sa.Column('shown', sa.Boolean(), default=False),
-
-    #    sa.UniqueConstraint('to_username','notify_type','json_data',name='yo_wwwpoll_idx'),
-    mysql_engine='InnoDB',
+    # sa.UniqueConstraint('to_username','notify_type','json_data',name='yo_wwwpoll_idx')
 )
 
 # This is where ALL notifications go, not to be confused with the wwwpoll
@@ -88,11 +96,15 @@ wwwpoll_table = sa.Table(
 notifications_table = sa.Table(
     'yo_notifications',
     metadata,
-    sa.Column('nid', sa.String(36), primary_key=True),
+    sa.Column(
+        'nid',
+        sa.String(32),
+        primary_key=True,
+        default=lambda: uuid.uuid4().hex),
     sa.Column('notify_type', sa.String(20), nullable=False, index=True),
     sa.Column('to_username', sa.String(20), nullable=False, index=True),
     sa.Column('from_username', sa.String(20), index=True, nullable=True),
-    sa.Column('json_data', sa.UnicodeText(1024)),
+    sa.Column('json_data', sa.UnicodeText()),
     sa.Column(
         'created',
         sa.DateTime,
@@ -108,6 +120,7 @@ notifications_table = sa.Table(
         index=True),
 
     # non-wwwpoll columns
+    sa.Column('sent', sa.Boolean, index=True, default=False),
     sa.Column('priority_level', sa.Integer, index=True, default=3),
     sa.Column('created_at', sa.DateTime, default=sa.func.now(), index=True),
     sa.Column('trx_id', sa.String(40), index=True, nullable=True),
@@ -116,21 +129,17 @@ notifications_table = sa.Table(
         'notify_type',
         'trx_id',
         'from_username',
-        name='yo_notification_idx'),
-    mysql_engine='InnoDB',
-)
+        'json_data',
+        name='yo_notification_idx'))
 
 actions_table = sa.Table(
-    'yo_actions',
-    metadata,
+    'yo_actions', metadata,
     sa.Column('aid', sa.Integer, primary_key=True),
     sa.Column('nid', None, sa.ForeignKey('yo_notifications.nid')),
     sa.Column('transport', sa.String(20), nullable=False, index=True),
     sa.Column('status', sa.String(20), nullable=False, index=True),
     sa.Column('created_at', sa.DateTime, default=sa.func.now(), index=True),
-    sa.UniqueConstraint('aid', 'nid', 'transport', name='yo_wwwpoll_idx'),
-    mysql_engine='InnoDB',
-)
+    sa.UniqueConstraint('aid', 'nid', 'transport', name='yo_wwwpoll_idx'))
 
 user_settings_table = sa.Table(
     'yo_user_settings',
@@ -150,7 +159,25 @@ user_settings_table = sa.Table(
         onupdate=sa.func.now(),
         nullable=False,
         index=True),
-    mysql_engine='InnoDB',
+)
+
+services_table = sa.Table(
+    'yo_services',
+    metadata,
+    sa.Column('service_id', sa.Integer, primary_key=True),
+    sa.Column('service_name', sa.String(30), nullable=False),
+    sa.Column(
+        'service_status',
+        sa.Integer,
+        default=int(ServiceState.DISABLED),
+        nullable=False),
+    sa.Column('service_extra', sa.String(300)),
+    sa.Column(
+        'updated',
+        sa.DateTime,
+        nullable=False,
+        default=sa.func.now(),
+        onupdate=sa.func.now()),
 )
 
 
@@ -161,7 +188,7 @@ def is_duplicate_entry_error(error):
     return False
 
 
-# pylint: disable-msg=no-value-for-parameter
+# pylint: disable-msg=no-value-for-parameter,too-many-public-methods
 class YoDatabase:
     def __init__(self, db_url=None):
         self.db_url = db_url
@@ -170,6 +197,9 @@ class YoDatabase:
         self.metadata.create_all(bind=self.engine)
         self.url = make_url(self.db_url)
 
+        self.clear_services()
+
+    # db helper methods
     @contextmanager
     def acquire_conn(self):
         conn = self.engine.connect()
@@ -182,15 +212,76 @@ class YoDatabase:
     def backend(self):
         return self.url.get_backend_name()
 
-    def _get_notifications(self,
-                           table=None,
-                           nid=None,
-                           to_username=None,
-                           created_before=None,
-                           updated_after=None,
-                           read=None,
-                           notify_types=None,
-                           limit=30):
+    # create notification methods
+    def __create_generic_notification(self, table=None, **notification):
+        with self.acquire_conn() as conn:
+            tx = conn.begin()
+            try:
+                result = conn.execute(table.insert(), **notification)
+
+                tx.commit()
+                logger.debug(
+                    'notification_stored',
+                    nid=result.inserted_primary_key,
+                    notify_type=notification.get('notify_type)'))
+                return True
+            except (IntegrityError, SQLiteIntegrityError) as e:
+                if is_duplicate_entry_error(e):
+                    logger.debug(
+                        '__create_generic_notification ignoring duplicate entry error'
+                    )
+                    return True
+                else:
+                    logger.exception('__create_generic_notification failed',
+                                     **notification)
+                    tx.rollback()
+                    return False
+            except BaseException:
+                tx.rollback()
+                logger.exception('__create_generic_notification failed',
+                                 **notification)
+
+            return False
+
+    def create_db_notification(self, **notification):
+        """ Creates a new notification in the notifications table
+
+        Returns:
+            bool:             True on success, False otherwise
+        """
+        table = notifications_table
+        return self.__create_generic_notification(table=table, **notification)
+
+    def create_wwwpoll_notification(self, **notification):
+        """ Creates a new notification in wwwpoll table
+
+        Returns:
+            bool:             True on success, False otherwise
+        """
+        table = wwwpoll_table
+        return self.__create_generic_notification(table=table, **notification)
+
+    def create_notification(self, **notification):
+        return all([
+            self.create_db_notification(**notification),
+            self.create_wwwpoll_notification(**notification)
+        ])
+
+    # notification retrieval methods
+
+    # pylint: disable=too-many-arguments,too-many-locals
+    def __get_notifications(self,
+                            table=None,
+                            nid=None,
+                            to_username=None,
+                            created_before=None,
+                            updated_after=None,
+                            read=None,
+                            shown=False,
+                            sent=False,
+                            notify_types=None,
+                            priority=None,
+                            limit=30):
         """Returns an SQLAlchemy result proxy with the notifications stored in wwwpoll table matching the specified params
 
        Keyword args:
@@ -220,202 +311,103 @@ class YoDatabase:
                     query = query.where(table.c.updated <= updated_after_val)
                 if read:
                     query = query.where(table.c.read == read)
+                if shown:
+                    query = query.where(table.c.shown == shown)
+                if sent:
+                    query = query.where(table.c.sent == sent)
                 if notify_types:
                     query = query.filter(table.c.notify_type.in_(notify_types))
+                if priority:
+                    query = query.filter(table.c.priority_level >= priority)
                 query = query.limit(limit)
                 resp = conn.execute(query)
                 if resp is not None:
-                    return resp.fetchall()
-            except BaseException:
-                logger.exception('_get_notifications failed')
-        return []
+                    return list(map(dict, resp.fetchall()))
 
-    def get_notifications(self, **kwargs):
+            except BaseException:
+                logger.exception(
+                    '__get_notifications failed',
+                    table=table,
+                    nid=nid,
+                    to_username=to_username,
+                    created_before=created_before,
+                    updated_after=updated_after,
+                    read=read,
+                    shown=shown,
+                    sent=sent,
+                    notify_types=notify_types,
+                    priority=priority,
+                    limit=30)
+        return []
+        # pylint: enable=too-many-arguments,too-many-locals
+
+    def get_db_notifications(self, **kwargs):
         kwargs['table'] = notifications_table
-        return self._get_notifications(**kwargs)
+        return self.__get_notifications(**kwargs)
 
     def get_wwwpoll_notifications(self, **kwargs):
         kwargs['table'] = wwwpoll_table
-        return self._get_notifications(**kwargs)
+        return self.__get_notifications(**kwargs)
+
+    def get_db_unsents(self):
+        return self.get_db_notifications(sent=False)
 
     def get_wwwpoll_unsents(self):
-        retval = {}
-        with self.acquire_conn() as conn:
-            query = sa.sql.select([notifications_table.c.nid])
-            query = query.except_(
-                sa.sql.select([
-                    actions_table.c.nid
-                ]).where(actions_table.c.nid == notifications_table.c.nid))
-            select_response = conn.execute(query).fetchall()
-            logger.info(str(select_response))
+        return self.get_wwwpoll_notifications(shown=False)
 
-            for nid in select_response:
-                row = conn.execute(
-                    sa.sql.select([
-                        notifications_table
-                    ]).where(notifications_table.c.nid == nid[0])).fetchone()
-                if not row['to_username'] in retval.keys():
-                    retval[row['to_username']] = []
-                retval[row['to_username']].append(dict(row.items()))
-        return retval
+    # notification sent/shown/read methods
+    def mark_db_notification_sent(self, nid):
+        return self.__mark_notification(notifications_table, nid, 'sent', True)
 
-    def _create_notification(self, table=None, **notification):
+    def mark_db_notifications_sent(self, nids):
+        logger.debug('mark_db_notifications_sent', nids=nids)
         with self.acquire_conn() as conn:
-            tx = conn.begin()
             try:
-                result = conn.execute(table.insert(), **notification)
-                logger.debug('_create_notification response: %s', result)
-
-                tx.commit()
+                # pylint: disable=no-value-for-parameter
+                stmt = notifications_table.update().where(
+                    notifications_table.c.nid in nids).values(sent=True)
+                # pylint: enable=no-value-for-parameter
+                conn.execute(stmt)
                 return True
-            except (IntegrityError, SQLiteIntegrityError) as e:
-                if is_duplicate_entry_error(e):
-                    logger.debug(
-                        '_create_notification ignoring duplicate entry error')
-                    return True
-                else:
-                    logger.exception(
-                        '_create_notification failed to add notification')
-                    tx.rollback()
             except BaseException:
-                tx.rollback()
-                logger.exception('_create_notification failed for %s',
-                                 notification)
-            return False
+                logger.exception('mark_db_notification_sent failed', nids=nids)
+        return False
+
+    def __mark_notification(self, tbl, nid, name, value):
+        logger.debug(
+            '__mark_notification', tbl=tbl, name=name, nid=nid, value=value)
+        with self.acquire_conn() as conn:
+            try:
+                # pylint: disable=no-value-for-parameter
+                query = tbl.update().where(tbl.c.nid == nid).values(
+                    **{
+                        name: value
+                    })
+                # pylint: enable=no-value-for-parameter
+                conn.execute(query)
+                return True
+            except BaseException:
+                logger.exception(
+                    '__mark_notification failed',
+                    tbl=tbl,
+                    name=name,
+                    nid=nid,
+                    value=value)
+        return False
 
     def wwwpoll_mark_shown(self, nid):
-        logger.debug('wwwpoll: marking %s as shown', nid)
-        with self.acquire_conn() as conn:
-            try:
-                query = wwwpoll_table.update() \
-                    .where(wwwpoll_table.c.nid == nid) \
-                    .values(shown=True)
-                conn.execute(query)
-                return True
-            except BaseException:
-                logger.exception('wwwpoll_mark_shown failed')
-        return False
+        return self.__mark_notification(wwwpoll_table, nid, 'shown', True)
 
     def wwwpoll_mark_unshown(self, nid):
-        logger.debug('wwwpoll: marking %s as unshown', nid)
-        with self.acquire_conn() as conn:
-            try:
-                query = wwwpoll_table.update() \
-                    .where(wwwpoll_table.c.nid == nid) \
-                    .values(shown=False)
-                conn.execute(query)
-                return True
-            except BaseException:
-                logger.exception('wwwpoll_mark_unshown failed')
-        return False
+        return self.__mark_notification(wwwpoll_table, nid, 'shown', False)
 
     def wwwpoll_mark_read(self, nid):
-        logger.debug('wwwpoll: marking %s as read', nid)
-        with self.acquire_conn() as conn:
-            try:
-                query = wwwpoll_table.update() \
-                    .where(wwwpoll_table.c.nid == nid) \
-                    .values(read=True)
-                conn.execute(query)
-                return True
-            except BaseException:
-                logger.exception('wwwpoll_mark_read failed')
-        return False
+        return self.__mark_notification(wwwpoll_table, nid, 'read', True)
 
     def wwwpoll_mark_unread(self, nid):
-        logger.debug('wwwpoll: marking %s as unread', nid)
-        with self.acquire_conn() as conn:
-            try:
-                query = wwwpoll_table.update() \
-                    .where(wwwpoll_table.c.nid == nid) \
-                    .values(read=False)
-                conn.execute(query)
-                return True
-            except BaseException:
-                logger.exception('wwwpoll_mark_unread failed')
-        return False
+        return self.__mark_notification(wwwpoll_table, nid, 'read', False)
 
-    def create_user(self, username, transports=None):
-        logger.info('Creating user %s', username)
-        if transports is None:
-            transports = DEFAULT_USER_TRANSPORT_SETTINGS
-        user_settings_data = {
-            'username': username,
-            'transports': json.dumps(transports)
-        }
-        success = False
-        with self.acquire_conn() as conn:
-            try:
-                stmt = user_settings_table.insert(values=user_settings_data)
-                _ = conn.execute(stmt)
-                if _ is not None:
-                    logger.info('Created user %s with settings %s', username,
-                                json.dumps(transports))
-                    success = True
-            except BaseException:
-                logger.exception('create_user failed')
-                success = False
-        return success
-
-    def get_user_transports(self, username=None, retry=False):
-        """Returns the JSON object representing user's configured transports
-
-       This method does no validation on the object, it is assumed that the object was validated in set_user_transports
-
-       Args:
-          username(str): the username to lookup
-
-       Returns:
-          dict: the transports configured for the user
-       """
-        retval = None
-        with self.acquire_conn() as conn:
-            try:
-                query = user_settings_table.select().where(
-                    user_settings_table.c.username == username)
-                select_response = conn.execute(query)
-                results = select_response.fetchone()
-                if results is not None:
-                    json_settings = results['transports']
-                    retval = json.loads(json_settings)
-                else:
-                    retval = None
-            except BaseException:
-                logger.exception('get_user_transports failed')
-        if (retval is None) and (not retry):
-            if self.create_user(username):
-                return self.get_user_transports(username=username, retry=True)
-            else:
-                logger.error('get_user_transports failed')
-        return retval
-
-    def set_user_transports(self, username=None, transports=None):
-        """ Sets the JSON object representing user's configured transports
-        This method does only basic sanity checks, it should only be invoked via the API server
-        Args:
-            username(str):    the user whose transports need to be set
-            transports(dict): maps transports to dicts containing 'notification_types' and 'sub_data' keys
-        """
-        with self.acquire_conn() as conn:
-            # user exists
-            # user doesnt exist
-            success = False
-            try:
-                stmt = user_settings_table.update().where(
-                    user_settings_table.c.username == username). \
-                    values(transports=json.dumps(transports))
-                result = conn.execute(stmt).fetchone()
-                success = True
-            except sa.exc.SQLAlchemyError:
-                logger.info(
-                    'Exception occurred trying to update transports for user %s to %s',
-                    username, str(transports))
-        if not success:
-            result = self.create_user(username, transports=transports)
-            if result:
-                success = True
-        return success
-
+    # notification priorty query method
     def get_priority_count(self,
                            to_username,
                            priority,
@@ -459,91 +451,199 @@ class YoDatabase:
                 logger.exception('Exception occurred!')
         return retval
 
-    def create_wwwpoll_notification(self,
-                                    notify_id=None,
-                                    notify_type=None,
-                                    created_time=None,
-                                    json_data=None,
-                                    from_username=None,
-                                    to_username=None,
-                                    shown=False,
-                                    read=False):
-        """ Creates a new notification in the wwwpoll table
+    # user methods
+    def create_user(self, username, transports=None):
+        logger.info('creating user', username=username, transports=transports)
 
-        Keyword Args:
-           notify_id(str):    if not provided, will be autogenerated as a UUID
-           notify_type(str):  the notification type
-           created_time(str): ISO8601-formatted timestamp, if not set current time will be used
-           json_data(str):    what to include in the data field of the stored notification, must be JSON formatted
-           to_user(str):      the username we're sending to
-           shown(bool):       whether or not the notification should start marked as shown (default False)
-           read(bool):       whether or not the notification should start marked as shown (default False)
-
-        Returns:
-           dict: the notification as stored in wwwpoll, None on error
-        """
-
-        if notify_id is None:
-            notify_id = str(uuid.uuid4)
-        if created_time is None:
-            created_time = datetime.datetime.now()
-        notification = {
-            'nid': notify_id,
-            'notify_type': notify_type,
-            'created': created_time,
-            'updated': created_time,
-            'from_username':
-            from_username,  # TODO - does this field even make sense for the wwwpoll table?
-            'to_username': to_username,
-            'shown': shown,
-            'json_data': json_data,
-            'read': read
+        transports = transports or DEFAULT_USER_TRANSPORT_SETTINGS
+        user_settings_data = {
+            'username': username,
+            'transports': ujson.dumps(transports)
         }
-        success = False
+
         with self.acquire_conn() as conn:
-            tx = conn.begin()
             try:
-                conn.execute(wwwpoll_table.insert(), **notification)
-                tx.commit()
-                success = True
-            except (IntegrityError, SQLiteIntegrityError) as e:
-                if is_duplicate_entry_error(e):
-                    logger.debug('Ignoring duplicate entry error')
-                    success = True
-                else:
-                    logger.exception('failed to add notification')
-                    tx.rollback()
+                stmt = user_settings_table.insert(values=user_settings_data)
+                result = conn.execute(stmt)
+                if result.inserted_primary_key:
+                    logger.info('user created', username=username)
+                    return True
             except BaseException:
-                tx.rollback()
                 logger.exception(
-                    'Failed to create new wwwpoll notification object: %s',
-                    notification)
-        return success
-
-    def create_notification(self, **notification_object):
-        """ Creates an unsent notification in the DB
-
-        Keyword Args:
-           notification_object(dict): the actual notification to create+store
-
-        Returns:
-          True on success, False on error
-        """
-        if 'nid' not in notification_object.keys():
-            notification_object['nid'] = str(uuid.uuid4())
-        with self.acquire_conn() as conn:
-            tx = conn.begin()
-            try:
-                _ = conn.execute(notifications_table.insert(),
-                                 **notification_object)
-                tx.commit()
-                logger.info('Created new notification object: %s',
-                            notification_object)
-                return True
-            except Exception as e:
-                if is_duplicate_entry_error(e):
-                    logger.info('Ignoring duplicate entry error')
-                else:
-                    logger.info('failed to add notification')
-                    tx.rollback()
+                    'create_user failed',
+                    username=username,
+                    transports=transports,
+                    exc_info=True)
         return False
+
+    def get_user_transports(self, username=None):
+        """Returns the JSON object representing user's configured transports
+
+       This method does no validation on the object, it is assumed that the object was validated in set_user_transports
+
+       Args:
+          username(str): the username to lookup
+
+       Returns:
+          dict: the transports configured for the user
+       """
+        with self.acquire_conn() as conn:
+            try:
+                user_query = user_settings_table.select().where(
+                    user_settings_table.c.username == username)
+                select_response = conn.execute(user_query)
+                user = select_response.first()
+                if not user:
+                    raise UserNotFoundError()
+                return ujson.loads(user['transports'])
+
+            except UserNotFoundError:
+                result = self.create_user(username=username)
+                if result:
+                    return DEFAULT_USER_TRANSPORT_SETTINGS
+                raise ValueError('No user found or created')
+
+            except BaseException as e:
+                logger.exception(
+                    'get_user_transports failed', username=username)
+                raise e
+
+    def set_user_transports(self, username=None, transports=None):
+        """ Sets the JSON object representing user's configured transports
+        This method does only basic sanity checks, it should only be invoked via the API server
+        Args:
+            username(str):    the user whose transports need to be set
+            transports(dict): maps transports to dicts containing 'notification_types' and 'sub_data' keys
+        """
+        with self.acquire_conn() as conn:
+            try:
+                set_transpors_stmt = user_settings_table.update().\
+                    where(user_settings_table.c.username == username).\
+                    values(transports=ujson.dumps(transports))
+                result = conn.execute(set_transpors_stmt)
+                if result.rowcount > 0:
+                    return True
+            except sa.exc.SQLAlchemyError:
+                logger.info(
+                    'unable to update transports',
+                    username=username,
+                    transports=transports)
+
+            logger.info('creating user to set transports', username=username)
+            if self.create_user(username, transports=transports):
+                return True
+            return False
+
+    # service methods
+    def register_service(self, service_name):
+        logger.info('registering service', service_name=service_name)
+        tbl = services_table
+        with self.acquire_conn() as conn:
+            create_service_tx = conn.begin()
+            # add service to services table
+            create_service_stmt = tbl.insert().values(
+                service_name=service_name)
+            result = conn.execute(create_service_stmt)
+            service_id = result.inserted_primary_key[0]
+            logger.debug(
+                'service registered',
+                service_name=service_name,
+                service_id=service_id)
+            create_service_tx.commit()
+
+            # adjust number of enabled services
+            adjust_enabled_services_tx = conn.begin()
+            lock_services_stmt = tbl.select().with_for_update(). \
+                where(tbl.c.service_name == service_name)
+            conn.execute(lock_services_stmt)
+            enabled_services_query = tbl.count().where(
+                tbl.c.service_name == service_name).\
+                where(tbl.c.service_status == int(ServiceState.ENABLED))
+            enabled_services = conn.scalar(enabled_services_query)
+            logger.debug(
+                'enabled services count',
+                service_name=service_name,
+                count=enabled_services)
+
+            # enable service if it is the only one registered
+            if enabled_services < 1:
+                logger.debug('enabling service', service_name=service_name)
+                update_status_stmt = tbl.update().where(
+                    tbl.c.service_id == service_id).values(
+                        service_status=int(ServiceState.ENABLED))
+                conn.execute(update_status_stmt)
+            adjust_enabled_services_tx.commit()
+
+            # read service status from db and return it to service
+            query = tbl.select().where(tbl.c.service_id == service_id)
+            row = conn.execute(query).first()
+            result = Registration(
+                service_name=row['service_name'],
+                service_id=row['service_id'],
+                service_status=row['service_status'],
+                service_extra=row['service_extra'])
+
+            logger.debug('registration result', registration=result)
+            return result
+
+    def unregister_service(self, registration):
+        logger.info('unregistering service', registration=registration)
+        tbl = services_table
+        with self.acquire_conn() as conn:
+            disable_service_tx = conn.begin()
+            # remove service from services table
+            disable_service_stmt = tbl.delete().\
+                where(tbl.c.service_id == registration.service_id)
+            _ = conn.execute(disable_service_stmt)
+            disable_service_tx.commit()
+            logger.debug(
+                'service unregistered',
+                service_name=registration.service_name,
+                service_id=registration.service_id)
+
+    def heartbeat(self, registration: Registration):
+        logger.info('heartbeat received', **registration.asdict())
+        tbl = services_table
+        service_name = registration.service_name
+        service_id = registration.service_id
+        with self.acquire_conn() as conn:
+            # adjust number of enabled services
+            adjust_enabled_services_tx = conn.begin()
+            lock_services_stmt = tbl.select().with_for_update().\
+                where(tbl.c.service_name == service_name)
+            conn.execute(lock_services_stmt)
+            enabled_services_query = tbl.count().where(
+                tbl.c.service_name == service_name). \
+                where(tbl.c.service_status == int(ServiceState.ENABLED))
+            enabled_services = conn.scalar(enabled_services_query)
+            logger.debug(
+                'enabled services count',
+                service_name=service_name,
+                count=enabled_services)
+
+            # enable service if it is the only one registered
+            if enabled_services < 1:
+                logger.debug('enabling %s service', service_name)
+                update_status_stmt = tbl.update().where(
+                    tbl.c.service_id == service_id).values(
+                        service_status=int(ServiceState.ENABLED))
+                conn.execute(update_status_stmt)
+            adjust_enabled_services_tx.commit()
+
+            # read service status from db and return it to service
+            query = tbl.select().where(
+                tbl.c.service_id == registration.service_id)
+            row = conn.execute(query).first()
+            result = Registration(
+                service_name=row['service_name'],
+                service_id=row['service_id'],
+                service_status=row['service_status'],
+                service_extra=row['service_extra'])
+            logger.debug('registration result', registration=result)
+            return result
+
+    def clear_services(self):
+        logger.info('resetting services table')
+        tbl = services_table
+        with self.acquire_conn() as conn:
+            conn.execute(tbl.delete())

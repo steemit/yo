@@ -5,31 +5,17 @@
     "delivery" basically means storing the notification into the wwwpoll table where it can be polled using the API.
 """
 
-import logging
+import structlog
 
 from .base_transport import BaseTransport
 
-logger = logging.getLogger(__name__)
+logger = structlog.getLogger(
+    __name__, transport='WWWPollTransport', transport_type='wwwpoll')
 
 
 class WWWPollTransport(BaseTransport):
-    def __init__(self, yo_db):
-        """ Transport implementation for polling interface
+    transport_type = 'wwwpoll'
 
-       Args:
-           yo_db: instance of YoDatabase to use
-       """
-        self.db = yo_db
-
-    def send_notification(self, to_username=None, data=None):
-        """ Sends a notification to a specific user
-
-       Keyword args:
-          to_username(str): the username for the user we're sending to
-          data(dict):       a dictionary containing the raw data for the notification
-
-       Note:
-          the subscription data for wwwpoll is ignored at present and not used
-       """
-        logger.debug('wwwpoll sending notification to %s', to_username)
-        self.db.create_wwwpoll_notification(to_user=to_username, raw_data=data)
+    # pylint: disable=unused-argument,arguments-differ
+    def send_notification(self, user, notification):
+        return True

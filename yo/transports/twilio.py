@@ -1,17 +1,19 @@
 # -*- coding: utf-8 -*-
 """Twilio transport, sends sms"""
 
-import logging
-
+import structlog
 from twilio.rest import Client
 
 from .base_transport import BaseTransport
 
-logger = logging.getLogger(__name__)
+logger = structlog.getLogger(
+    __name__, transport='TwilioTranport', transport_type='sms')
 
 
 class TwilioTransport(BaseTransport):
-    def __init__(self, account_sid, auth_token, from_number):
+    transport_type = 'sms'
+
+    def __init__(self, account_sid, auth_token, from_number, *args, **kwargs):
         """Transport implementation for twilio
 
         Args:
@@ -19,23 +21,27 @@ class TwilioTransport(BaseTransport):
             auth_token(str):  the auth token for twilio
             from_number(str): the twilio number to send from
         """
+        super().__init__(*args, **kwargs)
         self.client = Client(account_sid, auth_token)
         self.from_number = from_number
 
-    def send_notification(self, to_subdata=None, notify_type=None, data=None):
-        if data is None:
-            data = {}
-        logger.debug('Twilio sending notification %s to %s', notify_type,
-                     to_subdata)
+    # pylint: disable=arguments-differ
+    def send_notification(self, user, notification):
+        to_sms_number = user['transports']['sms']['subdata']
+        notify_type = notification['notify_type']
+        logger.debug(
+            'Twilio sending notification',
+            notify_type=notify_type,
+            to_sms_number=to_sms_number)
 
-        if notify_type == 'vote':
-            vote_info = data['op'][1]
-            message = 'Your comment or post %s has been upvoted by %s' % (
-                vote_info['permlink'], vote_info['voter'])
-        else:
-            logger.error('Twilio - unknown notification type: %s', notify_type)
-            return
+        message = self.render(user, notification)
 
         response = self.client.messages.create(
-            to=to_subdata, from_=self.from_number, body=message)
-        logger.debug('Twilio response %s', response)
+            to=to_sms_number, from_=self.from_number, body=message)
+
+        logger.debug('Twilio response received', response=response)
+
+    # pylint: enable=arguments-differ
+
+    def render(self, user, notification):
+        raise NotImplementedError

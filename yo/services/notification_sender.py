@@ -1,20 +1,13 @@
 # -*- coding: utf-8 -*-
-import json
-import logging
 
-from ..ratelimits import check_ratelimit
+import structlog
+from toolz.itertoolz import groupby
+
 from ..transports import sendgrid
 from ..transports import twilio
-from ..transports import wwwpoll
 from .base_service import YoBaseService
 
-logger = logging.getLogger(__name__)
-""" Basic design:
-
-     1. Blockchain sender inserts notification into DB
-     2. Blockchain sender triggers the notification by calling internal API method
-     3. Notification sender checks if the notification is already sent or not, if not it sends to all configured transports and updates it to sent
-"""
+logger = structlog.getLogger(__name__, service_name='notification_sender')
 
 
 class YoNotificationSender(YoBaseService):
@@ -25,60 +18,47 @@ class YoNotificationSender(YoBaseService):
         self.configured_transports = {}
 
     async def api_trigger_notifications(self):
-        await self.run_send_notify()
+        await self.main_task()
         return {'result': 'Succeeded'}  # FIXME
 
-    async def run_send_notify(self):
-        unsents = self.db.get_wwwpoll_unsents()
-        logger.info('run_send_notify() handling %s unsents', str(len(unsents)))
+    async def main_task(self):
+        unsents = self.db.get_db_unsents()
+        self.log.info('main task', unsent_count=len(unsents))
 
-        for username, notifications in unsents.items():
-            logger.info(
-                'run_send_notify() handling user %s with %d notifications',
-                username, len(notifications))
-            user_transports = self.db.get_user_transports(username)
-            user_notify_types_transports = {}
-            for transport_name, transport_data in user_transports.items():
-                for notify_type in transport_data['notification_types']:
-                    if notify_type not in user_notify_types_transports.keys():
-                        user_notify_types_transports[notify_type] = []
-                    user_notify_types_transports[notify_type].append(
-                        (transport_name, transport_data['sub_data']))
-            for notification in notifications:
-                if not check_ratelimit(self.db, notification):
-                    logger.info(
-                        'Skipping notification for failing rate limit check: %s',
-                        str(notification))
-                    continue
-                for t in user_notify_types_transports[notification[
-                        'notify_type']]:
-                    logger.info('Sending notification %s to transport %s',
-                                str(notification), str(t[0]))
-                    self.configured_transports[t[0]].send_notification(
-                        to_subdata=t[1],
-                        to_username=username,
-                        notify_type=notification['notify_type'],
-                        data=json.loads(notification['json_data']))
+        grouped_unsents = groupby('to_username', unsents)
 
+        failed_sends = []
+        for username, unsents in grouped_unsents.items():
+            for transport in self.configured_transports.values():
+                failed = transport.process_notifications(username, unsents)
+                failed_sends.extend(failed)
+
+        failed_sends_ids = set(item[1]['nid'] for item in failed_sends)
+        sent_notifications = [
+            item for item in unsents if item['nid'] not in failed_sends_ids
+        ]
+        sent_nids = [n['nid'] for n in sent_notifications]
+        self.db.mark_db_notifications_sent(sent_nids)
+
+    # pylint: disable=abstract-class-instantiated
     def init_api(self):
-        self.private_api_methods[
-            'trigger_notifications'] = self.api_trigger_notifications
-        if self.yo_app.config.config_data['wwwpoll'].getint('enabled', 1):
-            logger.info('Enabling wwwpoll transport')
-            self.configured_transports['wwwpoll'] = wwwpoll.WWWPollTransport(
-                self.db)
-        if self.yo_app.config.config_data['sendgrid'].getint('enabled', 0):
-            logger.info('Enabling sendgrid (email) transport')
-            self.configured_transports['email'] = sendgrid.SendGridTransport(
-                self.yo_app.config.config_data['sendgrid']['priv_key'],
-                self.yo_app.config.config_data['sendgrid']['templates_dir'])
-        if self.yo_app.config.config_data['twilio'].getint('enabled', 0):
-            logger.info('Enabling twilio (sms) transport')
-            self.configured_transports['sms'] = twilio.TwilioTransport(
-                self.yo_app.config.config_data['twilio']['account_sid'],
-                self.yo_app.config.config_data['twilio']['auth_token'],
-                self.yo_app.config.config_data['twilio']['from_number'],
-            )
+        super().init_api()
+        config = self.yo_app.config.config_data
 
-    async def async_task(self):
-        pass
+        self.private_api_methods['trigger_notifications'] = \
+            self.api_trigger_notifications
+
+        if config['sendgrid'].getint('enabled', 0):
+            self.log.info('Enabling sendgrid (email) transport')
+            self.configured_transports['email'] = \
+                sendgrid.SendGridTransport(config['sendgrid']['priv_key'],
+                                           config['sendgrid']['templates_dir'],
+                                           yo_db=self.db)
+
+        if config['twilio'].getint('enabled', 0):
+            self.log.info('Enabling twilio (sms) transport')
+            self.configured_transports['sms'] = \
+                twilio.TwilioTransport(config['twilio']['account_sid'],
+                                       config['twilio']['auth_token'],
+                                       config['twilio']['from_number'],
+                                       yo_db=self.db)
