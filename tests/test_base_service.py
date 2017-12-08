@@ -1,14 +1,11 @@
 # -*- coding: utf-8 -*-
-
+import argparse
 import asynctest
-from yo import config
+
 from yo.services.registration import ServiceState
 
 
-class MockApp:
-    def __init__(self, db):
-        self.db = db
-        self.config = config.YoConfigManager(None)
+
 
 
 def test_class_variables():
@@ -16,10 +13,10 @@ def test_class_variables():
     assert YoBaseService.service_name == 'base'
 
 
-def test_instantiation(mocker):
+def test_instantiation(mocker, basic_mock_app):
     from yo.services.blockchain_follower import YoBlockchainFollower
 
-    ya = MockApp(None)
+    ya = basic_mock_app
     mocker.patch.object(YoBlockchainFollower, 'init_api')
     y = YoBlockchainFollower(yo_app=ya, config=None, db=None)
     assert y.service_status == ServiceState.DISABLED

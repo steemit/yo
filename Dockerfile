@@ -84,6 +84,7 @@ COPY ./tests ${APP_ROOT}/tests
 COPY ./yo ${APP_ROOT}/yo
 COPY ./yo.cfg ${APP_ROOT}/yo.cfg
 COPY ./.pylintrc ${APP_ROOT}/.pylintrc
+COPY ./mail_templates ${APP_ROOT}/mail_templates
 
 ENV HOME ${APP_ROOT}
 

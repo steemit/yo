@@ -1,18 +1,34 @@
 # -*- coding: utf-8 -*-
 import asyncio
 import datetime
+import functools
+import json
 import os
 
 from aiohttp import web
+from jsonrpcserver import config
 from jsonrpcserver.async_methods import AsyncMethods
 import structlog
 import uvloop
+
+import yo.api_methods
+
+config.log_responses = False
+config.log_requests = False
 
 logger = structlog.getLogger(__name__)
 
 asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
-ALLOWED_ORIGINS = ['http://localhost:8080', 'https://steemitdev.com']
+
+def default_json(obj):
+    if isinstance(obj, datetime.datetime):
+        return str(obj)
+    raise TypeError('Unable to serialize {!r}'.format(obj))
+
+
+json_dumps = functools.partial(json.dumps, default=default_json)
+json_response = functools.partial(web.json_response, dumps=json_dumps)
 
 
 # pylint: disable=too-many-instance-attributes
@@ -25,35 +41,34 @@ class YoApp:
         self.service_tasks = {}
         self.loop = asyncio.get_event_loop()
         self.web_app = web.Application(loop=self.loop)
-        self.web_app['config'] = {
-            'yo_config': self.config,
-            'yo_db': self.db,
-            'yo_app': self
-        }
         self.api_methods = AsyncMethods()
         self.running = False
+        self.web_app.router.add_post('/', self.handle_api)
+        self.web_app.router.add_get('/.well-known/healthcheck.json',
+                                    self.healthcheck_handler)
+
+        self.api_methods.add(yo.api_methods.api_get_notifications,
+                             'yo.get_db_notifications')
+        self.api_methods.add(yo.api_methods.api_mark_read, 'yo.mark_read')
+        self.api_methods.add(yo.api_methods.api_mark_unread, 'yo.mark_unread')
+        self.api_methods.add(yo.api_methods.api_mark_shown, 'yo.mark_shown')
+        self.api_methods.add(yo.api_methods.api_mark_unshown, 'yo.mark_unshown')
+        self.api_methods.add(yo.api_methods.api_get_transports, 'yo.get_transports')
+        self.api_methods.add(yo.api_methods.api_set_transports, 'yo.set_transports')
+        self.api_methods.add(self.api_healthcheck, 'health')
 
     async def handle_api(self, request):
-        req_app = request.app
         request = await request.json()
-        logger.debug('incoming request', request=request)
-        if 'params' not in request.keys():
-            request['params'] = {}  # fix for API methods that have no params
-        context = {'yo_db': req_app['config']['yo_db']}
+        context = {'yo_db': self.db}
         response = await self.api_methods.dispatch(request, context=context)
-        return web.json_response(response)
-
-    def add_api_method(self, func, func_name):
-        logger.debug('Adding API method', name=func_name)
-        self.api_methods.add(func, name='yo.%s' % func_name)
+        return json_response(response)
 
     # pylint: disable=unused-argument
     async def start_background_tasks(self, app):
         logger.info('starting tasks')
         for k, v in self.service_tasks.items():
             logger.info('starting service task', task=k)
-            self.web_app['service_task:%s' %
-                         k] = self.web_app.loop.create_task(v())
+            self.web_app['service_task:%s' % k] = self.web_app.loop.create_task(v())
 
     # pylint: enable=unused-argument
 
@@ -72,32 +87,10 @@ class YoApp:
 
     # pylint: enable=unused-argument
 
-    @staticmethod
-    async def handle_options(request):
-        origin = request.headers['Origin']
-        if origin in ALLOWED_ORIGINS:
-            response = web.Response(
-                status=204,
-                headers={
-                    'Access-Control-Allow-Methods': 'POST',
-                    'Access-Control-Allow-Origin': origin,
-                    'Access-Control-Allow-Headers': '*'
-                })
-        else:
-            response = web.Response(status=403)
-        return response
-
     # pylint: disable=unused-argument
-    async def setup_standard_api(self, app):
-        self.add_api_method(self.api_healthcheck, 'healthcheck')
-        self.web_app.router.add_post('/', self.handle_api)
-        self.web_app.router.add_get('/.well-known/healthcheck.json',
-                                    self.healthcheck_handler)
-
     async def on_cleanup(self, app):
         logger.info('executing on_cleanup signal handler')
         futures = [service.shutdown() for service in self.services.values()]
-
         await asyncio.gather(*futures)
 
     # pylint: enable=unused-argument
@@ -105,13 +98,9 @@ class YoApp:
     def run(self):
         self.running = True
         self.web_app.on_startup.append(self.start_background_tasks)
-        self.web_app.on_startup.append(self.setup_standard_api)
         self.web_app.on_cleanup.append(self.on_cleanup)
 
-        web.run_app(
-            self.web_app,
-            host=self.config.get_listen_host(),
-            port=self.config.get_listen_port())
+        web.run_app(self.web_app, host=self.config.http_host, port=self.config.http_port)
 
     def add_service(self, service_kls):
         logger.debug('Adding service', service=service_kls.service_name)

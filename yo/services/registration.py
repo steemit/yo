@@ -7,7 +7,7 @@ from typing import NamedTuple
 import ujson
 
 
-class ServiceState(enum.IntFlag):
+class ServiceState(enum.IntEnum):
     DISABLED = 0
     ENABLED = 1
 

@@ -12,6 +12,15 @@ from .registration import Registration
 from .registration import ServiceState
 
 logger = structlog.getLogger(__name__)
+service_config = {
+    'heartbeat_enabled': True,
+    'heartbeat_interval': 10,
+    'service_interval': 1,
+    'service_enabled': True,
+    'service_name': None,
+    'service_id': None,
+    'service_extra': {}
+}
 
 
 class YoAbstractServiceClass(abc.ABC):
@@ -29,11 +38,7 @@ class YoAbstractServiceClass(abc.ABC):
         pass
 
     @abc.abstractmethod
-    async def execute_sync(self,
-                           func: Callable,
-                           *args,
-                           db_func: bool = False,
-                           **kwargs):
+    async def execute_sync(self, func: Callable, *args, db_func: bool = False, **kwargs):
         pass
 
     @abc.abstractmethod
@@ -47,10 +52,6 @@ class YoAbstractServiceClass(abc.ABC):
 
     @abc.abstractmethod
     def update(self, registration: Registration) -> None:
-        pass
-
-    @abc.abstractmethod
-    def register(self) -> None:
         pass
 
     @abc.abstractmethod
@@ -123,11 +124,8 @@ class YoBaseService(YoAbstractServiceClass):
         self.log.info('initializing')
         self.log.info('creating job scheudler')
         self.scheduler = self.loop.run_until_complete(
-            aiojobs.create_scheduler(
-                close_timeout=self.heartbeat_interval + 2))
+            aiojobs.create_scheduler(close_timeout=self.heartbeat_interval + 2))
         self.log.info('registering')
-        self.register()
-
         self.log.info('starting heartbeat task')
         asyncio.ensure_future(self.scheduler.spawn(self.heartbeat()))
 
@@ -153,7 +151,7 @@ class YoBaseService(YoAbstractServiceClass):
             self.update(new_registration)
 
         except Exception:
-            self.log.exception('heartbeat task error')
+            self.log.exception('heartbeat task error', exc_info=True)
         finally:
             if self.heartbeat_status:
                 await asyncio.sleep(self.heartbeat_interval)
@@ -170,22 +168,15 @@ class YoBaseService(YoAbstractServiceClass):
             service_extra=self.service_extra)
 
     def update(self, registration):
-        self.log.debug('update requested')
+        self.log.debug(
+            'update requested', registration=registration, current=self.registration)
         self.service_id = registration.service_id
         self.handle_service_extra(registration.service_extra)
         self.log = self.log.bind(**registration.asdict())
         if self.service_status != registration.service_status:
-            self.log.info('updating')
+            self.log.info('service status changed')
             self.toggle_service_status()
             self.log.debug(str(self.registration))
-        else:
-            self.log.debug('update noop')
-
-    def register(self):
-        self.log.info('attempting to register')
-        registration = self.db.register_service(service_name=self.service_name)
-        self.log.info('registered')
-        self.update(registration)
 
     def unregister(self):
         self.log.info('attempting to unregister')

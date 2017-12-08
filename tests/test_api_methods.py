@@ -4,7 +4,7 @@ import json
 
 import pytest
 
-from yo.services import api_server
+import yo.api_methods
 
 
 @pytest.mark.asyncio
@@ -28,12 +28,11 @@ async def test_api_get_notifications(sqlite_db):
         'notify_type': 'vote',
         'trx_id': '123abc'
     }
-    API = api_server.YoAPIServer()
     yo_db = sqlite_db
-    retval = yo_db.create_db_notification(**test_data)
+    retval = yo_db.create_notification(**test_data)
     assert retval is True
 
-    result = await API.api_get_notifications(
+    result = await yo.api_methods.api_get_notifications(
         username='testuser1337', context=dict(yo_db=sqlite_db))
 
     assert len(result) == 1
@@ -67,12 +66,11 @@ async def test_api_mark_read(sqlite_db):
         'from_username': 'testuser1336',
         'notify_type': 'vote',
     }
-    API = api_server.YoAPIServer()
     _ = sqlite_db.create_wwwpoll_notification(**test_notification)
     assert _ is True
     notification = sqlite_db.get_wwwpoll_notifications()[0]
     assert notification['read'] is False
-    result = await API.api_mark_read(ids=[notification['nid']], context=dict(yo_db=sqlite_db))
+    result = await yo.api_methods.api_mark_read(ids=[notification['nid']], context=dict(yo_db=sqlite_db))
     assert result == [True]
     notification = sqlite_db.get_wwwpoll_notifications()[0]
     assert notification['read'] is True
@@ -97,12 +95,12 @@ async def test_api_mark_unread(sqlite_db):
         'notify_type': 'vote',
         'read': True
     }
-    API = api_server.YoAPIServer()
+
     _ = sqlite_db.create_wwwpoll_notification(**test_notification)
     assert _ is True
     notification = sqlite_db.get_wwwpoll_notifications()[0]
     assert notification['read'] is True
-    result = await API.api_mark_unread(ids=[notification['nid']],
+    result = await yo.api_methods.api_mark_unread(ids=[notification['nid']],
                                        context=dict(yo_db=sqlite_db))
     assert result == [True]
     notification = sqlite_db.get_wwwpoll_notifications()[0]
@@ -127,12 +125,12 @@ async def test_api_mark_shown(sqlite_db):
         'from_username': 'testuser1336',
         'notify_type': 'vote',
     }
-    API = api_server.YoAPIServer()
+
     _ = sqlite_db.create_wwwpoll_notification(**test_notification)
     assert _ is True
     notification = sqlite_db.get_wwwpoll_notifications()[0]
     assert notification['shown'] is False
-    result = await API.api_mark_shown(ids=[notification['nid']],
+    result = await yo.api_methods.api_mark_shown(ids=[notification['nid']],
                                       context=dict(yo_db=sqlite_db))
     assert result == [True]
     notification = sqlite_db.get_wwwpoll_notifications()[0]
@@ -158,12 +156,12 @@ async def test_api_mark_unshown(sqlite_db):
         'notify_type': 'vote',
         'shown': True
     }
-    API = api_server.YoAPIServer()
+
     _ = sqlite_db.create_wwwpoll_notification(**test_notification)
     assert _ is True
     notification = sqlite_db.get_wwwpoll_notifications()[0]
     assert notification['shown'] is True
-    result = await API.api_mark_unshown(ids=[notification['nid']],
+    result = await yo.api_methods.api_mark_unshown(ids=[notification['nid']],
                                         context=dict(yo_db=sqlite_db))
     assert result == [True]
     notification = sqlite_db.get_wwwpoll_notifications()[0]
@@ -173,7 +171,7 @@ async def test_api_mark_unshown(sqlite_db):
 @pytest.mark.asyncio
 async def test_api_get_set_transports(sqlite_db):
     """Test get and set transports backed by sqlite with simple non-default transports"""
-    API = api_server.YoAPIServer()
+
 
     simple_transports_obj = {
         'username': 'testuser1337',
@@ -191,12 +189,12 @@ async def test_api_get_set_transports(sqlite_db):
         }
     }
 
-    resp = await API.api_set_transports(
+    resp = await yo.api_methods.api_set_transports(
         username='testuser1337',
         transports=simple_transports_obj['transports'],
         context=dict(yo_db=sqlite_db))
     assert resp
 
-    resp = await API.api_get_transports(
+    resp = await yo.api_methods.api_get_transports(
         username='testuser1337', context=dict(yo_db=sqlite_db))
     assert resp == simple_transports_obj['transports']

@@ -4,12 +4,11 @@ import logging.config
 
 import structlog
 
-timestamper = structlog.processors.TimeStamper(fmt='iso')
 pre_chain = [
     # Add the log level and a timestamp to the event_dict if the log entry
     # is not from structlog.
     structlog.stdlib.add_log_level,
-    timestamper
+    structlog.processors.TimeStamper(fmt='iso')
 ]
 
 logging.config.dictConfig({
@@ -18,13 +17,17 @@ logging.config.dictConfig({
     "formatters": {
         "plain": {
             "()": structlog.stdlib.ProcessorFormatter,
-            "processor": structlog.dev.ConsoleRenderer(colors=True),
+            "processor": structlog.dev.ConsoleRenderer(colors=False),
             "foreign_pre_chain": pre_chain,
+            "keep_exc_info": True,
+            "keep_stack_info": True
         },
         "colored": {
             "()": structlog.stdlib.ProcessorFormatter,
             "processor": structlog.dev.ConsoleRenderer(colors=True),
             "foreign_pre_chain": pre_chain,
+            #  "keep_exc_info": True,
+            #  "keep_stack_info": True
         },
     },
     "handlers": {
@@ -45,9 +48,8 @@ logging.config.dictConfig({
 structlog.configure(
     processors=[
         structlog.stdlib.add_log_level,
-        structlog.stdlib.PositionalArgumentsFormatter(
-            remove_positional_args=False),
-        timestamper,
+        structlog.stdlib.PositionalArgumentsFormatter(),
+        structlog.processors.TimeStamper(fmt='iso'),
         structlog.processors.StackInfoRenderer(),
         structlog.processors.format_exc_info,
         structlog.stdlib.ProcessorFormatter.wrap_for_formatter,
