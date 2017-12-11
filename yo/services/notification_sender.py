@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import structlog
-from toolz.itertoolz import groupby
 
 from ..transports import sendgrid
 from ..transports import twilio
@@ -15,50 +14,46 @@ class YoNotificationSender(YoBaseService):
 
     def __init__(self, yo_app=None, config=None, db=None):
         super().__init__(yo_app=yo_app, config=config, db=db)
-        self.configured_transports = {}
-
-    async def api_trigger_notifications(self):
-        await self.main_task()
-        return {'result': 'Succeeded'}  # FIXME
+        self._configured_transports = {}
 
     async def main_task(self):
         unsents = self.db.get_db_unsents()
-        self.log.info('main task', unsent_count=len(unsents))
+        usernames = set(u['to_username'] for u in unsents)
+        self.log.info(
+            'sending unsents', unsent_count=len(unsents), unique_usernames=len(usernames))
 
-        grouped_unsents = groupby('to_username', unsents)
-
-        failed_sends = []
-        for username, unsents in grouped_unsents.items():
-            for transport in self.configured_transports.values():
-                failed = transport.process_notifications(username, unsents)
-                failed_sends.extend(failed)
-
-        failed_sends_ids = set(item[1]['nid'] for item in failed_sends)
-        sent_notifications = [
-            item for item in unsents if item['nid'] not in failed_sends_ids
+        user_rates = self.db.get_users_rates(usernames)
+        logger.debug('main_task', user_rates=user_rates)
+        results = [
+            transport.process_notifications(user_rates, unsents)
+            for transport in self.configured_transports
         ]
-        sent_nids = [n['nid'] for n in sent_notifications]
-        self.db.mark_db_notifications_sent(sent_nids)
+
+        logger.debug('results', results=results)
+        #results = [transport.process_notifications(user_rates, unsents) for transport in self.configured_transports]
+        for transport_type, sent, failed, muted, rate_limited in results:
+            self.log.debug('storing results', transport=transport_type)
+            self.db.store_notification_results(transport_type, sent, failed, muted,
+                                               rate_limited)
+
+    @property
+    def configured_transports(self):
+        return self._configured_transports.values()
 
     # pylint: disable=abstract-class-instantiated
     def init_api(self):
         super().init_api()
-        config = self.yo_app.config.config_data
+        config = self.yo_app.config
 
-        self.private_api_methods['trigger_notifications'] = \
-            self.api_trigger_notifications
+        # pylint: disable=using-constant-test
 
-        if config['sendgrid'].getint('enabled', 0):
-            self.log.info('Enabling sendgrid (email) transport')
-            self.configured_transports['email'] = \
-                sendgrid.SendGridTransport(config['sendgrid']['priv_key'],
-                                           config['sendgrid']['templates_dir'],
-                                           yo_db=self.db)
+        self.log.info('enabling sendgrid (email) transport')
+        self._configured_transports['email'] = \
+            sendgrid.SendGridTransport(config.sendgrid_priv_key,
+                                       config.sendgrid_templates_dir)
 
-        if config['twilio'].getint('enabled', 0):
-            self.log.info('Enabling twilio (sms) transport')
-            self.configured_transports['sms'] = \
-                twilio.TwilioTransport(config['twilio']['account_sid'],
-                                       config['twilio']['auth_token'],
-                                       config['twilio']['from_number'],
-                                       yo_db=self.db)
+        self.log.info('Enabling twilio (sms) transport')
+        self._configured_transports['sms'] = \
+            twilio.TwilioTransport(config.twilio_account_sid,
+                                   config.twilio_auth_token,
+                                   config.twilio_from_number)

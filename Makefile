@@ -71,7 +71,7 @@ sort-imports: ## sorts python imports using isort with settings from .editorconf
 
 .PHONY: fmt
 fmt: remove-unused-imports sort-imports ## format python files
-	pipenv run yapf --in-place --style pep8 --recursive $(PROJECT_NAME)
+	pipenv run yapf --in-place --parallel --recursive $(PROJECT_NAME)
 	pipenv run autopep8 --verbose --verbose --max-line-length=100 --aggressive --jobs -1 --in-place  --recursive $(PROJECT_NAME)
 
 .PHONY: pre-commit
@@ -84,11 +84,16 @@ pre-commit-all: ## run pre-commit against all files
 
 .PHONY: run-local
 run-local: ## run application locally
-	env YO_DATABASE_URL=sqlite:///yo.db pipenv run python -m yo.cli
+	pipenv run python -m yo.cli --database_url sqlite:///yo.db
 
 .PHONY: run-local-pg
 run-local-pg: ## run application locally
-	env YO_DATABASE_URL=postgres://postgres:password@localhost/yo pipenv run python -m yo.cli
+	pipenv run python -m yo.cli --database_url postgres://postgres:password@localhost/yo
+
+.PHONY: run-local-pg2
+run-local-pg2: ## run application locally
+	pipenv run python -m yo.cli --database_url postgres://postgres:password@localhost/yo \
+	--http_port 8081
 
 .PHONY: init-db
 init-db: ## initialize app db
@@ -96,7 +101,11 @@ init-db: ## initialize app db
 
 .PHONY: reset-db
 reset-db: ## reset app db
-	pipenv run python -m yo.db_utils $(YO_DATABASE_URL) reset
+	pipenv run python -m yo.db_utils sqlite:///yo.db reset
+
+.PHONY: reset-db-pg
+reset-db-pg: ## reset app db
+	pipenv run python -m yo.db_utils postgres://postgres:password@localhost/yo reset
 
 .PHONY: clean
 clean: clean-build clean-pyc ## clean

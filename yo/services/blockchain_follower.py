@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import asyncio
 from collections import defaultdict
+import itertools
 import json
 import re
 
@@ -44,10 +45,11 @@ class YoBlockchainFollower(YoBaseService):
         super().__init__(**kwargs)
 
         # init blockchain
-        steemd_url = self.yo_app.config.config_data['blockchain_follower'].\
-            get('steemd_url', 'https://api.steemit.com')
+        steemd_url = self.yo_app.config.steemd_url
+
         self.steemd = steem.steemd.Steemd(nodes=[steemd_url])
         self.blockchain = Blockchain(steemd_instance=self.steemd)
+        self.start_block = self.yo_app.config.steemd_start_block
 
         self.last_block_num_handled = 0
 
@@ -68,20 +70,18 @@ class YoBlockchainFollower(YoBaseService):
         self.ops = lambda: self.execute_sync(next, self.ops_func)
 
     def get_start_block(self):
+        start_block = None
         try:
-            start_block = self.yo_app.config.config_data[
-                'blockchain_follower'].getint('start_block', None)
-            if isinstance(start_block, int) and start_block < 0:
-                start_block = self.blockchain.get_current_block_num(
-                ) - start_block
+            if isinstance(self.start_block, int) and self.start_block < 0:
+                start_block = self.blockchain.get_current_block_num() - self.start_block
         except Exception:
             self.log.exception('service error')
             start_block = None
         self.log.debug('get_start_block', start_block=start_block)
         return start_block
 
-    async def store_notification(self, **data):
-        return self.db.create_notification(**data)
+    async def store_notification(self, notifications):
+        return await self.db.create_notifications(notifications)
 
     # pylint gets confused about these for some reason
     # pylint: disable=no-member
@@ -94,55 +94,60 @@ class YoBlockchainFollower(YoBaseService):
             voter=vote_info['voter'],
             weight=vote_info['weight'])
 
-        return await self.store_notification(
-            trx_id=op['trx_id'],
-            from_username=vote_info['voter'],
-            to_username=vote_info['author'],
-            json_data=json.dumps(vote_info),
-            notify_type=VOTE,
-            priority_level=Priority.LOW.value)
+        return [
+            dict(
+                trx_id=op['trx_id'],
+                from_username=vote_info['voter'],
+                to_username=vote_info['author'],
+                json_data=json.dumps(vote_info),
+                notify_type=VOTE,
+                priority_level=Priority.LOW.value)
+        ]
 
     async def handle_follow(self, op):
         if op['op'][1]['id'] != 'follow':
             self.log.debug('handle_follow noop')
-            return True
+            return []
 
         op_data = op['op'][1]
         follow_data = json.loads(op_data['json'])
         if follow_data[0] != 'follow':
-            return False
+            return []
 
         follower = follow_data[1]['follower']
         following = follow_data[1]['following']
 
         if len(op_data['required_posting_auths']) != 1:
-            self.log.error(
-                'inavlid follow op, got %d posting auths, expected 1',
-                op_data['required_posting_auths'])
-            return False
+            self.log.error('inavlid follow op, got %d posting auths, expected 1',
+                           op_data['required_posting_auths'])
+            return []
 
         if op_data['required_posting_auths'][0] != follower:
             self.log.error('invalid follow op, follower must be signer')
-            return False
+            return []
         self.log.debug('handle_follow', follower=follower, following=following)
 
-        return await self.store_notification(
-            trx_id=op['trx_id'],
-            from_username=follower,
-            to_username=following,
-            json_data=json.dumps(follow_data[1]),
-            notify_type=FOLLOW,
-            priority_level=Priority.LOW.value)
+        return [
+            dict(
+                trx_id=op['trx_id'],
+                from_username=follower,
+                to_username=following,
+                json_data=json.dumps(follow_data[1]),
+                notify_type=FOLLOW,
+                priority_level=Priority.LOW.value)
+        ]
 
     async def handle_account_update(self, op):
         op_data = op['op'][1]
         self.log.debug('handle_account_update', account=op_data['account'])
-        return await self.store_notification(
-            trx_id=op['trx_id'],
-            to_username=op_data['account'],
-            json_data=json.dumps(op_data),
-            notify_type=ACCOUNT_UPDATE,
-            priority_level=Priority.LOW.value)
+        return [
+            dict(
+                trx_id=op['trx_id'],
+                to_username=op_data['account'],
+                json_data=json.dumps(op_data),
+                notify_type=ACCOUNT_UPDATE,
+                priority_level=Priority.LOW.value)
+        ]
 
     async def handle_send(self, op):
         op_data = op['op'][1]
@@ -157,13 +162,14 @@ class YoBlockchainFollower(YoBaseService):
             _from=send_data['from'],
             amount=send_data['amount'],
             to=send_data['to'])
-        await self.store_notification(
-            trx_id=op['trx_id'],
-            to_username=send_data['from'],
-            json_data=json.dumps(send_data),
-            notify_type=SEND_STEEM,
-            priority_level=Priority.LOW.value)
-        return True
+        return [
+            dict(
+                trx_id=op['trx_id'],
+                to_username=send_data['from'],
+                json_data=json.dumps(send_data),
+                notify_type=SEND_STEEM,
+                priority_level=Priority.LOW.value)
+        ]
 
     async def handle_receive(self, op):
         op_data = op['op'][1]
@@ -178,14 +184,15 @@ class YoBlockchainFollower(YoBaseService):
             to=receive_data['to'],
             amount=receive_data['amount'],
             _from=receive_data['from'])
-        await self.store_notification(
-            trx_id=op['trx_id'],
-            to_username=receive_data['to'],
-            from_username=receive_data['from'],
-            json_data=json.dumps(receive_data),
-            notify_type=RECEIVE_STEEM,
-            priority_level=Priority.LOW.value)
-        return True
+        return [
+            dict(
+                trx_id=op['trx_id'],
+                to_username=receive_data['to'],
+                from_username=receive_data['from'],
+                json_data=json.dumps(receive_data),
+                notify_type=RECEIVE_STEEM,
+                priority_level=Priority.LOW.value)
+        ]
 
     async def handle_power_down(self, op):
         op_data = op['op'][1]
@@ -193,13 +200,14 @@ class YoBlockchainFollower(YoBaseService):
             'handle_power_down',
             account=op_data['account'],
             amount=op_data['vesting_shares'])
-        await self.store_notification(
-            trx_id=op['trx_id'],
-            to_username=op_data['account'],
-            json_data=json.dumps(op_data),
-            notify_type=POWER_DOWN,
-            priority_level=Priority.LOW.value)
-        return True
+        return [
+            dict(
+                trx_id=op['trx_id'],
+                to_username=op_data['account'],
+                json_data=json.dumps(op_data),
+                notify_type=POWER_DOWN,
+                priority_level=Priority.LOW.value)
+        ]
 
     async def handle_mention(self, op):
         comment_data = op['op'][1]
@@ -208,25 +216,25 @@ class YoBlockchainFollower(YoBaseService):
             'author': comment_data['author'],
             'permlink': comment_data['permlink'],
         }
+        notifications = []
         for match in set(re.findall(MENTION_PATTERN, haystack)):
-            # TODO: validate mentioned user exists on chain?
-            self.log.debug(
-                'handle_mention', author=data['author'], mentioned=match)
-            await self.store_notification(
-                trx_id=op['trx_id'],
-                to_username=match,
-                from_username=data['author'],
-                json_data=json.dumps(data),
-                notify_type=MENTION,
-                priority_level=Priority.LOW.value)
-        return True
+            self.log.debug('handle_mention', author=data['author'], mentioned=match)
+            notifications.append(
+                dict(
+                    trx_id=op['trx_id'],
+                    to_username=match,
+                    from_username=data['author'],
+                    json_data=json.dumps(data),
+                    notify_type=MENTION,
+                    priority_level=Priority.LOW.value))
+        return notifications
 
     async def handle_comment(self, op):
         self.log.debug('handle_comment', op=['op'][0])
         op_data = op['op'][1]
         if op_data['parent_author'] == '':
             # top level post
-            return True
+            return []
         parent_id = '@' + op_data['parent_author'] + '/' + op_data['parent_permlink']
         parent = steem.post.Post(parent_id)
         note_type = COMMENT_REPLY if parent.is_comment() else POST_REPLY
@@ -235,46 +243,44 @@ class YoBlockchainFollower(YoBaseService):
             note_type=note_type,
             author=op_data['author'],
             parent_id=parent_id)
-        await self.store_notification(
-            trx_id=op['trx_id'],
-            to_username=op_data['parent_author'],
-            from_username=op_data['author'],
-            json_data=json.dumps(op_data),
-            notify_type=note_type,
-            priority_level=Priority.LOW.value)
-        return True
+        return [
+            dict(
+                trx_id=op['trx_id'],
+                to_username=op_data['parent_author'],
+                from_username=op_data['author'],
+                json_data=json.dumps(op_data),
+                notify_type=note_type,
+                priority_level=Priority.LOW.value)
+        ]
 
     async def handle_resteem(self, op):
         op_data = op['op'][1]
         resteem_data = json.loads(op_data['json'])
         if resteem_data[0] != 'reblog':
             self.log.debug('handle_resteem noop')
-            return True
+            return []
 
         account = resteem_data[1]['account']
         author = resteem_data[1]['author']
         permlink = resteem_data[1]['permlink']
         if len(op_data['required_posting_auths']) != 1:
-            self.log.error(
-                'inavlid resteem op, got %d posting auths, expected 1',
-                op_data['required_posting_auths'])
-            return True
+            self.log.error('inavlid resteem op, got %d posting auths, expected 1',
+                           op_data['required_posting_auths'])
+            return []
         if op_data['required_posting_auths'][0] != account:
             self.log.error('invalid resteem op, account must be signer')
-            return True
+            return []
         self.log.debug(
-            'handle_resteem',
-            account=account,
-            author=author,
-            permlink=permlink)
-        await self.store_notification(
-            trx_id=op['trx_id'],
-            from_username=account,
-            to_username=author,
-            json_data=json.dumps(resteem_data[1]),
-            notify_type=RESTEEM,
-            priority_level=Priority.LOW.value)
-        return True
+            'handle_resteem', account=account, author=author, permlink=permlink)
+        return [
+            dict(
+                trx_id=op['trx_id'],
+                from_username=account,
+                to_username=author,
+                json_data=json.dumps(resteem_data[1]),
+                notify_type=RESTEEM,
+                priority_level=Priority.LOW.value)
+        ]
 
     # pylint: enable=no-member
 
@@ -285,13 +291,11 @@ class YoBlockchainFollower(YoBaseService):
         futures = [handler(blockchain_op) for handler in self.op_map[op_type]]
         if futures:
             self.log.debug(
-                'operation triggering handlers',
-                op_type=op_type,
-                handlers=futures)
+                'operation triggering handlers', op_type=op_type, handlers=futures)
             return await asyncio.gather(*futures)
         else:
             self.log.debug('skipping operation', op_type=op_type)
-            return True
+            return []
 
     async def ops_iter(self):
         start_block = self.get_start_block()
@@ -305,10 +309,19 @@ class YoBlockchainFollower(YoBaseService):
         self.log.debug('main task executed')
         async for ops in self.ops_iter():
             block_num = ops[0]['block']
-            self.log.debug(
-                'main task', op_in_block=len(ops), block_num=block_num)
-            for op in ops:
-                block_num = op['block']
-                resp = await self.notify(op)
-                if resp:
-                    self.last_block_num_handled = block_num
+            self.log.debug('main task', op_in_block=len(ops), block_num=block_num)
+
+            unstored_notifications = await asyncio.gather(
+                *[self.notify(op) for op in ops])
+            combined_notifications = list(
+                itertools.chain(*itertools.chain(*unstored_notifications)))
+
+            logger.debug(
+                'main_task',
+                block_num=block_num,
+                op_count=len(ops),
+                unstored_count=sum(map(len, unstored_notifications)),
+                combined_notifications=len(combined_notifications))
+            resp = await self.store_notification(combined_notifications)
+            if resp:
+                self.last_block_num_handled = block_num
