@@ -1,16 +1,11 @@
 [[source]]
-
 verify_ssl = true
 url = "https://pypi.python.org/simple"
 
-
 [requires]
-
 python_version = "3.6"
 
-
 [packages]
-
 ujson = "*"
 aiohttp = "*"
 jsonrpcclient = "*"
@@ -26,7 +21,6 @@ requests = "*"
 py-vapid = "*"
 pywebpush = "*"
 python-dateutil = "*"
-steem = "*"
 sendgrid = "*"
 twilio = "*"
 premailer = "*"
@@ -38,10 +32,13 @@ colorama = "*"
 structlog-pretty = {extras = ["fast"]}
 "psycopg2" = "*"
 aiopg = "*"
-
+pylru = "*"
+click = "*"
+steem = "*"
+asyncpg = "*"
+serpy = "*"
 
 [dev-packages]
-
 ipython = "*"
 "pep8" = "*"
 pytest = "*"

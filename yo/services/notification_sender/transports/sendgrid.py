@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 """ Sendgrid transport class
 """
+import structlog
+import toolz
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Content
 from sendgrid.helpers.mail import Email
 from sendgrid.helpers.mail import Mail
-import structlog
-import toolz
 
-from ..email_templates import EmailRenderer
+from services.notification_sender.email_templates import EmailRenderer
 from .base_transport import BaseTransport
 
 logger = structlog.getLogger(

@@ -2,12 +2,18 @@
 
 import structlog
 
-from .db import TRANSPORT_TYPES as DB_TRANSPORT_TYPES
+from ...schema import TransportType
+from db.desktop import get__notifications
+from db.desktop import mark_read
+from db.desktop import mark_unread
+from db.desktops import mark_shown
+from db.desktop import mark_unshown
+
 
 logger = structlog.getLogger(__name__)
 
 TRANSPORT_KEYS = {'notification_types', 'sub_data'}
-TRANSPORT_TYPES = set(DB_TRANSPORT_TYPES)
+TRANSPORT_TYPES = set(t.value for t in TransportType)
 
 
 async def api_get_notifications(username=None,
@@ -30,19 +36,17 @@ async def api_get_notifications(username=None,
    Returns:
       list: list of notifications represented in dictionary format
    """
-    yo_db = context['yo_db']
-    result = yo_db.get_wwwpoll_notifications(
-        to_username=username,
-        created_before=created_before,
-        updated_after=updated_after,
-        notify_types=notify_types,
-        read=read,
-        limit=limit)
+    engine = context['app'].async_db_engine
+    async with engine.acquire() as conn:
+        result = get_wwwpoll_notifications(conn,
+            to_username=username,
+            created_before=created_before,
+            updated_after=updated_after,
+            notify_types=notify_types,
+            read=read,
+            limit=limit)
     return result
-
-
 # pylint: enable=too-many-arguments
-
 
 async def api_mark_read(ids=None, context=None):
     """ Mark a list of notifications as read
@@ -53,9 +57,10 @@ async def api_mark_read(ids=None, context=None):
    Returns:
        list: list of notifications updated
    """
-    yo_db = context['yo_db']
-    ids = ids or []
-    return [yo_db.wwwpoll_mark_read(nid) for nid in ids]
+    engine = context['app'].async_db_engine
+    async with engine.acquire() as conn:
+        ids = ids or []
+        return [wwwpoll_mark_read(conn, nid) for nid in ids]
 
 
 async def api_mark_unread(ids=None, context=None):
@@ -67,9 +72,10 @@ async def api_mark_unread(ids=None, context=None):
    Returns:
        list: list of notifications updated
    """
-    yo_db = context['yo_db']
-    ids = ids or []
-    return [yo_db.wwwpoll_mark_unread(nid) for nid in ids]
+    engine = context['app'].async_db_engine
+    async with engine.acquire() as conn:
+        ids = ids or []
+        return [wwwpoll_mark_unread(conn,nid) for nid in ids]
 
 
 async def api_mark_shown(ids=None, context=None):
@@ -81,8 +87,9 @@ async def api_mark_shown(ids=None, context=None):
    Returns:
        list: list of notifications updated
    """
-    yo_db = context['yo_db']
-    return [yo_db.wwwpoll_mark_shown(nid) for nid in ids]
+    engine = context['app'].async_db_engine
+    async with engine.acquire() as conn:
+        return [wwwpoll_mark_shown(conn,nid) for nid in ids]
 
 
 async def api_mark_unshown(ids=None, context=None):
@@ -94,14 +101,15 @@ async def api_mark_unshown(ids=None, context=None):
    Returns:
        list: list of notifications updated
    """
-    yo_db = context['yo_db']
-    ids = ids or []
-    return [yo_db.wwwpoll_mark_unshown(nid) for nid in ids]
+    engine = context['app'].async_db_engine
+    async with engine.acquire() as conn:
+        ids = ids or []
+        return [wwwpoll_mark_unshown(conn,nid) for nid in ids]
 
 
 async def api_get_transports(username=None, context=None):
-    yo_db = context['yo_db']
-    return yo_db.get_user_transports(username)
+    Users = context['app'].Users
+    return Users[username]
 
 
 async def api_set_transports(username=None, transports=None, context=None):
@@ -112,8 +120,8 @@ async def api_set_transports(username=None, transports=None, context=None):
     for transport in transports.values():
         assert TRANSPORT_KEYS.issuperset(transport.keys()), 'bad transport data'
 
-    yo_db = context['yo_db']
-    return yo_db.set_user_transports(username, transports)
+    Users = context['app'].Users
+    Users[username] = transports
 
 
 def init_api(self):

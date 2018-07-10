@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
+import yojson
 from datetime import datetime
-import json
 
 import pytest
 
-import yo.api_methods
+import services.api_server.api_methods
 
 
 @pytest.mark.asyncio
@@ -22,7 +22,7 @@ async def test_api_get_notifications(sqlite_db):
         }
     }
     test_data = {
-        'json_data': json.dumps(vote_data),
+        'json_data':     yojson.dumps(vote_data),
         'to_username': 'testuser1337',
         'from_username': 'testuser1336',
         'notify_type': 'vote',
@@ -32,7 +32,7 @@ async def test_api_get_notifications(sqlite_db):
     retval = yo_db.create_notification(**test_data)
     assert retval is True
 
-    result = await yo.api_methods.api_get_notifications(
+    result = await services.api_server.api_methods.api_get_notifications(
         username='testuser1337', context=dict(yo_db=sqlite_db))
 
     assert len(result) == 1
@@ -41,7 +41,7 @@ async def test_api_get_notifications(sqlite_db):
     assert result['notify_type'] == 'vote'
     assert result['to_username'] == 'testuser1337'
     assert result['from_username'] == 'testuser1336'
-    assert json.loads(result['json_data']) == vote_data
+    assert yojson.loads(result['json_data']) == vote_data
     assert isinstance(result['created'], datetime)
 
     # notifications only columns
@@ -51,7 +51,7 @@ async def test_api_get_notifications(sqlite_db):
 @pytest.mark.asyncio
 async def test_api_mark_read(sqlite_db):
     test_notification = {
-        'json_data': json.dumps({
+        'json_data':     yojson.dumps({
             'author': 'testuser1336',
             'weight': 100,
             'item': {
@@ -70,7 +70,7 @@ async def test_api_mark_read(sqlite_db):
     assert _ is True
     notification = sqlite_db.get_wwwpoll_notifications()[0]
     assert notification['read'] is False
-    result = await yo.api_methods.api_mark_read(ids=[notification['nid']], context=dict(yo_db=sqlite_db))
+    result = await services.api_server.api_methods.api_mark_read(ids=[notification['nid']], context=dict(yo_db=sqlite_db))
     assert result == [True]
     notification = sqlite_db.get_wwwpoll_notifications()[0]
     assert notification['read'] is True
@@ -79,7 +79,7 @@ async def test_api_mark_read(sqlite_db):
 @pytest.mark.asyncio
 async def test_api_mark_unread(sqlite_db):
     test_notification = {
-        'json_data': json.dumps({
+        'json_data':     yojson.dumps({
             'author': 'testuser1336',
             'weight': 100,
             'item': {
@@ -93,15 +93,15 @@ async def test_api_mark_unread(sqlite_db):
         'to_username': 'testuser1337',
         'from_username': 'testuser1336',
         'notify_type': 'vote',
-        'read': True
+        'read':          True
     }
 
     _ = sqlite_db.create_wwwpoll_notification(**test_notification)
     assert _ is True
     notification = sqlite_db.get_wwwpoll_notifications()[0]
     assert notification['read'] is True
-    result = await yo.api_methods.api_mark_unread(ids=[notification['nid']],
-                                       context=dict(yo_db=sqlite_db))
+    result = await services.api_server.api_methods.api_mark_unread(ids=[notification['nid']],
+                                                                   context=dict(yo_db=sqlite_db))
     assert result == [True]
     notification = sqlite_db.get_wwwpoll_notifications()[0]
     assert notification['read'] is False
@@ -110,7 +110,7 @@ async def test_api_mark_unread(sqlite_db):
 @pytest.mark.asyncio
 async def test_api_mark_shown(sqlite_db):
     test_notification = {
-        'json_data': json.dumps({
+        'json_data':     yojson.dumps({
             'author': 'testuser1336',
             'weight': 100,
             'item': {
@@ -130,8 +130,8 @@ async def test_api_mark_shown(sqlite_db):
     assert _ is True
     notification = sqlite_db.get_wwwpoll_notifications()[0]
     assert notification['shown'] is False
-    result = await yo.api_methods.api_mark_shown(ids=[notification['nid']],
-                                      context=dict(yo_db=sqlite_db))
+    result = await services.api_server.api_methods.api_mark_shown(ids=[notification['nid']],
+                                                                  context=dict(yo_db=sqlite_db))
     assert result == [True]
     notification = sqlite_db.get_wwwpoll_notifications()[0]
     assert notification['shown'] is True
@@ -140,7 +140,7 @@ async def test_api_mark_shown(sqlite_db):
 @pytest.mark.asyncio
 async def test_api_mark_unshown(sqlite_db):
     test_notification = {
-        'json_data': json.dumps({
+        'json_data':     yojson.dumps({
             'author': 'testuser1336',
             'weight': 100,
             'item': {
@@ -154,15 +154,15 @@ async def test_api_mark_unshown(sqlite_db):
         'to_username': 'testuser1337',
         'from_username': 'testuser1336',
         'notify_type': 'vote',
-        'shown': True
+        'shown':         True
     }
 
     _ = sqlite_db.create_wwwpoll_notification(**test_notification)
     assert _ is True
     notification = sqlite_db.get_wwwpoll_notifications()[0]
     assert notification['shown'] is True
-    result = await yo.api_methods.api_mark_unshown(ids=[notification['nid']],
-                                        context=dict(yo_db=sqlite_db))
+    result = await services.api_server.api_methods.api_mark_unshown(ids=[notification['nid']],
+                                                                    context=dict(yo_db=sqlite_db))
     assert result == [True]
     notification = sqlite_db.get_wwwpoll_notifications()[0]
     assert notification['shown'] is False
@@ -189,12 +189,12 @@ async def test_api_get_set_transports(sqlite_db):
         }
     }
 
-    resp = await yo.api_methods.api_set_transports(
+    resp = await services.api_server.api_methods.api_set_transports(
         username='testuser1337',
         transports=simple_transports_obj['transports'],
         context=dict(yo_db=sqlite_db))
     assert resp
 
-    resp = await yo.api_methods.api_get_transports(
+    resp = await services.api_server.api_methods.api_get_transports(
         username='testuser1337', context=dict(yo_db=sqlite_db))
     assert resp == simple_transports_obj['transports']

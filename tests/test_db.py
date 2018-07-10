@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from datetime import datetime
-import json
+import yojson
 
 from sqlalchemy import MetaData
 
@@ -46,7 +46,7 @@ def test_create_notification(sqlite_db):
         }
     }
     test_data = {
-        'json_data': json.dumps(vote_data),
+        'json_data':     yojson.dumps(vote_data),
         'to_username': 'testuser1337',
         'from_username': 'testuser1336',
         'notify_type': 'vote',
@@ -64,7 +64,7 @@ def test_create_notification(sqlite_db):
     assert result['notify_type'] == 'vote'
     assert result['to_username'] == 'testuser1337'
     assert result['from_username'] == 'testuser1336'
-    assert json.loads(result['json_data']) == vote_data
+    assert yojson.loads(result['json_data']) == vote_data
     assert isinstance(result['created'], datetime)
 
     # notifications only columns
@@ -84,7 +84,7 @@ def test_create_wwwpoll_notification(sqlite_db):
         }
     }
     test_data = {
-        'json_data': json.dumps(vote_data),
+        'json_data':     yojson.dumps(vote_data),
         'from_username': 'testuser1336',
         'to_username': 'testuser1337',
         'notify_type': 'vote'
@@ -100,7 +100,7 @@ def test_create_wwwpoll_notification(sqlite_db):
 
     assert result['notify_type'] == 'vote'
     assert result['to_username'] == 'testuser1337'
-    assert json.loads(result['json_data']) == vote_data
+    assert yojson.loads(result['json_data']) == vote_data
     assert isinstance(result['created'], datetime)
 
     # wwwpoll only columns
@@ -121,7 +121,7 @@ def test_get_notifications(sqlite_db):
         }
     }
     test_data = {
-        'json_data': json.dumps(vote_data),
+        'json_data':     yojson.dumps(vote_data),
         'to_username': 'testuser1337',
         'from_username': 'testuser1336',
         'notify_type': 'vote',
@@ -139,7 +139,7 @@ def test_get_notifications(sqlite_db):
     assert result['notify_type'] == 'vote'
     assert result['to_username'] == 'testuser1337'
     assert result['from_username'] == 'testuser1336'
-    assert json.loads(result['json_data']) == vote_data
+    assert yojson.loads(result['json_data']) == vote_data
     assert isinstance(result['created'], datetime)
 
     # notifications only columns
@@ -159,7 +159,7 @@ def test_get_wwwpoll_notifications(sqlite_db):
         }
     }
     test_data = {
-        'json_data': json.dumps(vote_data),
+        'json_data':     yojson.dumps(vote_data),
         'from_username': 'testuser1336',
         'to_username': 'testuser1337',
         'notify_type': 'vote',
@@ -175,7 +175,7 @@ def test_get_wwwpoll_notifications(sqlite_db):
 
     assert result['notify_type'] == 'vote'
     assert result['to_username'] == 'testuser1337'
-    assert json.loads(result['json_data']) == vote_data
+    assert yojson.loads(result['json_data']) == vote_data
     assert isinstance(result['created'], datetime)
 
     # wwwpoll only columns
@@ -196,7 +196,7 @@ def test_wwpoll_mark_shown(sqlite_db):
         }
     }
     test_data = {
-        'json_data': json.dumps(vote_data),
+        'json_data':     yojson.dumps(vote_data),
         'from_username': 'testuser1336',
         'to_username': 'testuser1337',
         'notify_type': 'vote'
@@ -227,11 +227,11 @@ def test_wwpoll_mark_unshown(sqlite_db):
         }
     }
     test_data = {
-        'json_data': json.dumps(vote_data),
+        'json_data':     yojson.dumps(vote_data),
         'from_username': 'testuser1336',
         'to_username': 'testuser1337',
         'notify_type': 'vote',
-        'shown': True
+        'shown':         True
     }
 
     yo_db = sqlite_db
@@ -259,7 +259,7 @@ def test_wwpoll_mark_read(sqlite_db):
         }
     }
     test_data = {
-        'json_data': json.dumps(vote_data),
+        'json_data':     yojson.dumps(vote_data),
         'from_username': 'testuser1336',
         'to_username': 'testuser1337',
         'notify_type': 'vote'
@@ -290,11 +290,11 @@ def test_wwpoll_mark_unread(sqlite_db):
         }
     }
     test_data = {
-        'json_data': json.dumps(vote_data),
+        'json_data':     yojson.dumps(vote_data),
         'from_username': 'testuser1336',
         'to_username': 'testuser1337',
         'notify_type': 'vote',
-        'read': True
+        'read':          True
     }
 
     yo_db = sqlite_db

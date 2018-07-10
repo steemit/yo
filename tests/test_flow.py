@@ -5,14 +5,14 @@
 
 """
 
-import pytest
-import json
 import uuid
-from yo.services import blockchain_follower
-from yo.services import notification_sender
-import yo.api_methods
 
-from yo.transports import base_transport
+import pytest
+
+import services.api_server.api_methods
+from services.notification_sender.transports import base_transport
+from services.blockchain_follower import service
+from yo.services import notification_sender
 
 
 @pytest.fixture(autouse=True)
@@ -20,7 +20,7 @@ def add_mock_transport_type(monkeypatch):
     from yo.db import TRANSPORT_TYPES
     transport_types_set = set(TRANSPORT_TYPES)
     transport_types_set.add('mock')
-    monkeypatch.setattr(yo.api_methods, 'TRANSPORT_TYPES', transport_types_set)
+    monkeypatch.setattr(services.api_server.api_methods, 'TRANSPORT_TYPES', transport_types_set)
 
 
 class MockApp:
@@ -56,12 +56,12 @@ async def vote_flow(sqlite_db):
     sender.configured_transports = {}
     sender.configured_transports['mock'] = mock_tx
 
-    follower = blockchain_follower.YoBlockchainFollower(db=yo_db, yo_app=yo_app)
+    follower = service.YoBlockchainFollower(db=yo_db, yo_app=yo_app)
 
     # configure testupvoted and testupvoter users to use mock transport for votes
     transports_obj = {'mock': {'notification_types': ['vote'], 'sub_data': ''}}
-    await yo.api_methods.api_set_transports(username='testupvoted', transports=transports_obj, context=dict(yo_db=sqlite_db))
-    await yo.api_methods.api_set_transports(username='testupvoter', transports=transports_obj, context=dict(yo_db=sqlite_db))
+    await services.api_server.api_methods.api_set_transports(username='testupvoted', transports=transports_obj, context=dict(yo_db=sqlite_db))
+    await services.api_server.api_methods.api_set_transports(username='testupvoter', transports=transports_obj, context=dict(yo_db=sqlite_db))
 
     # handle the mock vote op
     await follower.notify(mock_vote_op)
@@ -99,12 +99,12 @@ async def test_follow_flow(sqlite_db):
     sender.configured_transports = {}
     sender.configured_transports['mock'] = mock_tx
 
-    follower = blockchain_follower.YoBlockchainFollower(db=yo_db, yo_app=yo_app)
+    follower = service.YoBlockchainFollower(db=yo_db, yo_app=yo_app)
 
     # configure testupvoted and testupvoter users to use mock transport for follows
     transports_obj = {'mock': {'notification_types': ['follow'], 'sub_data': ''}}
-    await yo.api_methods.api_set_transports(username='testfollower', transports=transports_obj, context=dict(yo_db=sqlite_db))
-    await yo.api_methods.api_set_transports(username='testfollowed', transports=transports_obj, context=dict(yo_db=sqlite_db))
+    await services.api_server.api_methods.api_set_transports(username='testfollower', transports=transports_obj, context=dict(yo_db=sqlite_db))
+    await services.api_server.api_methods.api_set_transports(username='testfollowed', transports=transports_obj, context=dict(yo_db=sqlite_db))
 
     # handle the mock follow op
     await follower.notify(mock_follow_op)

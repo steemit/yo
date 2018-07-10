@@ -53,3 +53,4 @@ blocks.json
 *.db
 envfile
 /deploy
+.DS_Store

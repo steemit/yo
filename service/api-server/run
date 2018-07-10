@@ -1,0 +1,10 @@
+#!/bin/bash -e
+
+# Make sure we're in the right place
+cd "${APP_ROOT}"
+
+exec 2>&1 pipenv run python -m yo.cli \
+    --database_url "${DATABASE_URL}" \
+    api_server \
+        --http_host "${HTTP_HOST}" \
+        --http_port "${HTTP_PORT}" 2>&1

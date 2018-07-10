@@ -1,14 +1,11 @@
 # -*- coding: utf-8 -*-
-import json
-import os
 import argparse
-
 import logging
+import os
 
 import pytest
 
-from yo.db_utils import init_db
-
+from db.db_utils import init_db
 
 logging.basicConfig(level='DEBUG')
 

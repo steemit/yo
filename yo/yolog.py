@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
-
+import os
 import logging.config
+
 
 import structlog
 
 pre_chain = [
     # Add the log level and a timestamp to the event_dict if the log entry
     # is not from structlog.
+
     structlog.stdlib.add_log_level,
     structlog.processors.TimeStamper(fmt='iso')
 ]
@@ -26,13 +28,13 @@ logging.config.dictConfig({
             "()": structlog.stdlib.ProcessorFormatter,
             "processor": structlog.dev.ConsoleRenderer(colors=True),
             "foreign_pre_chain": pre_chain,
-            #  "keep_exc_info": True,
-            #  "keep_stack_info": True
+            "keep_exc_info": True,
+            "keep_stack_info": True
         },
     },
     "handlers": {
         "default": {
-            "level": "DEBUG",
+            "level": os.environ.get('LOG_LEVEL','DEBUG'),
             "class": "logging.StreamHandler",
             "formatter": "colored",
         },
@@ -40,7 +42,7 @@ logging.config.dictConfig({
     "loggers": {
         "": {
             "handlers": ["default"],
-            "level": "DEBUG",
+            "level": os.environ.get('LOG_LEVEL','DEBUG'),
             "propagate": True,
         },
     }

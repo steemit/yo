@@ -1,23 +1,21 @@
 # -*- coding: utf-8 -*-
-import argparse
-import asynctest
 
-from yo.services.registration import ServiceState
+from services.base_service.registration import ServiceState
 
 
 
 
 
 def test_class_variables():
-    from yo.services.base_service import YoBaseService
+    from services.base_service.base_service import YoBaseService
     assert YoBaseService.service_name == 'base'
 
 
 def test_instantiation(mocker, basic_mock_app):
-    from yo.services.blockchain_follower import YoBlockchainFollower
+    from services.blockchain_follower.service import YoBlockchainFollower
 
     ya = basic_mock_app
-    mocker.patch.object(YoBlockchainFollower, 'init_api')
+    mocker.patch.object(YoBlockchainFollower, 'run')
     y = YoBlockchainFollower(yo_app=ya, config=None, db=None)
     assert y.service_status == ServiceState.DISABLED
     assert y.service_id is None

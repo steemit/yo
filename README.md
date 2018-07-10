@@ -286,10 +286,9 @@ Get a user's notifications, with filters & limit.
                         "account_update",
                         "message",
                         "receive"
-                    ],
-                    "sub_data": "test@example.com"
+                    ]
                 },
-                "wwwpoll": {
+                "desktop": {
                     "notification_types": [
                         "power_down",
                         "power_up",
@@ -305,8 +304,7 @@ Get a user's notifications, with filters & limit.
                         "account_update",
                         "message",
                         "receive"
-                    ],
-                    "sub_data": {}
+                    ]
                 }
             }
         }
@@ -339,8 +337,7 @@ Get a user's notifications, with filters & limit.
                             "mention",
                             "resteem",
                             "feed"
-                        ],
-                        "sub_data": "test@example.com"
+                        ]
                     },
                     "wwwpoll": {
                         "notification_types": [
@@ -356,8 +353,7 @@ Get a user's notifications, with filters & limit.
                             "mention",
                             "resteem",
                             "feed"
-                        ],
-                        "sub_data": {}
+                        ]
                     }
                 }
             }
@@ -386,8 +382,7 @@ Get a user's notifications, with filters & limit.
                         "mention",
                         "resteem",
                         "feed"
-                    ],
-                    "sub_data": "test@example.com"
+                    ]
                 },
                 "wwwpoll": {
                     "notification_types": [
@@ -403,8 +398,7 @@ Get a user's notifications, with filters & limit.
                         "mention",
                         "resteem",
                         "feed"
-                    ],
-                    "sub_data": {}
+                    ]
                 }
             }
         }

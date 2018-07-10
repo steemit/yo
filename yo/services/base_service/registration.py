@@ -20,7 +20,7 @@ class Registration(NamedTuple):
 
     @classmethod
     def from_row(cls, row):
-        return cls(
+        return Registration(
             service_name=row['service_name'],
             service_id=row['service_id'],
             service_status=row['service_status'],
