@@ -54,3 +54,4 @@ blocks.json
 envfile
 /deploy
 .DS_Store
+.pytest_cache

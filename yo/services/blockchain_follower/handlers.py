@@ -11,8 +11,6 @@ from ...schema import NotificationType as Notification
 logger = structlog.get_logger(__name__)
 
 
-
-
 # any valid @username with a trailing whitespace
 MENTION_PATTERN = re.compile(r'@([a-z][a-z0-9\-]{2,15})\s')
 

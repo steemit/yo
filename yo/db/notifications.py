@@ -1,25 +1,22 @@
 # -*- coding: utf-8 -*-
-import asyncio
-import dateutil
-import dateutil.parser
 import sqlalchemy as sa
 import structlog
-import toolz
 
-
-from sqlalchemy.exc import IntegrityError
 
 from ..schema import NotificationType
 from ..schema import TransportType
 from ..schema import Priority
-from .actions import store as store_action
-from .users import get_user_transports
+
+from .users import get_user_transports_for_notification
 
 
 logger = structlog.getLogger(__name__, source='YoDB')
 
 from yo.db import metadata
-from .queue import put
+from .queue import put_many
+
+class DuplicateNotificationError(BaseException):
+    pass
 
 notifications_table = sa.Table(
     'notifications',
@@ -78,7 +75,6 @@ if rate-limited:
 '''
 
 
-
 # create notification methods
 async def create_notification(pool,
                               eid:str = None,
@@ -95,37 +91,47 @@ async def create_notification(pool,
                  json_data=json_data,
                  priority=priority)
     async with pool.acquire() as conn:
-        async with conn.transaction():
-            # store notification
-            nid = await conn.fetchval(INSERT_NOTIFICATON_STMT, eid, notify_type, to_username, from_username, json_data, priority)
-            # load applicable user transport settings
-            user_transports = await get_user_transports(conn, to_username)
-            enabled_transports = []
-            # determine transports for user and notification
-            for transport_type, enabled in user_transports.items():
-                if notify_type.name in enabled['notification_types']:
-                    logger.debug(f'{notify_type.name} enabled for {transport_type}')
-                    enabled_transports.append(transport_type)
-            logger.debug('enabled_transports',acct=to_username,enabled=enabled_transports)
-            if not enabled_transports:
+        try:
+            async with conn.transaction():
+                # store notification
+                nid = await conn.fetchval(INSERT_NOTIFICATON_STMT, eid, notify_type, to_username, from_username, json_data, priority)
+                if not nid:
+                    raise DuplicateNotificationError()
+
+                # load applicable user transport settings
+                enabled_transports = await get_user_transports_for_notification(conn, to_username, notify_type)
+                logger.debug('enabled_transports',acct=to_username,enabled=enabled_transports)
+                if not enabled_transports:
+                    return True
+
+                # create/put transport-notifications
+                queue_item = {
+                    'nid':           nid,
+                    'eid':           eid,
+                    'notify_type':   notify_type.value,
+                    'to_username':   to_username,
+                    'from_username': from_username,
+                    'json_data':     json_data,
+                    'priority':      priority
+                }
+                queue_items = [(queue_item, TransportType[tt]) for tt in enabled_transports]
+                await put_many(conn, queue_items)
+
+                logger.debug('notifications created', notify_type=notify_type.name, transports=enabled_transports)
                 return True
-            queue_item = {
-                'nid':           nid,
-                'eid':           eid,
-                'notify_type':   notify_type.value,
-                'to_username':   to_username,
-                'from_username': from_username,
-                'json_data':     json_data,
-                'priority':      priority
-            }
-            await asyncio.gather(*[put(conn, queue_item, TransportType[tt]) for tt in enabled_transports])
-            # create/put transport-notifications
-            logger.debug('notifications created', notify_type=notify_type.name, transports=enabled_transports)
+
+        except DuplicateNotificationError:
+            logger.debug('duplicate notification', eid=eid,
+                         to_username=to_username)
             return True
 
+        except Exception as e:
+            logger.exception('error creating notification')
+            return False
 
-async def get_last_processed_block(pool):
-    eid = await pool.fetchval(GET_LAST_BLOCK_STMT)
+
+async def get_last_processed_block(conn):
+    eid = await conn.fetchval(GET_LAST_BLOCK_STMT)
     if eid:
         return int(eid.split('/')[0]) - 1
     return 1

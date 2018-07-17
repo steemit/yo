@@ -85,14 +85,14 @@ def get_start_block(start_block:int = None, blockchain: Blockchain=None):
     logger.debug('get_start_block', start_block=start_block)
     return start_block
 
-async def store_notifications(notifications, pool):
+async def store_notifications(notifications, pool) -> bool:
     logger.debug('store_notifications', notifications=list(notifications))
     futures = [create_notification(pool, **notification) for notification in notifications]
     result = await asyncio.gather(*futures)
     logger.debug('store_notifications', result=result)
     return True
 
-def gather_notifications(blockchain_op:dict = None):
+def gather_notifications(blockchain_op:dict = None) -> list:
     """ Handle notification for a particular op
     """
     op_type = blockchain_op['op'][0]
@@ -128,7 +128,7 @@ async def _main_task(database_url=None, loop=None, steemd_url=None, start_block=
         loop_start = time.perf_counter()
         logger.debug('main task', loop_elapsed=loop_elapsed,  op=op)
         block_num = op['block']
-        unstored_notifications = list(flatten(await execute_sync(gather_notifications, op)))
+        unstored_notifications = list(flatten(gather_notifications(op)))
         logger.debug(
             'main_task',
             block_num=block_num,

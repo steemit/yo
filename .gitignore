@@ -113,3 +113,4 @@ tests/failed_blocks/
 /tests/envdir-to-envfile.sh
 /deploy/
 .DS_Store
+.pytest_cache

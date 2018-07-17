@@ -53,7 +53,6 @@ EVENT_PRIORITIES = [i.name for i in EventPriority]
 
 
 
-
 '''
 Example Notification
 -------
@@ -90,7 +89,7 @@ scheme     authority       path        query   fragment
 '''
 flow
 bf detects operation
-op's handlers are run tp generate event
+op's handlers are run to generate event
 
 begin transaction
     event is stored

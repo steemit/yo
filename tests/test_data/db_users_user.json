@@ -1,0 +1,26 @@
+{
+  "username": "test_username",
+  "transports": {
+    "desktop": {
+      "data": null,
+      "notification_types": [
+        "power_down",
+        "power_up",
+        "resteem",
+        "feed",
+        "reward",
+        "send",
+        "mention",
+        "follow",
+        "vote",
+        "comment_reply",
+        "post_reply",
+        "account_update",
+        "message",
+        "receive"
+      ]
+    }
+  },
+  "created": "2018-07-11 02:00:13.505257",
+  "updated": "2018-07-11 02:00:13.505257"
+}

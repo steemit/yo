@@ -1,0 +1,21 @@
+{
+  "desktop": {
+    "notification_types": [
+      "power_down",
+      "power_up",
+      "resteem",
+      "feed",
+      "reward",
+      "send",
+      "mention",
+      "follow",
+      "vote",
+      "comment_reply",
+      "post_reply",
+      "account_update",
+      "message",
+      "receive"
+    ],
+    "data": null
+  }
+}

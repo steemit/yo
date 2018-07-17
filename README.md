@@ -8,7 +8,7 @@ Yo consists of the following components:
 
  1. ***Database layer***
 
-    By default, Yo makes use of sqlite for development work and provides a simple way to implement standard test data at startup. MySQL support is the intended final use in production. This tracks user preferences and actual notifications (which are flagged as processed, sent, shown and read). Each layer above the DB layer may be run distributed for reliability purposes, so long as the database supports transactions.
+    By default, Yo makes use of sqlite for development work and provides a simple way to implement standard test data at startup. MySQL support is the intended final use in production. This tracks user preferences and actual notifications (which are flagged as processed, mark_sent, shown and read). Each layer above the DB layer may be run distributed for reliability purposes, so long as the database supports transactions.
 
  2. ***Blockchain follower***
 
@@ -18,7 +18,7 @@ Yo consists of the following components:
 
  3. ***Notification sender***
 
-    This component handles sending out notifications to end users based on the current configuration in the database. After sending out a notification, the notification sender will mark it as sent at this stage. This is where the actual notification is sent to the user and for applications such as webpush an external endpoint is provided here.
+    This component handles sending out notifications to end users based on the current configuration in the database. After sending out a notification, the notification sender will mark it as mark_sent at this stage. This is where the actual notification is mark_sent to the user and for applications such as webpush an external endpoint is provided here.
 
  4. ***API server***
 

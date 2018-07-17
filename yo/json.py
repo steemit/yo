@@ -30,5 +30,5 @@ def ts_intenum_type(val):
     """Used if *val* is an instance of IntEnum."""
     return int(val.value())
 
-dumps = partial(rapidjson.dumps, default=to_serializable, ensure_ascii=True)
+dumps = partial(rapidjson.dumps, default=to_serializable, ensure_ascii=False)
 loads = rapidjson.loads

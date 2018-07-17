@@ -10,11 +10,9 @@ ENV DOCKER_TAG ${DOCKER_TAG}
 
 ENV HTTP_SERVER_PORT 8080
 ENV APP_SERVER_PORT 9000
-
 ENV APP_ROOT /app
 ENV APP_STATIC_ROOT ${APP_ROOT}/static
-ENV APPRUN_ROOT ${APP_ROOT}
-ENV APPRUN_CMD ${APP_ROOT}/bin/steemyo
+
 
 ENV ENVIRONMENT DEV
 
@@ -44,9 +42,9 @@ RUN \
 
 # Python 3.6
 RUN \
-    wget https://www.python.org/ftp/python/3.6.2/Python-3.6.2.tar.xz && \
-    tar xvf Python-3.6.2.tar.xz && \
-    cd Python-3.6.2/ && \
+    wget https://www.python.org/ftp/python/3.7.0/Python-3.7.0.tar.xz && \
+    tar xvf Python-3.7.0.tar.xz && \
+    cd Python-3.7.0/ && \
     ./configure && \
     make altinstall
 
@@ -70,23 +68,14 @@ RUN \
 ADD ./service /etc/service
 RUN chmod +x /etc/service/*/run
 
+
+
 # This updates the distro-provided pip and gives us pip3.6 binary
-RUN python3.6 -m pip install --upgrade pip pipenv
+RUN python3.7 -m pip install --upgrade pip pipenv
 
 WORKDIR ${APP_ROOT}
 
-# Copy code into a suitable place
-COPY ./Makefile ${APP_ROOT}/Makefile
-COPY ./Pipfile ${APP_ROOT}/Pipfile
-COPY ./Pipfile.lock ${APP_ROOT}/Pipfile.lock
-COPY ./scripts ${APP_ROOT}/scripts
-COPY ./tests ${APP_ROOT}/tests
-COPY ./yo ${APP_ROOT}/yo
-COPY ./yo.cfg ${APP_ROOT}/yo.cfg
-COPY ./.pylintrc ${APP_ROOT}/.pylintrc
-COPY ./mail_templates ${APP_ROOT}/mail_templates
-
-ENV HOME ${APP_ROOT}
+COPY . ${APP_ROOT}
 
 RUN pipenv install  --dev
 

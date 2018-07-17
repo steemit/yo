@@ -1,18 +1,24 @@
 # -*- coding: utf-8 -*-
-
+import asyncio
 import ujson
 from collections.abc import MutableMapping
+from collections import namedtuple
 from typing import Optional
-from typing import List
+from typing import TypeVar
 
 import sqlalchemy as sa
 import structlog
+
+from asyncpg.pool import Pool
+from asyncpg.connection import Connection
+
 from pylru import WriteThroughCacheManager
-from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy.dialects.postgresql import insert
+
+from yo.rpc_client import auth_request
 
 from ..schema import NOTIFICATION_TYPES
+from ..schema import NotificationType
 
 from yo.db import metadata
 
@@ -21,6 +27,7 @@ class UserNotFoundError(Exception):
 
 logger = structlog.getLogger(__name__, source='users')
 
+PoolOrConn = TypeVar('PoolOrConn', Pool, Connection)
 
 DEFAULT_SENTINEL = 'default_transports'
 
@@ -32,7 +39,6 @@ DEFAULT_USER_TRANSPORT_SETTINGS = {
 }
 
 DEFAULT_USER_TRANSPORT_SETTINGS_STRING = ujson.dumps(DEFAULT_USER_TRANSPORT_SETTINGS)
-
 
 CREATE_USER_STMT = '''INSERT INTO users(username,transports, created, updated) VALUES($1,$2,NOW(),NOW()) ON CONFLICT DO NOTHING RETURNING username'''
 CREATE_USER_WITHOUT_TRANSPORTS_STMT = '''INSERT INTO users(username) VALUES($1) ON CONFLICT DO NOTHING RETURNING username'''
@@ -60,94 +66,15 @@ user_settings_table = sa.Table(
     sa.Index('users_transports_ix', 'transports', postgresql_using='gin'))
 
 
-
-
-class UserManager(MutableMapping):
-    def __init__(self, engine):
-        self.engine = engine
-
-    def __get_default(self, transports=None):
-        return dict(updated=sa.func.now(),
-                    transports=transports or DEFAULT_USER_TRANSPORT_SETTINGS_STRING,
-                    )
-
-    def __getitem__(self, username):
-        try:
-            user_query = user_settings_table.select().where(
-                user_settings_table.c.username == username)
-            with self.engine.connect() as conn:
-                select_response = conn.execute(user_query)
-                user = select_response.first()
-            if not user:
-                raise KeyError
-            return user
-        except KeyError:
-            self[username] = DEFAULT_SENTINEL
-            return self[username]
-
-    def __setitem__(self, username, transports):
-        # Add the key/value pair to the cache and store.
-        if transports == DEFAULT_SENTINEL:
-            defaults = self.__get_default(username)
-        else:
-            defaults = self.__get_default(transports)
-
-        upsert_stmt = insert(user_settings_table).\
-            on_conflict_do_update(
-                constraint=user_settings_table.primary_key,
-                set_=defaults)
-        with self.engine.connect() as conn:
-            conn.execute(upsert_stmt, username=username)
-
-    def __delitem__(self, key):
-        raise NotImplementedError
-
-    def __iter__(self):
-        stmt = user_settings_table.select()
-        with self.engine.connect() as conn:
-            for row in conn.execute(stmt):
-                yield (row.username,
-                        dict(transports=row.transports,
-                             created=row.created,
-                             updated=row.updated))
-
-    def __len__(self):
-        stmt = user_settings_table.count()
-        with self.engine.connect() as conn:
-            return conn.scalar(stmt)
-
-    def __contains__(self, username):
-        with self.engine.connect() as conn:
-            s = select([user_settings_table.c.username]).where(
-                user_settings_table.c.username == username)
-            return conn.execute(s).scalar() == username
-
-    def keys(self):
-        return tuple(r[0] for r in self)
-
-    def values(self):
-        return tuple(r[1] for r in self)
-
-    def items(self):
-        return tuple(r for r in self)
-
-    def popitem(self):
-        raise NotImplementedError
-
-    def pop(self, key, default=None):
-        raise NotImplementedError
-
-
-# async user methods
-async def create_user(conn, username:str, transports:Optional[dict]=None) -> bool:
+async def create_user(conn:PoolOrConn, username:str, transports:dict=None) -> bool:
     transports = transports or DEFAULT_USER_TRANSPORT_SETTINGS
-    logger.info('creating user', username=username, transports=transports)
-
+    logger.debug('creating user', username=username, transports=transports)
     try:
         new_username = await conn.fetchval(CREATE_USER_STMT,username,transports)
-        logger.info('user created', username=username, created=new_username)
-        return new_username
-
+        if new_username is None:
+            return False
+        logger.debug('user created', username=username, created=new_username)
+        return True
     except BaseException:
         logger.exception(
             'create_user failed',
@@ -156,19 +83,7 @@ async def create_user(conn, username:str, transports:Optional[dict]=None) -> boo
             exc_info=True)
     return False
 
-
-async def get_user_transports(conn, username:str=None) -> dict:
-    """Returns the JSON object representing user's configured transports
-
-   This method does no validation on the object, it is assumed that the object was validated in set_user_transports
-
-   Args:
-      username(str): the username to lookup
-
-   Returns:
-      dict: the transports configured for the user
-   """
-
+async def get_user_transports(conn:PoolOrConn, username:str) -> dict:
     try:
         user = await conn.fetchrow(GET_USER_TRANSPORTS_STMT,username)
         if not user:
@@ -184,18 +99,10 @@ async def get_user_transports(conn, username:str=None) -> dict:
         logger.exception('get_user_transports failed', username=username)
         raise e
 
-async def set_user_transports(conn, username:str=None, transports:dict=None) -> bool:
-    """ Sets the JSON object representing user's configured transports
-    This method does only basic sanity checks, it should only be invoked via the API server
-    Args:
-        username(str):    the user whose transports need to be set
-        transports(dict): maps transports to dicts containing 'notification_types' and 'sub_data' keys
-    """
-
+async def set_user_transports(conn:PoolOrConn, username:str, transports:dict=None) -> bool:
     try:
-
-        result = await conn.execute(UPDATE_USER_TRANSPORTS_STMT, transports, username)
-        if result > 0:
+        result = await conn.fetchval(UPDATE_USER_TRANSPORTS_STMT, transports, username)
+        if result:
             return True
     except Exception as e:
         logger.error(
@@ -206,11 +113,90 @@ async def set_user_transports(conn, username:str=None, transports:dict=None) -> 
             )
 
     logger.info('creating user to set transports', username=username)
-    return await create_user(conn, username, transports=transports) is not None
-
+    return await create_user(conn, username, transports=transports)
 
 async def get_user_email(username:str=None) -> str:
-    return 'email@domain.com'
+    rpc_request = {'id':1, 'jsonrpc':'2.0','method':'gatekeeper.get_user_email','params':{'username':username}}
+    response = await auth_request(rpc_request)
+    return response['result']['email']
 
 async def get_user_phone(username:str=None) -> str:
-    return '+15555555555'
+    rpc_request = {'id':     1, 'jsonrpc': '2.0',
+                   'method': 'gatekeeper.get_user_phonel',
+                   'params': {'username': username}
+    }
+    response = await auth_request(rpc_request)
+    return response['result']['phonne']
+
+
+async def get_user_transports_for_notification(conn:PoolOrConn, username:str, notification_type:NotificationType) -> list:
+    transports = await get_user_transports(conn, username)
+    name = notification_type.name
+    return [k for k,v in transports.items() if name in v['notification_types']]
+
+
+class User:
+    def __init__(self,username, transports):
+        self.username = username
+        self.transports = transports
+
+    def transports_for(self, event_type):
+        return [k for k, v in self.transports.items() if event_type in v['notification_types']]
+
+    def email(self):
+        pass
+
+    def phone(self):
+        pass
+
+def _run(coro, loop=None):
+    loop = loop or asyncio.get_event_loop()
+    return loop.run_until_complete(coro)
+
+class Users(MutableMapping):
+    def __init__(self, pool:Pool):
+        self.pool = pool
+
+    def __getitem__(self, username:str):
+        return _run(get_user_transports(self.pool, username))
+
+    def __setitem__(self, username, transports):
+        _run(set_user_transports(self.pool, username))
+
+    def __delitem__(self, key):
+        raise NotImplementedError
+
+    def __iter__(self):
+        raise NotImplementedError
+
+    def __len__(self):
+        raise NotImplementedError
+
+    def __contains__(self, username):
+        raise NotImplementedError
+
+    def keys(self):
+        raise NotImplementedError
+
+    def values(self):
+        raise NotImplementedError
+
+    def items(self):
+        raise NotImplementedError
+
+    def popitem(self):
+        raise NotImplementedError
+
+    def pop(self, key, default=None):
+        raise NotImplementedError
+
+
+async def create_users_writethrough_cache_async(pool):
+    users = Users(pool)
+    return WriteThroughCacheManager(users, 100000)
+
+
+def create_users_writethrough_cache(pool):
+    return _run(create_users_writethrough_cache_async(pool))
+
+
