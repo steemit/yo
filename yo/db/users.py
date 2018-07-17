@@ -15,7 +15,7 @@ from asyncpg.connection import Connection
 from pylru import WriteThroughCacheManager
 from sqlalchemy.dialects.postgresql import JSONB
 
-from yo.rpc_client import auth_request
+from yo.rpc_client import get_user_data
 
 from ..schema import NOTIFICATION_TYPES
 from ..schema import NotificationType
@@ -116,17 +116,12 @@ async def set_user_transports(conn:PoolOrConn, username:str, transports:dict=Non
     return await create_user(conn, username, transports=transports)
 
 async def get_user_email(username:str=None) -> str:
-    rpc_request = {'id':1, 'jsonrpc':'2.0','method':'gatekeeper.get_user_email','params':{'username':username}}
-    response = await auth_request(rpc_request)
-    return response['result']['email']
+    response = await get_user_data(username)
+    return response['email']
 
 async def get_user_phone(username:str=None) -> str:
-    rpc_request = {'id':     1, 'jsonrpc': '2.0',
-                   'method': 'gatekeeper.get_user_phonel',
-                   'params': {'username': username}
-    }
-    response = await auth_request(rpc_request)
-    return response['result']['phonne']
+    response = await get_user_data(username)
+    return response['phone']
 
 
 async def get_user_transports_for_notification(conn:PoolOrConn, username:str, notification_type:NotificationType) -> list:
