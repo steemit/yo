@@ -3,6 +3,7 @@ import argparse
 import logging
 import os
 
+import aiohttp
 import asyncpg
 import asyncpg.connection
 import asyncpg.pool
@@ -49,6 +50,31 @@ def create_mocked_pool():
     return mocked_pool
 
 
+def create_mocked_aiohttp_client_response():
+    response = asynctest.create_autospec(
+        aiohttp.client_reqrep.ClientResponse)
+    response.json = asynctest.CoroutineMock()
+    return response
+
+
+def create_mocked_aiohttp_client_request_context_manager():
+    response = create_mocked_aiohttp_client_response()
+    request_context_manager = asynctest.create_autospec(
+        aiohttp.client._RequestContextManager)
+    request_context_manager.__aenter__.return_value = response
+    return request_context_manager
+
+
+def create_mocked_aiohttp_client_session():
+    request_context_manager = create_mocked_aiohttp_client_request_context_manager()
+    mocked_client_session = asynctest.create_autospec(
+    aiohttp.client.ClientSession)
+    mocked_client_session.return_value = mocked_client_session
+    mocked_client_session.__aenter__.return_value = mocked_client_session
+    mocked_client_session.post.return_value = request_context_manager
+    return mocked_client_session
+
+
 
 @pytest.fixture(scope='function')
 def mocked_pool():
@@ -59,6 +85,9 @@ def mocked_conn():
     return create_mocked_connection()
 
 
+@pytest.fixture
+def mocked_rpc_client_session():
+    return create_mocked_aiohttp_client_session()
 
 
 @pytest.fixture

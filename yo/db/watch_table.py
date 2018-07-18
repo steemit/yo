@@ -7,6 +7,7 @@ import yo.yolog
 import json
 import structlog
 logger = structlog.get_logger()
+
 def channel_callback(conn,pid,channel,payload):
     logger.info('NOTIFY',conn=conn,pid=pid, channel=channel, payload_type=type(payload), payload=payload)
 

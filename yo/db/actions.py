@@ -62,36 +62,44 @@ GET_RATES_STMT = '''
   GROUP BY hour
 '''
 
+class RateLimitException(BaseException):
+    pass
 
-async def store(pool:PoolOrConn, nid:int, username:str, transport:TransportType, status:ActionStatus) -> ActionId:
-    return await pool.fetchval(INSERT_ACTION_STMT, nid, username, transport, status)
+class PermanentFailException(BaseException):
+    pass
+
+class SendError(BaseException):
+    pass
+
+async def store(pool_or_conn:PoolOrConn, nid:int, username:str, transport:TransportType, status:ActionStatus) -> ActionId:
+    return await pool_or_conn.fetchval(INSERT_ACTION_STMT, nid, username, transport, status)
 
 
-async def get_notification_state(pool:PoolOrConn, nid:int) -> ActionStatus:
-    status_int = await pool.fetchrow(GET_NOTIFICATION_STATE_STMT, nid)
+async def get_notification_state(pool_or_conn:PoolOrConn, nid:int) -> ActionStatus:
+    status_int = await pool_or_conn.fetchrow(GET_NOTIFICATION_STATE_STMT, nid)
     return ActionStatus(status_int)
 
 
-async def mark_failed(pool:PoolOrConn, nid:int, transport:TransportType) -> Tuple[ActionId, NotificationId, ActionStatus]:
-    aid, nid, status = await pool.fetchrow(FAIL_ACTION_STMT,
-                                              nid,
-                                              transport,
-                                              ActionStatus.failed,
-                                              PERMANENT_FAIL_COUNT,
-                                              ActionStatus.perm_failed)
+async def mark_failed(pool_or_conn:PoolOrConn, nid:int, username:str, transport:TransportType) -> Tuple[ActionId, NotificationId, ActionStatus]:
+    aid, nid, status = await pool_or_conn.fetchrow(FAIL_ACTION_STMT,
+                                                   nid,
+                                                   transport,
+                                                   ActionStatus.failed,
+                                                   PERMANENT_FAIL_COUNT,
+                                                   ActionStatus.perm_failed)
     return aid, nid, status
 
 
-async def mark_rate_limited(pool:PoolOrConn, nid:int, username:str, transport:TransportType) -> ActionId:
-    return await store(pool, nid, username, transport,
-                 status=ActionStatus.rate_limited)
+async def mark_rate_limited(pool_or_conn:PoolOrConn, nid:int, username:str, transport:TransportType) -> ActionId:
+    return await store(pool_or_conn, nid, username, transport,
+                       status=ActionStatus.rate_limited)
 
 
-async def mark_sent(pool:PoolOrConn, nid:int, username:str, transport:TransportType) -> ActionId:
-    return await store(pool, nid, username, transport,
-                 status=ActionStatus.sent)
+async def mark_sent(pool_or_conn:PoolOrConn, nid:int, username:str, transport:TransportType) -> ActionId:
+    return await store(pool_or_conn, nid, username, transport,
+                       status=ActionStatus.sent)
 
 
-async def get_rates(pool:PoolOrConn, username:str, transport:TransportType,):
-    rows = await pool.fetch(GET_RATES_STMT, username, transport, ActionStatus.sent.value)
+async def get_rates(pool_or_conn:PoolOrConn, username:str, transport:TransportType, ):
+    rows = await pool_or_conn.fetch(GET_RATES_STMT, username, transport, ActionStatus.sent.value)
     return rows

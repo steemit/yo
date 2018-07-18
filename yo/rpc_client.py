@@ -17,7 +17,7 @@ async def auth_request(jsonrpc_request:dict, account:str='test', keys:tuple=('te
         async with session.post(url, json=signed_request, encoding='utf8') as resp:
             return await resp.json(encoding='utf8', loads=loads)
 
-async def get_user_data(username:str, account:str='test',keys:tuple=('test'), url:str='https://api.steemit.com') -> dict:
+async def get_user_data(username:str, account:str=None, keys:tuple=None, url:str='https://api.steemit.com') -> dict:
     rpc_request = {
         'id':     1, 'jsonrpc': '2.0',
         'method': 'conveyor.get_user_data',

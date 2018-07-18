@@ -28,8 +28,6 @@ PoolOrConn = TypeVar('PoolOrConn', Pool, Connection)
 QItemId = int
 NotificationId = int
 
-EXECUTOR = ThreadPoolExecutor()
-
 
 
 

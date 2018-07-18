@@ -368,7 +368,13 @@ EVENTS = {
             'filter': {
                 'operation_type': [],
             },
-            'example':{}
+            'example': {
+                "author": "ivelina89",
+                "permlink": "friends-forever",
+                "sbd_payout": "2.865 SBD",
+                "steem_payout": "0.000 STEEM",
+                "vesting_payout": "1365.457442 VESTS"
+            }
         }
     },
     'vote':           {
