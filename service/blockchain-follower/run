@@ -1,0 +1,9 @@
+#!/bin/bash -e
+
+# Make sure we're in the right place
+cd "${APP_ROOT}"
+
+exec 2>&1 pipenv run python -m yo.cli \
+    --database_url "${DATABASE_URL}" \
+    blockchain_follower \
+        --steemd_url "${STEEMD_URL}" 2>&1

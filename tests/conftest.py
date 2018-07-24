@@ -1,70 +1,93 @@
 # -*- coding: utf-8 -*-
-import json
-import os
 import argparse
-
 import logging
+import os
+
+import aiohttp
+import asyncpg
+import asyncpg.connection
+import asyncpg.pool
+import asyncpg.transaction
+
+import asynctest
 
 import pytest
 
-from yo.db_utils import init_db
+def create_mocked_transaction():
+    mocked_transaction = asynctest.create_autospec(
+        asyncpg.transaction.Transaction)
+    mocked_transaction.__await__ = asynctest.CoroutineMock()
+    mocked_transaction.__aenter__ = asynctest.CoroutineMock()
+    mocked_transaction.__aexit__ = asynctest.CoroutineMock()
+    mocked_transaction.start = asynctest.CoroutineMock()
+    mocked_transaction.commit = asynctest.CoroutineMock()
+    mocked_transaction.rollback = asynctest.CoroutineMock()
+    return mocked_transaction
+
+def create_mocked_connection():
+    mocked_transaction = create_mocked_transaction()
+    mocked_conn = asynctest.create_autospec(asyncpg.connection.Connection)
+    mocked_conn.transaction = asynctest.Mock(return_value=mocked_transaction)
+    mocked_conn.fetchval = asynctest.CoroutineMock()
+    mocked_conn.fetchrow = asynctest.CoroutineMock()
+    mocked_conn.fetch = asynctest.CoroutineMock()
+    mocked_conn.execute = asynctest.CoroutineMock()
+    return mocked_conn
+
+def create_mocked_pool():
+    mocked_connection = create_mocked_connection()
+    mocked_pool_acquire_context = asynctest.create_autospec(asyncpg.pool.PoolAcquireContext)
+    mocked_pool_acquire_context.__aenter__ = asynctest.CoroutineMock(return_value=mocked_connection)
+    mocked_pool_acquire_context.__await__ = asynctest.CoroutineMock(return_value=mocked_connection)
+
+    mocked_pool = asynctest.create_autospec(asyncpg.pool.Pool)
+    mocked_pool.acquire = asynctest.Mock(return_value=mocked_pool_acquire_context)
+    mocked_pool.fetchval = asynctest.CoroutineMock()
+    mocked_pool.fetchrow = asynctest.CoroutineMock()
+    mocked_pool.fetch  = asynctest.CoroutineMock()
+    mocked_pool.execute = asynctest.CoroutineMock()
+
+    return mocked_pool
 
 
-logging.basicConfig(level='DEBUG')
-
-@pytest.fixture
-def parsed_args():
-    parser = argparse.ArgumentParser(description="Steem notification service")
-    parser.add_argument('--log_level',
-                        default=os.environ.get('LOG_LEVEL', 'INFO'))
-    parser.add_argument('--steemd_url', default=os.environ.get('STEEMD_URL',
-                                                               'https://api.steemit.com'))
-    parser.add_argument('--database_url',
-                        default=os.environ.get('DATABASE_URL', 'sqlite://'))
-    parser.add_argument('--sendgrid_priv_key',
-                        default=os.environ.get('SENDGRID_PRIV_KEY', None))
-    parser.add_argument('--sendgrid_templates_dir',
-                        default=os.environ.get('SENDGRID_TEMPLATES_DIR',
-                                               'mail_templates'))
-    parser.add_argument('--twilio_account_sid',
-                        default=os.environ.get('TWILIO_ACCOUNT_SID', None))
-    parser.add_argument('--twilio_auth_token',
-                        default=os.environ.get('TWILIO_AUTH_TOKEN', None))
-    parser.add_argument('--twilio_from_number',
-                        default=os.environ.get('TWILIO_FROM_NUMBER', None))
-    parser.add_argument('--steemd_start_block',
-                        default=os.environ.get('STEEMD_START_BLOCK', None))
-    parser.add_argument('--http_host',
-                        default=os.environ.get('HTTP_HOST', '0.0.0.0'))
-    parser.add_argument('--http_port', type=int,
-                        default=os.environ.get('HTTP_PORT', 8080))
-    return parser.parse_args([])
+def create_mocked_aiohttp_client_response():
+    response = asynctest.create_autospec(
+        aiohttp.client_reqrep.ClientResponse)
+    response.json = asynctest.CoroutineMock()
+    return response
 
 
-@pytest.fixture
-def basic_mock_app(parsed_args, sqlite_db):
-    class MockApp:
-        def __init__(self, db):
-            self.db = db
-            self.config = parsed_args
-    return MockApp(sqlite_db)
+def create_mocked_aiohttp_client_request_context_manager():
+    response = create_mocked_aiohttp_client_response()
+    request_context_manager = asynctest.create_autospec(
+        aiohttp.client._RequestContextManager)
+    request_context_manager.__aenter__.return_value = response
+    return request_context_manager
 
-def add_test_users(sqlite_db):
-    sqlite_db.create_user('test_user1')
-    sqlite_db.create_user('test_user2')
-    sqlite_db.create_user('testuser_3')
+
+def create_mocked_aiohttp_client_session():
+    request_context_manager = create_mocked_aiohttp_client_request_context_manager()
+    mocked_client_session = asynctest.create_autospec(
+    aiohttp.client.ClientSession)
+    mocked_client_session.return_value = mocked_client_session
+    mocked_client_session.__aenter__.return_value = mocked_client_session
+    mocked_client_session.post.return_value = request_context_manager
+    return mocked_client_session
+
 
 
 @pytest.fixture(scope='function')
-def sqlite_db():
-    """Returns a new instance of YoDatabase backed by sqlite3 memory with the mock data preloaded"""
-    yo_db = init_db(db_url='sqlite://', reset=True)
-    return yo_db
+def mocked_pool():
+    return create_mocked_pool()
+
+@pytest.fixture
+def mocked_conn():
+    return create_mocked_connection()
 
 
-@pytest.fixture(scope='function')
-def sqlite_db_with_data():
-    yield init_db(db_url='sqlite://', reset=True)
+@pytest.fixture
+def mocked_rpc_client_session():
+    return create_mocked_aiohttp_client_session()
 
 
 @pytest.fixture

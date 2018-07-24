@@ -1,0 +1,13 @@
+#!/bin/bash -e
+
+# Make sure we're in the right place
+cd "${APP_ROOT}"
+
+exec 2>&1 pipenv run python -m yo.cli \
+    --database_url "${DATABASE_URL}" \
+    notification_sender \
+        --sendgrid_priv_key "${STEEMD_URL}" \
+        --sendgrid_templates_dir "${SENDGRID_TEMPLATES_DIR}" \
+        --twilio_account_sid "${TWILIO_ACCOUNT_SID}" \
+        --twilio_auth_token "${TWILIO_AUTH_TOKEN}" \
+        --twilio_from_number "${TWILIO_FROM_NUMBER}" 2>&1
